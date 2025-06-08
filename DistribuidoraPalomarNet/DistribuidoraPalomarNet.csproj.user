@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Compile Update="Forms\frmCarroCompras.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\frmDatosUsuario.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\frmDescMarcas.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\frmImagen.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\frmMensajePersonalizado.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Forms\frmPrincipal.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+</Project>

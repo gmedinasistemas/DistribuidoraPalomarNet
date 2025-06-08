@@ -1,0 +1,25 @@
+{
+  "ExtendedData": {
+    "inputs": [
+      "http://www.sistemavs.com.ar/webs/WSPalomar.asmx"
+    ],
+    "collectionTypes": [
+      "System.Array",
+      "System.Collections.Generic.Dictionary`2"
+    ],
+    "namespaceMappings": [
+      "*, ServiceReferenceWSPalomar"
+    ],
+    "references": [
+      "BouncyCastle.Crypto, {BouncyCastle, 1.8.9}",
+      "itextsharp, {iTextSharp, 5.5.13.3}",
+      "System.Configuration.ConfigurationManager, {System.Configuration.ConfigurationManager, 8.0.0}",
+      "System.Data.OleDb, {System.Data.OleDb, 8.0.0}",
+      "System.Diagnostics.EventLog, {System.Diagnostics.EventLog, 8.0.0}",
+      "System.Diagnostics.PerformanceCounter, {System.Diagnostics.PerformanceCounter, 8.0.0}",
+      "System.Security.Cryptography.ProtectedData, {System.Security.Cryptography.ProtectedData, 8.0.0}"
+    ],
+    "targetFramework": "net8.0",
+    "typeReuseMode": "All"
+  }
+}
