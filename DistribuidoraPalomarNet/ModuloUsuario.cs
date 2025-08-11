@@ -9,7 +9,7 @@ namespace DistribuidoraPalomarNet
     public static class ModuloUsuario
     {
         #region Funciones
-        private static frmDatosUsuario _frmDatosUsuario;
+        public static frmDatosUsuario _frmDatosUsuario;
 
         /// <summary>
         /// Valida si existe el código de cliente en la base de datos y actualiza los datos globales.
@@ -129,8 +129,6 @@ namespace DistribuidoraPalomarNet
             using var cmd = new OleDbCommand();
             try
             {
-                if (_frmDatosUsuario == null) throw new InvalidOperationException("Formulario de datos de usuario no inicializado");
-
                 Module.ConectarDBUsuario();
                 cmd.Connection = Module.cnnU;
                 cmd.CommandType = CommandType.Text;
@@ -210,8 +208,6 @@ namespace DistribuidoraPalomarNet
             using var cmd = new OleDbCommand();
             try
             {
-                if (_frmDatosUsuario == null) throw new InvalidOperationException("Formulario de datos de usuario no inicializado");
-
                 Module.ConectarDBUsuario();
                 cmd.Connection = Module.cnnU;
                 cmd.CommandType = CommandType.Text;

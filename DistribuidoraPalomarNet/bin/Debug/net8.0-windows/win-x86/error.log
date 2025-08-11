@@ -1,286 +1,251 @@
- - viernes, 4 de abril de 2025 => 01:21:11 'Descarga Archivo': The remote name could not be resolved
- - viernes, 4 de abril de 2025 => 01:21:18 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 08:40:54 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 08:41:01 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 09:01:35 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 09:01:42 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 09:08:12 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 09:08:18 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 23:16:36 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 23:16:42 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 23:45:31 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 23:45:37 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 23:46:25 'Pintar Ofertas': No se pudo encontrar la columna denominada oferta. (Parameter 'columnName')
- - lunes, 7 de abril de 2025 => 23:48:21 'Acción Grilla': No se pudo encontrar la columna denominada preciolista. (Parameter 'columnName')
- - lunes, 7 de abril de 2025 => 23:48:24 'Acción Grilla': No se pudo encontrar la columna denominada preciolista. (Parameter 'columnName')
- - lunes, 7 de abril de 2025 => 23:48:26 'Acción Grilla': No se pudo encontrar la columna denominada preciolista. (Parameter 'columnName')
- - lunes, 7 de abril de 2025 => 23:48:27 'Acción Grilla': No se pudo encontrar la columna denominada preciolista. (Parameter 'columnName')
- - lunes, 7 de abril de 2025 => 23:48:28 'Acción Grilla': No se pudo encontrar la columna denominada preciolista. (Parameter 'columnName')
- - lunes, 7 de abril de 2025 => 23:48:30 'Acción Grilla': No se pudo encontrar la columna denominada preciolista. (Parameter 'columnName')
- - lunes, 7 de abril de 2025 => 23:49:15 'Descarga Archivo': The remote name could not be resolved
- - lunes, 7 de abril de 2025 => 23:49:20 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 00:04:08 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 00:04:14 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 00:26:45 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 00:26:51 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 00:30:34 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 00:30:40 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 00:33:13 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 00:33:19 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:12:00 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:12:08 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:16:40 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:16:42 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' , dentro de 'CargarComboLineas': System.Data.OleDb.OleDbException (0x80040E14): Error de sintaxis en la cláusula FROM.
-   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
-   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
-   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
-   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
-   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
-   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
-   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.Fill(DataTable[] dataTables, Int32 startRecord, Int32 maxRecords, IDbCommand command, CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.Fill(DataTable dataTable)
-   at DistribuidoraPalomarNet.Module.CargarComboLineas(String idRubro) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 2097
- - martes, 8 de abril de 2025 => 01:16:45 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:16:46 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' , dentro de 'CargarComboLineas': System.Data.OleDb.OleDbException (0x80040E14): Error de sintaxis en la cláusula FROM.
-   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
-   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
-   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
-   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.Fill(DataTable[] dataTables, Int32 startRecord, Int32 maxRecords, IDbCommand command, CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.Fill(DataTable dataTable)
-   at DistribuidoraPalomarNet.Module.CargarComboLineas(String idRubro) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 2097
- - martes, 8 de abril de 2025 => 01:18:13 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:18:16 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' , dentro de 'CargarComboLineas': System.Data.OleDb.OleDbException (0x80040E14): Error de sintaxis en la cláusula FROM.
-   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
-   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
-   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
-   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
-   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
-   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
-   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.Fill(DataTable[] dataTables, Int32 startRecord, Int32 maxRecords, IDbCommand command, CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.Fill(DataTable dataTable)
-   at DistribuidoraPalomarNet.Module.CargarComboLineas(String idRubro) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 2097
- - martes, 8 de abril de 2025 => 01:18:18 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:18:19 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' , dentro de 'CargarComboLineas': System.Data.OleDb.OleDbException (0x80040E14): Error de sintaxis en la cláusula FROM.
-   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
-   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
-   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
-   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.Fill(DataTable[] dataTables, Int32 startRecord, Int32 maxRecords, IDbCommand command, CommandBehavior behavior)
-   at System.Data.Common.DbDataAdapter.Fill(DataTable dataTable)
-   at DistribuidoraPalomarNet.Module.CargarComboLineas(String idRubro) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 2097
- - martes, 8 de abril de 2025 => 01:20:35 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:21:07 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:22:04 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:27:11 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:27:38 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:30:57 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:31:03 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:37:27 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:37:33 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:54:58 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 01:55:05 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 02:06:45 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 02:06:52 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 02:09:00 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 02:09:07 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 02:16:58 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 02:19:23 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 03:36:06 'Descarga Archivo': The remote name could not be resolved
- - martes, 8 de abril de 2025 => 03:36:41 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 9 de abril de 2025 => 18:02:07 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 9 de abril de 2025 => 18:02:13 'Limpiar Campos': , dentro de 'consultas_relacionadas' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
- - miércoles, 9 de abril de 2025 => 18:02:14 'Filtro Lineas': Error en la Funcion 'funcion_inicial' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
- - miércoles, 9 de abril de 2025 => 18:02:14 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
- - miércoles, 9 de abril de 2025 => 18:02:16 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 9 de abril de 2025 => 18:02:21 'Limpiar Campos': , dentro de 'consultas_relacionadas' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
- - miércoles, 9 de abril de 2025 => 18:02:22 'Filtro Lineas': Error en la Funcion 'funcion_inicial' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
- - miércoles, 9 de abril de 2025 => 18:02:22 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
- - miércoles, 9 de abril de 2025 => 18:02:35 'Limpiar Campos': , dentro de 'consultas_relacionadas' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
- - miércoles, 9 de abril de 2025 => 18:02:36 'Filtro Lineas': , dentro de 'consultas_relacionadas' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
- - miércoles, 9 de abril de 2025 => 18:02:52 'Limpiar Campos': , dentro de 'consultas_relacionadas' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
- - miércoles, 9 de abril de 2025 => 18:02:52 'Filtro Rubros': , dentro de 'consultas_relacionadas' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
- - jueves, 10 de abril de 2025 => 19:45:46 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 19:45:57 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 19:57:23 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 19:57:32 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 20:02:21 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 20:02:30 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 20:53:40 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 20:53:49 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 21:52:28 'Inicio Formulario Principal': Error dentro del proceso 'LeerConfig': Index and length must refer to a location within the string. (Parameter 'length')
- - jueves, 10 de abril de 2025 => 21:52:28 'Inicio Formulario Principal': Error dentro del proceso 'LeerConfig': Index and length must refer to a location within the string. (Parameter 'length')
- - jueves, 10 de abril de 2025 => 21:56:33 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 21:56:42 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 23:02:39 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 23:02:50 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 23:16:57 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 23:17:26 'Filtro Lineas': Error en la Funcion 'funcion_inicial' Object reference not set to an instance of an object.
- - jueves, 10 de abril de 2025 => 23:20:37 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 23:26:30 'Descarga Archivo': The remote name could not be resolved
- - jueves, 10 de abril de 2025 => 23:26:40 'Descarga Archivo': The remote name could not be resolved
- - viernes, 11 de abril de 2025 => 00:14:10 'Descarga Archivo': The remote name could not be resolved
- - viernes, 11 de abril de 2025 => 00:14:20 'Descarga Archivo': The remote name could not be resolved
- - viernes, 11 de abril de 2025 => 00:20:12 'Descarga Archivo': The remote name could not be resolved
- - viernes, 11 de abril de 2025 => 00:20:21 'Descarga Archivo': The remote name could not be resolved
- - viernes, 11 de abril de 2025 => 00:22:11 'Descarga Archivo': The remote name could not be resolved
- - viernes, 11 de abril de 2025 => 00:22:20 'Descarga Archivo': The remote name could not be resolved
- - viernes, 11 de abril de 2025 => 00:26:41 'Descarga Archivo': The remote name could not be resolved
- - viernes, 11 de abril de 2025 => 00:26:49 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 17:16:04 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 17:16:14 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 17:38:55 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 17:39:03 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 17:41:57 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 17:42:50 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 17:57:50 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 17:58:24 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 18:46:44 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 18:46:53 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 18:49:17 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 18:49:25 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 19:00:21 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 19:00:29 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 19:01:26 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 19:01:33 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 19:09:15 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 19:10:05 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 19:10:49 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 19:12:55 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 19:13:02 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 20:05:57 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 20:06:05 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 20:10:22 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 20:10:29 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 20:11:35 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 20:11:42 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 20:21:33 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 20:21:40 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 20:29:54 'Descarga Archivo': The remote name could not be resolved
- - sábado, 12 de abril de 2025 => 20:30:01 'Descarga Archivo': The remote name could not be resolved
- - domingo, 13 de abril de 2025 => 18:24:42 'Descarga Archivo': The remote name could not be resolved
- - domingo, 13 de abril de 2025 => 18:24:52 'Descarga Archivo': The remote name could not be resolved
- - lunes, 14 de abril de 2025 => 20:26:29 'Descarga Archivo': The remote name could not be resolved
- - lunes, 14 de abril de 2025 => 20:26:45 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 16 de abril de 2025 => 22:36:09 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 16 de abril de 2025 => 22:36:18 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 16 de abril de 2025 => 22:40:00 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 16 de abril de 2025 => 22:40:07 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 16 de abril de 2025 => 22:44:53 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 16 de abril de 2025 => 22:45:01 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 16 de abril de 2025 => 22:51:50 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 16 de abril de 2025 => 22:51:56 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 16 de abril de 2025 => 23:23:46 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 16 de abril de 2025 => 23:24:05 'Descarga Archivo': The remote name could not be resolved
- - sábado, 19 de abril de 2025 => 15:53:12 'Descarga Archivo': The remote name could not be resolved
- - sábado, 19 de abril de 2025 => 15:53:19 'Descarga Archivo': The remote name could not be resolved
- - sábado, 19 de abril de 2025 => 19:30:29 'Descarga Archivo': The remote name could not be resolved
- - sábado, 19 de abril de 2025 => 19:30:36 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 23 de abril de 2025 => 00:02:30 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 23 de abril de 2025 => 00:02:39 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 23 de abril de 2025 => 00:06:52 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 23 de abril de 2025 => 00:06:59 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 23 de abril de 2025 => 00:10:58 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 23 de abril de 2025 => 00:11:04 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 23 de abril de 2025 => 00:51:47 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 23 de abril de 2025 => 00:51:54 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 23 de abril de 2025 => 01:01:40 'Descarga Archivo': The remote name could not be resolved
- - martes, 29 de abril de 2025 => 19:21:44 'Descarga Archivo': The remote name could not be resolved
- - martes, 29 de abril de 2025 => 19:47:26 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 30 de abril de 2025 => 13:12:58 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 30 de abril de 2025 => 14:10:23 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 30 de abril de 2025 => 14:17:11 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 30 de abril de 2025 => 14:26:53 'Pintar Ofertas': No se pudo encontrar la columna denominada oferta. (Parameter 'columnName')
- - miércoles, 30 de abril de 2025 => 14:30:46 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 30 de abril de 2025 => 14:38:03 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 30 de abril de 2025 => 14:46:00 'Descarga Archivo': The remote name could not be resolved
- - jueves, 1 de mayo de 2025 => 14:44:14 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 14:00:06 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 14:07:35 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 14:17:14 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 14:18:52 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 14:20:55 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 14:23:42 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 14:45:27 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 15:09:47 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 15:19:03 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 15:20:26 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 15:21:37 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 17:40:49 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 17:47:08 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 17:48:51 'Descarga Archivo': The remote name could not be resolved
- - viernes, 2 de mayo de 2025 => 18:07:45 'Descarga Archivo': The remote name could not be resolved
- - martes, 6 de mayo de 2025 => 00:34:15 'Descarga Archivo': The remote name could not be resolved
- - martes, 6 de mayo de 2025 => 00:44:06 'Descarga Archivo': The remote name could not be resolved
- - martes, 6 de mayo de 2025 => 00:46:23 'Descarga Archivo': The remote name could not be resolved
- - martes, 6 de mayo de 2025 => 01:52:50 'Descarga Archivo': The remote name could not be resolved
- - martes, 6 de mayo de 2025 => 02:04:28 'Descarga Archivo': The remote name could not be resolved
- - martes, 6 de mayo de 2025 => 02:07:22 'Descarga Archivo': The remote name could not be resolved
- - martes, 6 de mayo de 2025 => 02:18:26 'Descarga Archivo': The remote name could not be resolved
- - martes, 6 de mayo de 2025 => 02:19:27 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 7 de mayo de 2025 => 01:05:42 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 7 de mayo de 2025 => 01:06:29 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 7 de mayo de 2025 => 01:08:25 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 7 de mayo de 2025 => 01:08:58 'Descarga Archivo': The remote name could not be resolved
- - miércoles, 7 de mayo de 2025 => 01:11:22 'Descarga Archivo': The remote name could not be resolved
- - jueves, 8 de mayo de 2025 => 19:01:02 'Pintar Ofertas': No se pudo encontrar la columna denominada oferta. (Parameter 'columnName')
- - lunes, 12 de mayo de 2025 => 00:02:53 'Click Grilla': Error en CargarDatosExtras: La función 'nz' no está definida en la expresión.
- - lunes, 12 de mayo de 2025 => 00:06:05 'Click Grilla': Error en CargarDatosExtras: La función 'nz' no está definida en la expresión.
- - lunes, 12 de mayo de 2025 => 00:06:08 'Click Grilla': Error en CargarDatosExtras: La función 'nz' no está definida en la expresión.
- - lunes, 12 de mayo de 2025 => 00:06:09 'Click Grilla': Error en CargarDatosExtras: La función 'nz' no está definida en la expresión.
- - lunes, 12 de mayo de 2025 => 00:06:10 'Click Grilla': Error en CargarDatosExtras: La función 'nz' no está definida en la expresión.
- - lunes, 12 de mayo de 2025 => 00:06:11 'Click Grilla': Error en CargarDatosExtras: La función 'nz' no está definida en la expresión.
- - lunes, 12 de mayo de 2025 => 00:06:29 'Click Grilla': Error en CargarDatosExtras: La función 'nz' no está definida en la expresión.
- - lunes, 12 de mayo de 2025 => 00:24:24 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' La instrucción SELECT incluye una palabra reservada, le falta un argumento o está mal escrito, o bien los signos de puntuación no son correctos.
- - lunes, 12 de mayo de 2025 => 00:25:26 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' La expresión de combinación no está admitida.
- - lunes, 12 de mayo de 2025 => 00:26:25 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' La expresión de combinación no está admitida.
- - lunes, 12 de mayo de 2025 => 00:59:20 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada obse. (Parameter 'columnName')
+ - lunes, 4 de agosto de 2025 => 20:58:18 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' El motor de base de datos Microsoft Jet no puede encontrar la tabla o consulta de entrada 'articulo'. Asegúrese de que existe y que su nombre está escrito correctamente.
+ - martes, 5 de agosto de 2025 => 19:22:56 'Filtro Ver Ofertas': , dentro de 'consultas_Ofertas' Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 670
- - lunes, 12 de mayo de 2025 => 00:59:39 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada obse. (Parameter 'columnName')
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:23:22 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 670
- - lunes, 12 de mayo de 2025 => 00:59:40 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada obse. (Parameter 'columnName')
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:23:23 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 670
- - lunes, 12 de mayo de 2025 => 00:59:41 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada obse. (Parameter 'columnName')
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:23:27 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 670
- - lunes, 12 de mayo de 2025 => 00:59:42 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada obse. (Parameter 'columnName')
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:23:28 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 670
- - lunes, 12 de mayo de 2025 => 00:59:42 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada obse. (Parameter 'columnName')
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:23:29 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 670
- - lunes, 12 de mayo de 2025 => 00:59:44 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada obse. (Parameter 'columnName')
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:23:34 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 670
- - lunes, 12 de mayo de 2025 => 00:59:45 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada obse. (Parameter 'columnName')
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 07:23:34 'Doble Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 670
- - lunes, 12 de mayo de 2025 => 00:59:49 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada obse. (Parameter 'columnName')
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:23:36 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 670
- - lunes, 12 de mayo de 2025 => 00:59:50 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada obse. (Parameter 'columnName')
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 07:23:36 'Doble Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 670
- - sábado, 7 de junio de 2025 => 18:12:23 'Filtro Ver Ofertas': , dentro de 'consultas_Ofertas' Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:23:38 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
    at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
    at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
-   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 704
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:23:39 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:39:19 'Filtro Ver Ofertas': , dentro de 'consultas_Ofertas' Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:39:23 'Filtro Ver Ofertas': , dentro de 'consultas_relacionadas' Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:39:27 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:39:28 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 19:39:30 'Filtro Ver Ofertas': , dentro de 'consultas_Ofertas' Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 20:10:17 'Filtro Ver Ofertas': , dentro de 'consultas_Ofertas' Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 20:10:21 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 20:10:22 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 20:10:24 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - martes, 5 de agosto de 2025 => 20:10:24 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:46:50 'Filtro Código': Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:46:51 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:46:53 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:46:54 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:46:58 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:46:58 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:46:59 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:47:00 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 03:47:01 'Doble Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:47:01 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:47:03 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:34 'Filtro Código': Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:38 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:39 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:40 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:42 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 03:56:42 'Doble Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:43 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:44 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:45 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:46 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:47 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:48 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:53 'Filtro Código': Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:56 'Filtro Código': Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:56:59 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 03:56:59 'Doble Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:57:01 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:57:02 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:57:06 'Filtro Código': Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:57:45 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:57:46 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:57:47 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:57:48 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 03:57:53 'Doble Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 15:57:58 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 16:04:27 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' Se utilizó un número incorrecto de argumentos con la función en la expresión de consulta 'ISNULL(a.arobse,'')'.
+ - domingo, 10 de agosto de 2025 => 16:47:57 'Filtro Código': Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+ - domingo, 10 de agosto de 2025 => 16:48:08 'Click Grilla': Error dentro de la funcion 'AccionGrilla': Error dentro de 'TraerDatosExtras': System.ArgumentException: No se pudo encontrar la columna denominada arobse. (Parameter 'columnName')
+   at System.Windows.Forms.DataGridViewCellCollection.get_Item(String columnName)
+   at System.Windows.Forms.DataGridView.get_Item(String columnName, Int32 rowIndex)
+   at DistribuidoraPalomarNet.Module.TraerDatosExtras(Int32 numFila) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 800
+
+
+ - domingo, 10 de agosto de 2025 => 16:56:04 'Filtro Código': Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Object reference not set to an instance of an object.
+
+
+ - domingo, 10 de agosto de 2025 => 17:04:58 'Limpiar Campos': , dentro de 'consultas_relacionadas' Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Object reference not set to an instance of an object.
+ - domingo, 10 de agosto de 2025 => 17:05:01 'Limpiar Campos': , dentro de 'consultas_relacionadas' Error dentro 'SeleccionarGrilla': Error dentro de la funcion 'AccionGrilla': Object reference not set to an instance of an object.
+
+

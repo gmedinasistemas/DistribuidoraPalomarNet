@@ -99,6 +99,7 @@ namespace DistribuidoraPalomarNet
             btnGrabar.TabIndex = 77;
             btnGrabar.Tag = "Grabar";
             btnGrabar.UseVisualStyleBackColor = true;
+            btnGrabar.Click += btnGrabar_Click;
             // 
             // btnSalir
             // 
@@ -111,6 +112,7 @@ namespace DistribuidoraPalomarNet
             btnSalir.Tag = "Salir";
             btnSalir.Text = "X";
             btnSalir.UseVisualStyleBackColor = true;
+            btnSalir.Click += btnSalir_Click;
             // 
             // ptbImgSi
             // 

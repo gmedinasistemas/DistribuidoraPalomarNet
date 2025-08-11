@@ -95,6 +95,7 @@ namespace DistribuidoraPalomarNet
 
         private void btnExportarCarro_Click(object sender, EventArgs e)
         {
+
             try
             {
                 if (gridPedidos.RowCount > 0)
@@ -104,13 +105,20 @@ namespace DistribuidoraPalomarNet
                     Label2.Refresh();
 
                     var doc = new Document(PageSize.A4, 10, 10, 10, 10);
-                    string filename = $@"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\pedidos\Preimpreso {Module._frmPrincipal.lblusuario.Text} {DateTime.Now.ToString().Replace("/", "-").Replace(":", "")}.pdf";
+                    string filename = $@"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\pedidos\Preimpreso {Module.US_CODI} {DateTime.Now.ToString().Replace("/", "-").Replace(":", "")}.pdf";
                     var file = new FileStream(filename, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
                     PdfWriter.GetInstance(doc, file);
                     doc.Open();
-                    ExportarDatosPDF(doc);
+                    Module.ExportarDatosPDF(doc);
                     doc.Close();
-                    Process.Start(filename);
+                    if (File.Exists(filename))
+                    {
+                        Process.Start(new ProcessStartInfo(filename) { UseShellExecute = true });
+                    }
+                    else
+                    {
+                        Console.WriteLine("El archivo no existe en la ruta especificada.");
+                    }
                     Label2.Visible = false;
                     Label2.Refresh();
                     btnExportarCarro.Enabled = true;
@@ -142,12 +150,13 @@ namespace DistribuidoraPalomarNet
                     Label2.Visible = true;
                     Label2.Refresh();
                     PictureBox1.Refresh();
-
+                    //comento el envio de mail, ya esta probado y funciona ok.
                     Module.ProcesoCorreo();
 
                     if (VerificarConexionURL("http://www.sistemavs.com.ar/webs/WSPalomar.asmx"))
                     {
-                        ModuloPreparac.ProcesoWSAsync();
+                        //ModuloPreparac.ProcesoWSAsync();
+                        ModuloPreparac.ProcesoWS();
                     }
 
                     ModuloPreparac.EliminarItemsCarro();
@@ -233,37 +242,123 @@ namespace DistribuidoraPalomarNet
         }
 
         #region Métodos Auxiliares
-        private void ExportarDatosPDF(Document doc)
-        {
-            try
-            {
-                // Implementar la lógica para exportar a PDF
-                var table = new PdfPTable(gridPedidos.Columns.Count);
-                table.WidthPercentage = 100;
+        //private void ExportarDatosPDF(Document doc)
+        //{
+        //    try
+        //    {
+        //        // Implementar la lógica para exportar a PDF
+        //        var table = new PdfPTable(gridPedidos.Columns.Count);
+        //        table.WidthPercentage = 100;
 
-                // Agregar encabezados
-                foreach (DataGridViewColumn column in gridPedidos.Columns)
-                {
-                    table.AddCell(new Phrase(column.HeaderText));
-                }
+        //        // Agregar encabezados
+        //        foreach (DataGridViewColumn column in gridPedidos.Columns)
+        //        {
+        //            table.AddCell(new Phrase(column.HeaderText));
+        //        }
 
-                // Agregar datos
-                foreach (DataGridViewRow row in gridPedidos.Rows)
-                {
-                    foreach (DataGridViewCell cell in row.Cells)
-                    {
-                        table.AddCell(new Phrase(cell.Value?.ToString() ?? ""));
-                    }
-                }
+        //        // Agregar datos
+        //        foreach (DataGridViewRow row in gridPedidos.Rows)
+        //        {
+        //            foreach (DataGridViewCell cell in row.Cells)
+        //            {
+        //                table.AddCell(new Phrase(cell.Value?.ToString() ?? ""));
+        //            }
+        //        }
 
-                doc.Add(table);
-            }
-            catch (Exception ex)
-            {
-                throw new Exception("Error en ExportarDatosPDF: " + ex.Message);
-            }
-        }
+        //        doc.Add(table);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception("Error en ExportarDatosPDF: " + ex.Message);
+        //    }
+        //}
+        //public void ExportarDatosPDF(Document document)
+        //{
+        //    try
+        //    {
+        //        // Se crea un objeto PDFTable con el numero de columnas del DataGridView.
+        //        PdfPTable datatable = new PdfPTable((gridPedidos.ColumnCount - 2)); //reemplazo -1 por -3 para sacar los precios#lo agregue gmedina
 
+        //        // Se asignan algunas propiedades para el diseño del PDF.
+        //        datatable.DefaultCell.Padding = 1;
+        //        float[] headerwidths = GetColumnasSize(gridPedidos);
+        //        datatable.SetWidths(headerwidths);
+
+        //        datatable.WidthPercentage = 100;
+        //        datatable.DefaultCell.BorderWidth = 1;
+        //        datatable.DefaultCell.HorizontalAlignment = Element.ALIGN_LEFT;
+
+        //        // se crea el logo del pdf
+        //        iTextSharp.text.Image imagendemo; // Declaracion de una imagen
+        //        imagendemo = iTextSharp.text.Image.GetInstance(@"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\imagenes\LogoImpresion.png"); // Dirreccion a la imagen que se hace referencia
+        //        imagendemo.ScaleAbsoluteWidth(150); // Ancho de la imagen
+        //        imagendemo.ScaleAbsoluteHeight(45); // Altura de la imagen
+        //                                            // Phrase texto2 = new Phrase("Catalogo Pedido", new Font(Font.Name = "Tahoma", 20, Font.Bold));
+
+        //        // Se crea el encabezado en el PDF.
+        //        Paragraph encabezado = new Paragraph("Reporte de Pedido. Cliente " + Module.US_CODI, FontFactory.GetFont(FontFactory.COURIER, 14, iTextSharp.text.Font.BOLD));
+        //        // Se crea el texto abajo del encabezado.
+        //        Phrase texto = new Phrase("Realizado la fecha : " + DateTime.Now, FontFactory.GetFont(FontFactory.COURIER, 10, iTextSharp.text.Font.BOLD));
+
+        //        // Se capturan los nombres de las columnas del DataGridView.
+        //        for (int i = 0; i < gridPedidos.ColumnCount; i++)
+        //        {
+        //            if (i != 0 && i != 4) // saco columnas de id y precios#lo agregue gmedina
+        //            {
+        //                datatable.AddCell(new PdfPCell(new Paragraph(gridPedidos.Columns[i].HeaderText, FontFactory.GetFont(FontFactory.COURIER, 10, iTextSharp.text.Font.ITALIC))));
+        //            }
+        //        }
+
+        //        datatable.HeaderRows = 1;
+        //        datatable.DefaultCell.BorderWidth = 1;
+
+        //        // Se generan las columnas del DataGridView.
+        //        for (int i = 0; i < gridPedidos.RowCount; i++)
+        //        {
+        //            for (int j = 0; j < gridPedidos.ColumnCount; j++)
+        //            {
+        //                if (j != 0 && j != 4) // saco columnas de id y precios#lo agregue gmedina
+        //                {
+        //                    datatable.AddCell(new PdfPCell(new Paragraph(gridPedidos[j, i].Value.ToString(), FontFactory.GetFont(FontFactory.COURIER, 10, iTextSharp.text.Font.ITALIC))));
+        //                }
+        //                PictureBox1.Refresh();
+        //            }
+        //            datatable.CompleteRow();
+        //        }
+
+        //        // Se agrega el PDFTable al documento.
+        //        document.Add(imagendemo);
+        //        // document.Add(texto2);
+        //        document.Add(encabezado);
+        //        document.Add(texto);
+        //        document.Add(datatable);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw new Exception(", dentro de la acción 'ExportarDatosPDF': " + ex.Message.ToString());
+        //    }
+        //}
+        //public float[] GetColumnasSize(DataGridView dg)
+        //{
+        //    // funcion para obtener el tamaño de la columnas del datagridview
+        //    float[] values = new float[dg.ColumnCount - 2]; // reemplazo -1 por -4#lo agregue gmedina
+
+        //    // For loop commented out as in the original VB code
+        //    //for (int i = 0; i <= dg.ColumnCount - 4; i++) // reemplazo -1 por -4#lo agregue gmedina
+        //    //{
+        //    //    values[i] = (float)dg.Columns[i + 1].Width;
+        //    //}
+
+        //    // Hardcoded values as in the original VB code
+        //    values[0] = (float)105;
+        //    values[1] = (float)95;
+        //    values[2] = (float)420;
+        //    values[3] = (float)215;
+        //    values[4] = (float)125;
+        //    values[5] = (float)175;
+
+        //    return values;
+        //}
         private bool VerificarConexionURL(string url)
         {
             try

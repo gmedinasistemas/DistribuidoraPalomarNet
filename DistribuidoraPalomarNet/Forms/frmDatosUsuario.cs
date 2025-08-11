@@ -153,14 +153,12 @@ namespace DistribuidoraPalomarNet
                                                 if (Module.accionDatosUsu == 1)
                                                 {
                                                     // Para Actualizar
-                                                    Module.UpdateUsuario(txtCodCliente.Text.Trim(), txtCuitCliente.Text.Trim(), 
-                                                        txtEmail.Text.Trim(), txtDesc1.Text.Trim(), txtDesc2.Text.Trim(), txtBene.Text.Trim());
+                                                    ModuloUsuario.UpdateUsuario(txtCodCliente.Text, txtCuitCliente.Text, txtEmail.Text, Convert.ToDecimal(txtDesc1.Text), Convert.ToDecimal(txtDesc2.Text), Module.US_CLRAZO, Module.US_CLCIVA.ToString(), Module.US_CLVEND.ToString(), Module.US_CLCPAG.ToString(), txtBene.Text);
                                                 }
                                                 else
                                                 {
                                                     // por primera vez
-                                                    Module.GrabarUsuario(txtCodCliente.Text.Trim(), txtCuitCliente.Text.Trim(), 
-                                                        txtEmail.Text.Trim(), txtDesc1.Text.Trim(), txtDesc2.Text.Trim(), txtBene.Text.Trim());
+                                                    ModuloUsuario.GrabarUsuario(txtCodCliente.Text, txtCuitCliente.Text, txtEmail.Text, Convert.ToDecimal(txtDesc1.Text), Convert.ToDecimal(txtDesc2.Text), Module.US_CLRAZO, Module.US_CLCIVA.ToString(), Module.US_CLVEND.ToString(), Module.US_CLCPAG.ToString(), txtBene.Text);
                                                 }
 
                                                 // +++++++++++++++++++++++COMENTO TEMPORARIAMENTE+++++++++++++++++++++++++++

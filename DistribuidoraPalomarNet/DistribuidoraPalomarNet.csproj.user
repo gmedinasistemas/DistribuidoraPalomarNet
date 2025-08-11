@@ -13,6 +13,9 @@
     <Compile Update="Forms\frmImagen.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Update="Forms\frmImagenZoom.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Update="Forms\frmMensajePersonalizado.cs">
       <SubType>Form</SubType>
     </Compile>

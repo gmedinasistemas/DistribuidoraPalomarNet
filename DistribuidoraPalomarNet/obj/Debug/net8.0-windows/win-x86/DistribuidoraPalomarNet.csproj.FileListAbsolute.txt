@@ -5,6 +5,11 @@ C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.pdb
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\BouncyCastle.Crypto.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\ClosedXML.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\ClosedXML.Parser.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DocumentFormat.OpenXml.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DocumentFormat.OpenXml.Framework.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\ExcelNumberFormat.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\itextsharp.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\Microsoft.Extensions.ObjectPool.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\Microsoft.IdentityModel.Logging.dll
@@ -12,7 +17,10 @@ C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\Microsoft.IdentityModel.Tokens.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\Microsoft.IdentityModel.Tokens.Saml.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\Microsoft.IdentityModel.Xml.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\RBush.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\SixLabors.Fonts.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\System.Data.OleDb.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\System.IO.Packaging.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\System.ServiceModel.Federation.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\System.ServiceModel.Http.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\System.ServiceModel.NetFramingBase.dll
@@ -89,12 +97,14 @@ C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmDatosUsuario.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmDescMarcas.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmImagen.resources
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\ImageViewerApp.frmImagenZoom.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.Forms.frmMensajePersonalizado.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmPrincipal.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.Properties.Resources.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.csproj.GenerateResource.cache
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.GeneratedMSBuildEditorConfig.editorconfig
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.csproj.CoreCompileInputs.cache
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.sourcelink.json
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\Distribu.AE0E6731.Up2Date
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.pdb

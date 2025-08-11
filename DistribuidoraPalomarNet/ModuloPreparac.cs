@@ -1,9 +1,9 @@
+using ServiceReferenceWSPalomar;
 using System;
 using System.Data;
 using System.Data.OleDb;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using ServiceReferenceWSPalomar;
 
 namespace DistribuidoraPalomarNet
 {
@@ -242,7 +242,7 @@ namespace DistribuidoraPalomarNet
                         $", format ({Module.precio_final.ToString().Replace(",", ".")},'Currency') as PPAPRECUNITARIO" +
                         ", A.ARUBIC1 AS UBICACION, A.AROBSE AS OBSERVACION " +
                         ", A.ARFLIA AS FAMILIA, A.ARPROV AS PROVEEDOR, A.ARORIG AS ORIGEN, A.ARUNID AS UNIDAD, F.FAMIVA AS FAMIVA, A.ARRELA AS RELACION, A.ARBARR, A.ARDEPO, P.PRMARC " +
-                        " FROM FAMILIAS AS F INNER JOIN (proveedo AS p INNER JOIN ARTICULO AS A ON p.PRCODI = A.ARPROV) ON F.FACODI = A.ARFLIA ";
+                        " FROM FAMILIAS AS F INNER JOIN (proveedo AS p INNER JOIN LISTAS AS A ON p.PRCODI = A.ARPROV) ON F.FACODI = A.ARFLIA ";
 
             try
             {
@@ -272,19 +272,20 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        public static async Task ProcesoWSAsync()
+        public static void ProcesoWS()//async Task ProcesoWSAsync()
         {
             try
             {
                 // Obtener y actualizar número de pedido
                 var wsPreparac = new WSPalomarSoapClient(WSPalomarSoapClient.EndpointConfiguration.WSPalomarSoap);
-                int numPed = (int)await wsPreparac.TraerNPedidoAsync();
+                
+                int numPed = (int)wsPreparac.TraerNPedido();// await wsPreparac.TraerNPedidoAsync();
                 if (numPed != 0)
                 {
-                    await Module.UpdateValorDBLocalAsync($"UPDATE PREPARAC SET PPANUME={numPed}");
+                    Module.UpdateValorDBLocal($"UPDATE PREPARAC SET PPANUME={numPed}"); //await Module.UpdateValorDBLocalAsync($"UPDATE PREPARAC SET PPANUME={numPed}");
                 }
                 
-                int resultado = await InsertWSPreparacAsync();
+                int resultado = InsertWSPreparac();// await InsertWSPreparacAsync();
                 if (resultado == 1)
                 {
                     MessageBox.Show($"Pedido Cargado por Web Service, Nº Pedido= {numPed}", 
@@ -302,7 +303,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        public static async Task<int> InsertWSPreparacAsync()
+        public static int InsertWSPreparac()// async Task<int> InsertWSPreparacAsync()
         {
             int resultado = 0;
             string fechap_ = "";
@@ -328,7 +329,8 @@ namespace DistribuidoraPalomarNet
 
                 foreach (DataRow fila in ds.Tables["preparac"].Rows)
                 {
-                    resultado = await wsPreparac.InsertPreparacAsync(
+                    //resultado = await wsPreparac.InsertPreparacAsync(
+                    resultado = wsPreparac.InsertPreparac(
                         Convert.ToDouble(fila["PPANUME"]),
                         Convert.ToDouble(fila["PPAESTA"]),
                         Convert.ToDouble(fila["PPACLIE"]),

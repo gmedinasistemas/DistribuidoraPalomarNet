@@ -10,14 +10,6 @@ namespace DistribuidoraPalomarNet
         // Controles públicos
         public System.Windows.Forms.DataGridView gridPedidos;
         public System.Windows.Forms.Label lblTotal;
-        public System.Windows.Forms.Button btnEliminarItem;
-        public System.Windows.Forms.Button btnVaciarCarro;
-        public System.Windows.Forms.Button btnExportarCarro;
-        public System.Windows.Forms.Button btnPedirCarro;
-        public System.Windows.Forms.Button btnmulti;
-        public System.Windows.Forms.Button btnSalir;
-        public System.Windows.Forms.Label Label2;
-        public System.Windows.Forms.PictureBox PictureBox1;
 
         /// <summary>
         /// Clean up any resources being used.
@@ -40,17 +32,22 @@ namespace DistribuidoraPalomarNet
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmCarroCompras));
             gridPedidos = new DataGridView();
+            lblTotal = new Label();
+            cboxNoEnviar = new CheckBox();
+            panel1 = new Panel();
+            label1 = new Label();
             btnEliminarItem = new Button();
-            btnVaciarCarro = new Button();
             btnExportarCarro = new Button();
             btnPedirCarro = new Button();
             btnmulti = new Button();
+            btnVaciarCarro = new Button();
             btnSalir = new Button();
-            lblTotal = new Label();
-            Label2 = new Label();
             PictureBox1 = new PictureBox();
+            Label2 = new Label();
             ((System.ComponentModel.ISupportInitialize)gridPedidos).BeginInit();
+            panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PictureBox1).BeginInit();
             SuspendLayout();
             // 
@@ -62,144 +59,190 @@ namespace DistribuidoraPalomarNet
             gridPedidos.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             gridPedidos.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             gridPedidos.EditMode = DataGridViewEditMode.EditProgrammatically;
-            gridPedidos.Location = new Point(14, 14);
+            gridPedidos.Location = new Point(4, 74);
             gridPedidos.Margin = new Padding(4, 3, 4, 3);
             gridPedidos.Name = "gridPedidos";
             gridPedidos.ReadOnly = true;
             gridPedidos.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            gridPedidos.Size = new Size(905, 447);
+            gridPedidos.Size = new Size(946, 440);
             gridPedidos.TabIndex = 0;
             gridPedidos.Click += gridPedidos_Click;
             gridPedidos.DoubleClick += gridPedidos_DoubleClick;
-            // 
-            // btnEliminarItem
-            // 
-            btnEliminarItem.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnEliminarItem.Enabled = false;
-            btnEliminarItem.Location = new Point(14, 467);
-            btnEliminarItem.Margin = new Padding(4, 3, 4, 3);
-            btnEliminarItem.Name = "btnEliminarItem";
-            btnEliminarItem.Size = new Size(117, 27);
-            btnEliminarItem.TabIndex = 1;
-            btnEliminarItem.Text = "Eliminar Item";
-            btnEliminarItem.Click += btnEliminarItem_Click;
-            // 
-            // btnVaciarCarro
-            // 
-            btnVaciarCarro.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnVaciarCarro.Location = new Point(138, 467);
-            btnVaciarCarro.Margin = new Padding(4, 3, 4, 3);
-            btnVaciarCarro.Name = "btnVaciarCarro";
-            btnVaciarCarro.Size = new Size(117, 27);
-            btnVaciarCarro.TabIndex = 2;
-            btnVaciarCarro.Text = "Vaciar Carro";
-            btnVaciarCarro.Click += btnVaciarCarro_Click;
-            // 
-            // btnExportarCarro
-            // 
-            btnExportarCarro.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnExportarCarro.Location = new Point(261, 467);
-            btnExportarCarro.Margin = new Padding(4, 3, 4, 3);
-            btnExportarCarro.Name = "btnExportarCarro";
-            btnExportarCarro.Size = new Size(117, 27);
-            btnExportarCarro.TabIndex = 3;
-            btnExportarCarro.Text = "Exportar PDF";
-            btnExportarCarro.Click += btnExportarCarro_Click;
-            // 
-            // btnPedirCarro
-            // 
-            btnPedirCarro.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnPedirCarro.Location = new Point(385, 467);
-            btnPedirCarro.Margin = new Padding(4, 3, 4, 3);
-            btnPedirCarro.Name = "btnPedirCarro";
-            btnPedirCarro.Size = new Size(117, 27);
-            btnPedirCarro.TabIndex = 4;
-            btnPedirCarro.Text = "Pedir Carro";
-            btnPedirCarro.Click += btnPedirCarro_Click;
-            // 
-            // btnmulti
-            // 
-            btnmulti.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnmulti.Location = new Point(509, 467);
-            btnmulti.Margin = new Padding(4, 3, 4, 3);
-            btnmulti.Name = "btnmulti";
-            btnmulti.Size = new Size(117, 27);
-            btnmulti.TabIndex = 5;
-            btnmulti.Text = "Actualizar";
-            btnmulti.Click += btnmulti_Click;
-            // 
-            // btnSalir
-            // 
-            btnSalir.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnSalir.Location = new Point(803, 467);
-            btnSalir.Margin = new Padding(4, 3, 4, 3);
-            btnSalir.Name = "btnSalir";
-            btnSalir.Size = new Size(117, 27);
-            btnSalir.TabIndex = 6;
-            btnSalir.Text = "Salir";
-            btnSalir.Click += btnSalir_Click;
             // 
             // lblTotal
             // 
             lblTotal.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             lblTotal.AutoSize = true;
             lblTotal.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            lblTotal.Location = new Point(632, 471);
+            lblTotal.Location = new Point(655, 525);
             lblTotal.Margin = new Padding(4, 0, 4, 0);
             lblTotal.Name = "lblTotal";
             lblTotal.Size = new Size(0, 16);
             lblTotal.TabIndex = 7;
             // 
+            // cboxNoEnviar
+            // 
+            cboxNoEnviar.AutoSize = true;
+            cboxNoEnviar.Location = new Point(367, 9);
+            cboxNoEnviar.Name = "cboxNoEnviar";
+            cboxNoEnviar.Size = new Size(109, 19);
+            cboxNoEnviar.TabIndex = 10;
+            cboxNoEnviar.Text = "No Enviar EMail";
+            cboxNoEnviar.UseVisualStyleBackColor = true;
+            cboxNoEnviar.Visible = false;
+            // 
+            // panel1
+            // 
+            panel1.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            panel1.BackColor = Color.FromArgb(87, 151, 161);
+            panel1.Controls.Add(PictureBox1);
+            panel1.Controls.Add(Label2);
+            panel1.Controls.Add(label1);
+            panel1.Controls.Add(btnEliminarItem);
+            panel1.Controls.Add(btnExportarCarro);
+            panel1.Controls.Add(btnPedirCarro);
+            panel1.Controls.Add(cboxNoEnviar);
+            panel1.Controls.Add(btnmulti);
+            panel1.Controls.Add(btnVaciarCarro);
+            panel1.Controls.Add(btnSalir);
+            panel1.Location = new Point(0, 0);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(954, 68);
+            panel1.TabIndex = 11;
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Font = new Font("Georgia", 9.75F, FontStyle.Bold);
+            label1.ForeColor = Color.Black;
+            label1.Location = new Point(14, 25);
+            label1.Name = "label1";
+            label1.Size = new Size(125, 16);
+            label1.TabIndex = 12;
+            label1.Text = "Carro de Pedido:";
+            // 
+            // btnEliminarItem
+            // 
+            btnEliminarItem.Enabled = false;
+            btnEliminarItem.Image = (Image)resources.GetObject("btnEliminarItem.Image");
+            btnEliminarItem.Location = new Point(152, 7);
+            btnEliminarItem.Margin = new Padding(4, 3, 4, 3);
+            btnEliminarItem.Name = "btnEliminarItem";
+            btnEliminarItem.Size = new Size(52, 52);
+            btnEliminarItem.TabIndex = 12;
+            btnEliminarItem.Click += btnEliminarItem_Click;
+            // 
+            // btnExportarCarro
+            // 
+            btnExportarCarro.Image = (Image)resources.GetObject("btnExportarCarro.Image");
+            btnExportarCarro.Location = new Point(204, 7);
+            btnExportarCarro.Margin = new Padding(4, 3, 4, 3);
+            btnExportarCarro.Name = "btnExportarCarro";
+            btnExportarCarro.Size = new Size(52, 52);
+            btnExportarCarro.TabIndex = 11;
+            btnExportarCarro.Click += btnExportarCarro_Click;
+            // 
+            // btnPedirCarro
+            // 
+            btnPedirCarro.Image = (Image)resources.GetObject("btnPedirCarro.Image");
+            btnPedirCarro.Location = new Point(256, 7);
+            btnPedirCarro.Margin = new Padding(4, 3, 4, 3);
+            btnPedirCarro.Name = "btnPedirCarro";
+            btnPedirCarro.Size = new Size(52, 52);
+            btnPedirCarro.TabIndex = 10;
+            btnPedirCarro.Click += btnPedirCarro_Click;
+            // 
+            // btnmulti
+            // 
+            btnmulti.Image = (Image)resources.GetObject("btnmulti.Image");
+            btnmulti.Location = new Point(308, 7);
+            btnmulti.Margin = new Padding(4, 3, 4, 3);
+            btnmulti.Name = "btnmulti";
+            btnmulti.Size = new Size(52, 52);
+            btnmulti.TabIndex = 9;
+            btnmulti.Click += btnmulti_Click;
+            // 
+            // btnVaciarCarro
+            // 
+            btnVaciarCarro.Image = (Image)resources.GetObject("btnVaciarCarro.Image");
+            btnVaciarCarro.Location = new Point(846, 6);
+            btnVaciarCarro.Margin = new Padding(4, 3, 4, 3);
+            btnVaciarCarro.Name = "btnVaciarCarro";
+            btnVaciarCarro.Size = new Size(52, 52);
+            btnVaciarCarro.TabIndex = 8;
+            btnVaciarCarro.Click += btnVaciarCarro_Click;
+            // 
+            // btnSalir
+            // 
+            btnSalir.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnSalir.ForeColor = Color.White;
+            btnSalir.Location = new Point(898, 6);
+            btnSalir.Margin = new Padding(4, 3, 4, 3);
+            btnSalir.Name = "btnSalir";
+            btnSalir.Size = new Size(52, 52);
+            btnSalir.TabIndex = 7;
+            btnSalir.Text = "X";
+            btnSalir.Click += btnSalir_Click;
+            // 
+            // PictureBox1
+            // 
+            PictureBox1.Image = (Image)resources.GetObject("PictureBox1.Image");
+            PictureBox1.Location = new Point(595, 6);
+            PictureBox1.Margin = new Padding(4, 3, 4, 3);
+            PictureBox1.Name = "PictureBox1";
+            PictureBox1.Size = new Size(52, 52);
+            PictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+            PictureBox1.TabIndex = 14;
+            PictureBox1.TabStop = false;
+            PictureBox1.Visible = false;
+            // 
             // Label2
             // 
             Label2.AutoSize = true;
             Label2.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold);
-            Label2.Location = new Point(14, 497);
+            Label2.Location = new Point(368, 24);
             Label2.Margin = new Padding(4, 0, 4, 0);
             Label2.Name = "Label2";
             Label2.Size = new Size(226, 16);
-            Label2.TabIndex = 8;
+            Label2.TabIndex = 13;
             Label2.Text = "Procesando, por favor espere...";
             Label2.Visible = false;
-            // 
-            // PictureBox1
-            // 
-            PictureBox1.Image = Properties.Resources.loading;
-            PictureBox1.Location = new Point(262, 497);
-            PictureBox1.Margin = new Padding(4, 3, 4, 3);
-            PictureBox1.Name = "PictureBox1";
-            PictureBox1.Size = new Size(16, 16);
-            PictureBox1.SizeMode = PictureBoxSizeMode.AutoSize;
-            PictureBox1.TabIndex = 9;
-            PictureBox1.TabStop = false;
-            PictureBox1.Visible = false;
             // 
             // frmCarroCompras
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(933, 519);
-            Controls.Add(PictureBox1);
-            Controls.Add(Label2);
+            BackColor = Color.FromArgb(87, 151, 161);
+            ClientSize = new Size(956, 548);
+            Controls.Add(panel1);
             Controls.Add(lblTotal);
-            Controls.Add(btnSalir);
-            Controls.Add(btnmulti);
-            Controls.Add(btnPedirCarro);
-            Controls.Add(btnExportarCarro);
-            Controls.Add(btnVaciarCarro);
-            Controls.Add(btnEliminarItem);
             Controls.Add(gridPedidos);
+            FormBorderStyle = FormBorderStyle.None;
             Margin = new Padding(4, 3, 4, 3);
             Name = "frmCarroCompras";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Carro de Compras";
             Load += frmCarroCompras_Load;
             ((System.ComponentModel.ISupportInitialize)gridPedidos).EndInit();
+            panel1.ResumeLayout(false);
+            panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)PictureBox1).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
+
+        public CheckBox cboxNoEnviar;
+        private Panel panel1;
+        public Button btnSalir;
+        public Button btnVaciarCarro;
+        public Button btnmulti;
+        public Button btnPedirCarro;
+        public Button btnEliminarItem;
+        public Button btnExportarCarro;
+        private Label label1;
+        public PictureBox PictureBox1;
+        public Label Label2;
     }
 }

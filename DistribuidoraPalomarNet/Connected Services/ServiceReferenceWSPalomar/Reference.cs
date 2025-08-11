@@ -11,34 +11,34 @@ namespace ServiceReferenceWSPalomar
 {
     
     
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.2.0-preview1.23462.5")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "8.0.0")]
     [System.ServiceModel.ServiceContractAttribute(Namespace="http://www.sistemavs.com.ar/webs/", ConfigurationName="ServiceReferenceWSPalomar.WSPalomarSoap")]
     public interface WSPalomarSoap
     {
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.sistemavs.com.ar/webs/ListPreparacTodos", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(SupportFaults=true)]
-        System.Threading.Tasks.Task<ServiceReferenceWSPalomar.ArrayOfXElement> ListPreparacTodosAsync();
+        ServiceReferenceWSPalomar.ArrayOfXElement ListPreparacTodos();
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.sistemavs.com.ar/webs/ListPreparacPendientes", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(SupportFaults=true)]
-        System.Threading.Tasks.Task<ServiceReferenceWSPalomar.ArrayOfXElement> ListPreparacPendientesAsync();
+        ServiceReferenceWSPalomar.ArrayOfXElement ListPreparacPendientes();
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.sistemavs.com.ar/webs/ListPreparacPreparando", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(SupportFaults=true)]
-        System.Threading.Tasks.Task<ServiceReferenceWSPalomar.ArrayOfXElement> ListPreparacPreparandoAsync();
+        ServiceReferenceWSPalomar.ArrayOfXElement ListPreparacPreparando();
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.sistemavs.com.ar/webs/BuscarPreparacxFechas", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(SupportFaults=true)]
-        System.Threading.Tasks.Task<ServiceReferenceWSPalomar.ArrayOfXElement> BuscarPreparacxFechasAsync(double Catalogo, string FechaDesde, string FechaHasta);
+        ServiceReferenceWSPalomar.ArrayOfXElement BuscarPreparacxFechas(double Catalogo, string FechaDesde, string FechaHasta);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.sistemavs.com.ar/webs/BuscarPreparacxFechasCliente", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(SupportFaults=true)]
-        System.Threading.Tasks.Task<ServiceReferenceWSPalomar.ArrayOfXElement> BuscarPreparacxFechasClienteAsync(double Catalogo, double Cliente, string FechaDesde, string FechaHasta);
+        ServiceReferenceWSPalomar.ArrayOfXElement BuscarPreparacxFechasCliente(double Catalogo, double Cliente, string FechaDesde, string FechaHasta);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.sistemavs.com.ar/webs/InsertPreparac", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(SupportFaults=true)]
-        System.Threading.Tasks.Task<int> InsertPreparacAsync(
+        int InsertPreparac(
                     double _PPANUME, 
                     double _PPAESTA, 
                     double _PPACLIE, 
@@ -95,20 +95,20 @@ namespace ServiceReferenceWSPalomar
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.sistemavs.com.ar/webs/UpdateEstadoPreparac", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(SupportFaults=true)]
-        System.Threading.Tasks.Task<int> UpdateEstadoPreparacAsync(double _PPACLIE, double _PPANUME, string _PPACODI, decimal _PPAESTADO);
+        int UpdateEstadoPreparac(double _PPACLIE, double _PPANUME, string _PPACODI, decimal _PPAESTADO);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://www.sistemavs.com.ar/webs/TraerNPedido", ReplyAction="*")]
         [System.ServiceModel.XmlSerializerFormatAttribute(SupportFaults=true)]
-        System.Threading.Tasks.Task<decimal> TraerNPedidoAsync();
+        decimal TraerNPedido();
     }
     
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.2.0-preview1.23462.5")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "8.0.0")]
     public interface WSPalomarSoapChannel : ServiceReferenceWSPalomar.WSPalomarSoap, System.ServiceModel.IClientChannel
     {
     }
     
     [System.Diagnostics.DebuggerStepThroughAttribute()]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "2.2.0-preview1.23462.5")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.Tools.ServiceModel.Svcutil", "8.0.0")]
     public partial class WSPalomarSoapClient : System.ServiceModel.ClientBase<ServiceReferenceWSPalomar.WSPalomarSoap>, ServiceReferenceWSPalomar.WSPalomarSoap
     {
         
@@ -145,32 +145,32 @@ namespace ServiceReferenceWSPalomar
         {
         }
         
-        public System.Threading.Tasks.Task<ServiceReferenceWSPalomar.ArrayOfXElement> ListPreparacTodosAsync()
+        public ServiceReferenceWSPalomar.ArrayOfXElement ListPreparacTodos()
         {
-            return base.Channel.ListPreparacTodosAsync();
+            return base.Channel.ListPreparacTodos();
         }
         
-        public System.Threading.Tasks.Task<ServiceReferenceWSPalomar.ArrayOfXElement> ListPreparacPendientesAsync()
+        public ServiceReferenceWSPalomar.ArrayOfXElement ListPreparacPendientes()
         {
-            return base.Channel.ListPreparacPendientesAsync();
+            return base.Channel.ListPreparacPendientes();
         }
         
-        public System.Threading.Tasks.Task<ServiceReferenceWSPalomar.ArrayOfXElement> ListPreparacPreparandoAsync()
+        public ServiceReferenceWSPalomar.ArrayOfXElement ListPreparacPreparando()
         {
-            return base.Channel.ListPreparacPreparandoAsync();
+            return base.Channel.ListPreparacPreparando();
         }
         
-        public System.Threading.Tasks.Task<ServiceReferenceWSPalomar.ArrayOfXElement> BuscarPreparacxFechasAsync(double Catalogo, string FechaDesde, string FechaHasta)
+        public ServiceReferenceWSPalomar.ArrayOfXElement BuscarPreparacxFechas(double Catalogo, string FechaDesde, string FechaHasta)
         {
-            return base.Channel.BuscarPreparacxFechasAsync(Catalogo, FechaDesde, FechaHasta);
+            return base.Channel.BuscarPreparacxFechas(Catalogo, FechaDesde, FechaHasta);
         }
         
-        public System.Threading.Tasks.Task<ServiceReferenceWSPalomar.ArrayOfXElement> BuscarPreparacxFechasClienteAsync(double Catalogo, double Cliente, string FechaDesde, string FechaHasta)
+        public ServiceReferenceWSPalomar.ArrayOfXElement BuscarPreparacxFechasCliente(double Catalogo, double Cliente, string FechaDesde, string FechaHasta)
         {
-            return base.Channel.BuscarPreparacxFechasClienteAsync(Catalogo, Cliente, FechaDesde, FechaHasta);
+            return base.Channel.BuscarPreparacxFechasCliente(Catalogo, Cliente, FechaDesde, FechaHasta);
         }
         
-        public System.Threading.Tasks.Task<int> InsertPreparacAsync(
+        public int InsertPreparac(
                     double _PPANUME, 
                     double _PPAESTA, 
                     double _PPACLIE, 
@@ -225,23 +225,30 @@ namespace ServiceReferenceWSPalomar
                     decimal _PPACATA, 
                     decimal _PPAESTADO)
         {
-            return base.Channel.InsertPreparacAsync(_PPANUME, _PPAESTA, _PPACLIE, _PPABARR, _PPACOD1, _PPACOD2, _PPACOD3, _PPACOD4, _PPADESC, _PPACANT, _PPAFECH, _PPATPRE, _PPAPREC, _PPACIVA, _PPARAZO, _PPASITI, _PPAQOT, _PPAPPA, _PPADESK, _PPAORIG, _PPACODI, _PPATARJ, _PPACUOT, _PPAVEND, _PPAFLIA, _PPAIMPO, _PPAPROV, _PPAAUTO, _PPAARFF, _PPAFIVA, _PPAOBSE, _PPAUSER, _PPACOMP, _PPABULT, _PPAKILO, _PPASEGU, _PPAREMF, _PPAREMN, _PPAPIEZ, _PPAMARC, _PPAPOR1, _PPAPOR2, _PPABASE, _PPACONT, _PPAFAPL, _PPAFORI, _PPAUNID, _PPADEPO, _PPADIRE, _PPACPAG, _PPAHORA, _PPACATA, _PPAESTADO);
+            return base.Channel.InsertPreparac(_PPANUME, _PPAESTA, _PPACLIE, _PPABARR, _PPACOD1, _PPACOD2, _PPACOD3, _PPACOD4, _PPADESC, _PPACANT, _PPAFECH, _PPATPRE, _PPAPREC, _PPACIVA, _PPARAZO, _PPASITI, _PPAQOT, _PPAPPA, _PPADESK, _PPAORIG, _PPACODI, _PPATARJ, _PPACUOT, _PPAVEND, _PPAFLIA, _PPAIMPO, _PPAPROV, _PPAAUTO, _PPAARFF, _PPAFIVA, _PPAOBSE, _PPAUSER, _PPACOMP, _PPABULT, _PPAKILO, _PPASEGU, _PPAREMF, _PPAREMN, _PPAPIEZ, _PPAMARC, _PPAPOR1, _PPAPOR2, _PPABASE, _PPACONT, _PPAFAPL, _PPAFORI, _PPAUNID, _PPADEPO, _PPADIRE, _PPACPAG, _PPAHORA, _PPACATA, _PPAESTADO);
         }
         
-        public System.Threading.Tasks.Task<int> UpdateEstadoPreparacAsync(double _PPACLIE, double _PPANUME, string _PPACODI, decimal _PPAESTADO)
+        public int UpdateEstadoPreparac(double _PPACLIE, double _PPANUME, string _PPACODI, decimal _PPAESTADO)
         {
-            return base.Channel.UpdateEstadoPreparacAsync(_PPACLIE, _PPANUME, _PPACODI, _PPAESTADO);
+            return base.Channel.UpdateEstadoPreparac(_PPACLIE, _PPANUME, _PPACODI, _PPAESTADO);
         }
         
-        public System.Threading.Tasks.Task<decimal> TraerNPedidoAsync()
+        public decimal TraerNPedido()
         {
-            return base.Channel.TraerNPedidoAsync();
+            return base.Channel.TraerNPedido();
         }
         
         public virtual System.Threading.Tasks.Task OpenAsync()
         {
             return System.Threading.Tasks.Task.Factory.FromAsync(((System.ServiceModel.ICommunicationObject)(this)).BeginOpen(null, null), new System.Action<System.IAsyncResult>(((System.ServiceModel.ICommunicationObject)(this)).EndOpen));
         }
+        
+        #if !NET6_0_OR_GREATER
+        public virtual System.Threading.Tasks.Task CloseAsync()
+        {
+            return System.Threading.Tasks.Task.Factory.FromAsync(((System.ServiceModel.ICommunicationObject)(this)).BeginClose(null, null), new System.Action<System.IAsyncResult>(((System.ServiceModel.ICommunicationObject)(this)).EndClose));
+        }
+        #endif
         
         private static System.ServiceModel.Channels.Binding GetBindingForEndpoint(EndpointConfiguration endpointConfiguration)
         {
@@ -293,7 +300,7 @@ namespace ServiceReferenceWSPalomar
     }
     
     [System.Xml.Serialization.XmlSchemaProviderAttribute(null, IsAny=true)]
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("dotnet-svcutil-lib", "2.2.0.0")]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("dotnet-svcutil-lib", "8.0.0.0")]
     public partial class ArrayOfXElement : object, System.Xml.Serialization.IXmlSerializable
     {
         

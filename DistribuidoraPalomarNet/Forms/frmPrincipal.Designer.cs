@@ -27,7 +27,6 @@ namespace DistribuidoraPalomarNet
         public System.Windows.Forms.Label lblusuario;
         public System.Windows.Forms.Label lblFechaAct;
         public System.Windows.Forms.ComboBox cmbRubros;
-        public System.Windows.Forms.Label lblTotalRegistros;
         public System.Windows.Forms.Label lblD3;
         public System.Windows.Forms.Button btnGenerarTxt;
         public System.Windows.Forms.Button btnVerCarrito;
@@ -37,7 +36,6 @@ namespace DistribuidoraPalomarNet
         public System.Windows.Forms.Label Label4;
         public System.Windows.Forms.Label lblDescripcion;
         public System.Windows.Forms.PictureBox PictureBox1;
-        public System.Windows.Forms.ProgressBar ProgressBar1;
 
         // Controles privados
         private System.Windows.Forms.Button btncerrar;
@@ -49,7 +47,6 @@ namespace DistribuidoraPalomarNet
         private System.Windows.Forms.Label lblD2;
         private System.Windows.Forms.Label lblD1;
         private System.Windows.Forms.Label lblPL;
-        private System.Windows.Forms.Label lblemail;
         private System.Windows.Forms.ToolTip ToolTip1;
         private System.Windows.Forms.Panel Panel1;
         private System.Windows.Forms.CheckBox CheckBox1;
@@ -95,7 +92,6 @@ namespace DistribuidoraPalomarNet
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmPrincipal));
             btncerrar = new Button();
             btnActualizar = new Button();
-            ProgressBar1 = new ProgressBar();
             GroupBox1 = new GroupBox();
             btnConfUsu = new Button();
             Label3 = new Label();
@@ -117,6 +113,7 @@ namespace DistribuidoraPalomarNet
             lblD3 = new Label();
             txtDescuento3 = new TextBox();
             Panel1 = new Panel();
+            lblTotalRegistros = new Label();
             cmbRubros = new ComboBox();
             txtModelo = new TextBox();
             label7 = new Label();
@@ -140,18 +137,17 @@ namespace DistribuidoraPalomarNet
             WwwsistemasvscomarToolStripMenuItem = new ToolStripMenuItem();
             AcercaDeToolStripMenuItem = new ToolStripMenuItem();
             ToolTip1 = new ToolTip(components);
+            btnGenerarTxt = new Button();
             Timer1 = new System.Windows.Forms.Timer(components);
             DataGridView1 = new DataGridView();
             txtEquivalencia = new TextBox();
             ckbOfertas = new CheckBox();
             btnVerCarrito = new Button();
-            btnGenerarTxt = new Button();
             btnEquivalencia = new Button();
             PictureBox1 = new PictureBox();
             lblSelecion = new Label();
             lblusuario = new Label();
             lblFechaAct = new Label();
-            lblTotalRegistros = new Label();
             Label4 = new Label();
             lblDescripcion = new Label();
             lblemail = new Label();
@@ -168,9 +164,12 @@ namespace DistribuidoraPalomarNet
             btnOfertas = new Button();
             TimerVerOfertas = new System.Windows.Forms.Timer(components);
             TimerVerOfertasEquivalencias = new System.Windows.Forms.Timer(components);
-            lblAlertaUpdate = new Label();
             PictureBox3 = new PictureBox();
             btnWhatsapp = new Button();
+            statusStrip1 = new StatusStrip();
+            toolStringBannerTxt = new ToolStripStatusLabel();
+            toolStripProgressBar1 = new ToolStripProgressBar();
+            lblAlertaUpdate = new ToolStripStatusLabel();
             GroupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)ptbImagen).BeginInit();
             Panel1.SuspendLayout();
@@ -181,12 +180,13 @@ namespace DistribuidoraPalomarNet
             ((System.ComponentModel.ISupportInitialize)DataGridView2).BeginInit();
             groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PictureBox3).BeginInit();
+            statusStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // btncerrar
             // 
             btncerrar.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btncerrar.Location = new Point(576, 645);
+            btncerrar.Location = new Point(576, 610);
             btncerrar.Margin = new Padding(4, 3, 4, 3);
             btncerrar.Name = "btncerrar";
             btncerrar.Size = new Size(52, 52);
@@ -207,15 +207,6 @@ namespace DistribuidoraPalomarNet
             btnActualizar.UseVisualStyleBackColor = false;
             btnActualizar.Click += BtnActualizar_Click;
             // 
-            // ProgressBar1
-            // 
-            ProgressBar1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            ProgressBar1.Location = new Point(12, 671);
-            ProgressBar1.Margin = new Padding(4, 3, 4, 3);
-            ProgressBar1.Name = "ProgressBar1";
-            ProgressBar1.Size = new Size(817, 23);
-            ProgressBar1.TabIndex = 7;
-            // 
             // GroupBox1
             // 
             GroupBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
@@ -235,7 +226,7 @@ namespace DistribuidoraPalomarNet
             GroupBox1.Controls.Add(lblB);
             GroupBox1.Controls.Add(lblPP);
             GroupBox1.Controls.Add(lblPL);
-            GroupBox1.Location = new Point(12, 598);
+            GroupBox1.Location = new Point(12, 600);
             GroupBox1.Margin = new Padding(4, 3, 4, 3);
             GroupBox1.Name = "GroupBox1";
             GroupBox1.Padding = new Padding(4, 3, 4, 3);
@@ -386,7 +377,7 @@ namespace DistribuidoraPalomarNet
             // txtStock
             // 
             txtStock.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            txtStock.Location = new Point(539, 587);
+            txtStock.Location = new Point(539, 559);
             txtStock.Name = "txtStock";
             txtStock.Size = new Size(65, 23);
             txtStock.TabIndex = 14;
@@ -396,13 +387,14 @@ namespace DistribuidoraPalomarNet
             // ptbImagen
             // 
             ptbImagen.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            ptbImagen.Location = new Point(939, 463);
+            ptbImagen.Location = new Point(939, 435);
             ptbImagen.Margin = new Padding(4, 3, 4, 3);
             ptbImagen.Name = "ptbImagen";
-            ptbImagen.Size = new Size(248, 231);
+            ptbImagen.Size = new Size(248, 229);
             ptbImagen.SizeMode = PictureBoxSizeMode.Zoom;
             ptbImagen.TabIndex = 0;
             ptbImagen.TabStop = false;
+            ptbImagen.Click += ptbImagen_Click;
             // 
             // lblD3
             // 
@@ -424,6 +416,7 @@ namespace DistribuidoraPalomarNet
             // Panel1
             // 
             Panel1.BackColor = Color.FromArgb(87, 151, 161);
+            Panel1.Controls.Add(lblTotalRegistros);
             Panel1.Controls.Add(cmbRubros);
             Panel1.Controls.Add(txtModelo);
             Panel1.Controls.Add(label7);
@@ -435,11 +428,20 @@ namespace DistribuidoraPalomarNet
             Panel1.Controls.Add(txtDescripcion);
             Panel1.Controls.Add(btnLimpiar);
             Panel1.Controls.Add(label6);
-            Panel1.Location = new Point(233, 81);
+            Panel1.Location = new Point(212, 75);
             Panel1.Margin = new Padding(4, 3, 4, 3);
             Panel1.Name = "Panel1";
-            Panel1.Size = new Size(879, 73);
+            Panel1.Size = new Size(869, 87);
             Panel1.TabIndex = 2;
+            // 
+            // lblTotalRegistros
+            // 
+            lblTotalRegistros.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            lblTotalRegistros.Location = new Point(4, 63);
+            lblTotalRegistros.Margin = new Padding(4, 0, 4, 0);
+            lblTotalRegistros.Name = "lblTotalRegistros";
+            lblTotalRegistros.Size = new Size(361, 27);
+            lblTotalRegistros.TabIndex = 12;
             // 
             // cmbRubros
             // 
@@ -529,7 +531,7 @@ namespace DistribuidoraPalomarNet
             // btnLimpiar
             // 
             btnLimpiar.Image = (Image)resources.GetObject("btnLimpiar.Image");
-            btnLimpiar.Location = new Point(817, 9);
+            btnLimpiar.Location = new Point(807, 9);
             btnLimpiar.Margin = new Padding(4, 3, 4, 3);
             btnLimpiar.Name = "btnLimpiar";
             btnLimpiar.Size = new Size(52, 52);
@@ -621,16 +623,30 @@ namespace DistribuidoraPalomarNet
             AcercaDeToolStripMenuItem.Size = new Size(71, 20);
             AcercaDeToolStripMenuItem.Text = "Acerca de";
             // 
+            // btnGenerarTxt
+            // 
+            btnGenerarTxt.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnGenerarTxt.Image = (Image)resources.GetObject("btnGenerarTxt.Image");
+            btnGenerarTxt.Location = new Point(1083, 81);
+            btnGenerarTxt.Name = "btnGenerarTxt";
+            btnGenerarTxt.Size = new Size(52, 52);
+            btnGenerarTxt.TabIndex = 16;
+            ToolTip1.SetToolTip(btnGenerarTxt, "Articulos a Excel");
+            btnGenerarTxt.UseVisualStyleBackColor = true;
+            btnGenerarTxt.Click += BtnGenerarTxt_Click;
+            // 
             // DataGridView1
             // 
             DataGridView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             DataGridView1.EditMode = DataGridViewEditMode.EditProgrammatically;
-            DataGridView1.Location = new Point(12, 159);
+            DataGridView1.Location = new Point(12, 168);
             DataGridView1.Margin = new Padding(4, 3, 4, 3);
+            DataGridView1.MultiSelect = false;
             DataGridView1.Name = "DataGridView1";
             DataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            DataGridView1.Size = new Size(1175, 300);
+            DataGridView1.Size = new Size(1175, 262);
             DataGridView1.TabIndex = 3;
+            DataGridView1.ColumnHeaderMouseClick += DataGridView1_ColumnHeaderMouseClick;
             DataGridView1.Click += DataGridView1_Click;
             DataGridView1.DoubleClick += DataGridView1_DoubleClick;
             // 
@@ -660,21 +676,10 @@ namespace DistribuidoraPalomarNet
             btnVerCarrito.TabIndex = 6;
             btnVerCarrito.UseVisualStyleBackColor = false;
             // 
-            // btnGenerarTxt
-            // 
-            btnGenerarTxt.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnGenerarTxt.Location = new Point(519, 645);
-            btnGenerarTxt.Name = "btnGenerarTxt";
-            btnGenerarTxt.Size = new Size(52, 52);
-            btnGenerarTxt.TabIndex = 16;
-            btnGenerarTxt.Text = "Generar TXT";
-            btnGenerarTxt.UseVisualStyleBackColor = true;
-            btnGenerarTxt.Visible = false;
-            // 
             // btnEquivalencia
             // 
             btnEquivalencia.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnEquivalencia.Location = new Point(461, 645);
+            btnEquivalencia.Location = new Point(541, 610);
             btnEquivalencia.Name = "btnEquivalencia";
             btnEquivalencia.Size = new Size(52, 52);
             btnEquivalencia.TabIndex = 17;
@@ -703,29 +708,22 @@ namespace DistribuidoraPalomarNet
             // lblusuario
             // 
             lblusuario.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            lblusuario.Location = new Point(12, 699);
+            lblusuario.Location = new Point(599, 537);
             lblusuario.Margin = new Padding(4, 0, 4, 0);
             lblusuario.Name = "lblusuario";
             lblusuario.Size = new Size(117, 27);
             lblusuario.TabIndex = 8;
+            lblusuario.Visible = false;
             // 
             // lblFechaAct
             // 
             lblFechaAct.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            lblFechaAct.Location = new Point(233, 699);
+            lblFechaAct.Location = new Point(599, 564);
             lblFechaAct.Margin = new Padding(4, 0, 4, 0);
             lblFechaAct.Name = "lblFechaAct";
             lblFechaAct.Size = new Size(117, 27);
             lblFechaAct.TabIndex = 9;
-            // 
-            // lblTotalRegistros
-            // 
-            lblTotalRegistros.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            lblTotalRegistros.Location = new Point(467, 699);
-            lblTotalRegistros.Margin = new Padding(4, 0, 4, 0);
-            lblTotalRegistros.Name = "lblTotalRegistros";
-            lblTotalRegistros.Size = new Size(117, 27);
-            lblTotalRegistros.TabIndex = 10;
+            lblFechaAct.Visible = false;
             // 
             // Label4
             // 
@@ -751,7 +749,7 @@ namespace DistribuidoraPalomarNet
             // imgBanner
             // 
             imgBanner.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            imgBanner.Location = new Point(211, 29);
+            imgBanner.Location = new Point(211, 24);
             imgBanner.Name = "imgBanner";
             imgBanner.Size = new Size(870, 50);
             imgBanner.TabIndex = 11;
@@ -762,11 +760,14 @@ namespace DistribuidoraPalomarNet
             DataGridView2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             DataGridView2.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             DataGridView2.EditMode = DataGridViewEditMode.EditProgrammatically;
-            DataGridView2.Location = new Point(12, 477);
+            DataGridView2.Location = new Point(12, 449);
             DataGridView2.Name = "DataGridView2";
             DataGridView2.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            DataGridView2.Size = new Size(519, 115);
+            DataGridView2.Size = new Size(519, 149);
             DataGridView2.TabIndex = 176;
+            DataGridView2.ColumnHeaderMouseClick += DataGridView2_ColumnHeaderMouseClick;
+            DataGridView2.Click += DataGridView2_Click;
+            DataGridView2.DoubleClick += DataGridView2_DoubleClick;
             // 
             // label8
             // 
@@ -774,7 +775,7 @@ namespace DistribuidoraPalomarNet
             label8.BackColor = Color.FromArgb(179, 179, 179);
             label8.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label8.ForeColor = Color.Black;
-            label8.Location = new Point(12, 462);
+            label8.Location = new Point(12, 434);
             label8.Margin = new Padding(4, 0, 4, 0);
             label8.Name = "label8";
             label8.Size = new Size(519, 23);
@@ -790,7 +791,7 @@ namespace DistribuidoraPalomarNet
             groupBox2.Controls.Add(label11);
             groupBox2.Controls.Add(lblObservaciones);
             groupBox2.Controls.Add(lblRubro);
-            groupBox2.Location = new Point(538, 462);
+            groupBox2.Location = new Point(538, 434);
             groupBox2.Name = "groupBox2";
             groupBox2.Size = new Size(394, 92);
             groupBox2.TabIndex = 178;
@@ -855,7 +856,7 @@ namespace DistribuidoraPalomarNet
             btnnovedades.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnnovedades.BackColor = Color.FromArgb(87, 151, 161);
             btnnovedades.ForeColor = Color.White;
-            btnnovedades.Location = new Point(533, 638);
+            btnnovedades.Location = new Point(533, 640);
             btnnovedades.Name = "btnnovedades";
             btnnovedades.Size = new Size(98, 24);
             btnnovedades.TabIndex = 179;
@@ -868,7 +869,7 @@ namespace DistribuidoraPalomarNet
             btnOfertas.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnOfertas.BackColor = Color.FromArgb(87, 151, 161);
             btnOfertas.ForeColor = Color.White;
-            btnOfertas.Location = new Point(533, 608);
+            btnOfertas.Location = new Point(533, 610);
             btnOfertas.Name = "btnOfertas";
             btnOfertas.Size = new Size(98, 24);
             btnOfertas.TabIndex = 180;
@@ -886,25 +887,14 @@ namespace DistribuidoraPalomarNet
             TimerVerOfertasEquivalencias.Interval = 10;
             TimerVerOfertasEquivalencias.Tick += TimerVerOfertasEquivalencias_Tick;
             // 
-            // lblAlertaUpdate
-            // 
-            lblAlertaUpdate.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            lblAlertaUpdate.AutoSize = true;
-            lblAlertaUpdate.Location = new Point(636, 654);
-            lblAlertaUpdate.Name = "lblAlertaUpdate";
-            lblAlertaUpdate.Size = new Size(264, 15);
-            lblAlertaUpdate.TabIndex = 182;
-            lblAlertaUpdate.Text = "\"Usted tiene una nueva actualización disponible\"";
-            lblAlertaUpdate.Visible = false;
-            // 
             // PictureBox3
             // 
             PictureBox3.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             PictureBox3.BackColor = Color.Transparent;
             PictureBox3.Image = (Image)resources.GetObject("PictureBox3.Image");
-            PictureBox3.Location = new Point(740, 558);
+            PictureBox3.Location = new Point(738, 530);
             PictureBox3.Name = "PictureBox3";
-            PictureBox3.Size = new Size(192, 136);
+            PictureBox3.Size = new Size(194, 134);
             PictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
             PictureBox3.TabIndex = 183;
             PictureBox3.TabStop = false;
@@ -921,14 +911,42 @@ namespace DistribuidoraPalomarNet
             btnWhatsapp.UseVisualStyleBackColor = false;
             btnWhatsapp.Click += btnWhatsapp_Click;
             // 
+            // statusStrip1
+            // 
+            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStringBannerTxt, toolStripProgressBar1, lblAlertaUpdate });
+            statusStrip1.Location = new Point(0, 677);
+            statusStrip1.Name = "statusStrip1";
+            statusStrip1.Size = new Size(1195, 24);
+            statusStrip1.TabIndex = 185;
+            statusStrip1.Text = "statusStrip1";
+            // 
+            // toolStringBannerTxt
+            // 
+            toolStringBannerTxt.Font = new Font("Century Gothic", 9F, FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point, 0);
+            toolStringBannerTxt.ForeColor = Color.Purple;
+            toolStringBannerTxt.Name = "toolStringBannerTxt";
+            toolStringBannerTxt.Size = new Size(0, 19);
+            // 
+            // toolStripProgressBar1
+            // 
+            toolStripProgressBar1.Name = "toolStripProgressBar1";
+            toolStripProgressBar1.Size = new Size(400, 18);
+            // 
+            // lblAlertaUpdate
+            // 
+            lblAlertaUpdate.Name = "lblAlertaUpdate";
+            lblAlertaUpdate.Size = new Size(264, 19);
+            lblAlertaUpdate.Text = "\"Usted tiene una nueva actualización disponible\"";
+            lblAlertaUpdate.Visible = false;
+            // 
             // frmPrincipal
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(232, 234, 233);
             ClientSize = new Size(1195, 701);
+            Controls.Add(statusStrip1);
             Controls.Add(btnWhatsapp);
-            Controls.Add(lblAlertaUpdate);
             Controls.Add(btnOfertas);
             Controls.Add(btnnovedades);
             Controls.Add(groupBox2);
@@ -941,10 +959,8 @@ namespace DistribuidoraPalomarNet
             Controls.Add(txtStock);
             Controls.Add(btncerrar);
             Controls.Add(btnVerCarrito);
-            Controls.Add(ProgressBar1);
             Controls.Add(lblusuario);
             Controls.Add(lblFechaAct);
-            Controls.Add(lblTotalRegistros);
             Controls.Add(btnActualizar);
             Controls.Add(btnGenerarTxt);
             Controls.Add(btnEquivalencia);
@@ -953,6 +969,7 @@ namespace DistribuidoraPalomarNet
             Controls.Add(PictureBox1);
             Controls.Add(PictureBox3);
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = MenuStrip1;
             Margin = new Padding(4, 3, 4, 3);
             Name = "frmPrincipal";
@@ -973,6 +990,8 @@ namespace DistribuidoraPalomarNet
             ((System.ComponentModel.ISupportInitialize)DataGridView2).EndInit();
             groupBox2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)PictureBox3).EndInit();
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -995,7 +1014,6 @@ namespace DistribuidoraPalomarNet
         public Button btnEquivalencia;
         public System.Windows.Forms.Timer TimerVerOfertasEquivalencias;
         public System.Windows.Forms.Timer Timer1;
-        public Label lblAlertaUpdate;
         private Label label10;
         private Label label11;
         public Label lblRubro;
@@ -1003,5 +1021,11 @@ namespace DistribuidoraPalomarNet
         public Label lblObservaciones;
         public PictureBox PictureBox3;
         public Button btnWhatsapp;
+        public Label lblemail;
+        public Label lblTotalRegistros;
+        public StatusStrip statusStrip1;
+        public ToolStripProgressBar toolStripProgressBar1;
+        public ToolStripStatusLabel toolStringBannerTxt;
+        public ToolStripStatusLabel lblAlertaUpdate;
     }
 }
