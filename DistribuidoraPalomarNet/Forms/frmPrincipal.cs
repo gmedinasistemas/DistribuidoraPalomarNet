@@ -145,11 +145,11 @@ namespace DistribuidoraPalomarNet
             try
             {
                 Module.Funcion_Novedades();
-                TimerVerOfertasEquivalencias.Enabled = true;
+                TimerVerOfertas.Enabled = true;
             }
             catch (Exception ex)
             {
-                TimerVerOfertasEquivalencias.Enabled = false;
+                TimerVerOfertas.Enabled = false;
                 MessageBox.Show($"Error dentro de la accion 'Novedades Click': {ex.Message}", "Alerta", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -476,7 +476,7 @@ namespace DistribuidoraPalomarNet
                 // Carga general de combos, grillas, imágenes (banners)
                 Module.LeerConfig();
                 bool ret = Module.DescargaArchivo("BannerPalomar.gif",
-                    "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Imagenes\\BannerPalomar.gif",
+                    Module.ini_ruta_gral + "\\DistribuidoraPalomarNet\\Imagenes\\BannerPalomar.gif",
                     Module.ini_usu_ftp, Module.ini_pass_ftp, Module.ini_ruta_ftp);
                 CargarBanner();
                 Module.Inicializacion();
@@ -1495,6 +1495,20 @@ namespace DistribuidoraPalomarNet
                 Module.GrabarError(" - " + DateTime.Now.ToLongDateString() + " => " +
                             DateTime.Now.ToString("hh:mm:ss") +
                             " 'Doble Click Grilla': " + ex.Message);
+            }
+        }
+
+        private void confPorFamiliaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var frmConfFamilia = new frmConfFamilia();
+                frmConfFamilia.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Abrir Conf. por Familia': {ex.Message}");
+                MessageBox.Show("Error al abrir configuración por familia: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

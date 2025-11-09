@@ -138,11 +138,12 @@ namespace DistribuidoraPalomarNet
             AcercaDeToolStripMenuItem = new ToolStripMenuItem();
             ToolTip1 = new ToolTip(components);
             btnGenerarTxt = new Button();
+            btnVerCarrito = new Button();
+            btnWhatsapp = new Button();
             Timer1 = new System.Windows.Forms.Timer(components);
             DataGridView1 = new DataGridView();
             txtEquivalencia = new TextBox();
             ckbOfertas = new CheckBox();
-            btnVerCarrito = new Button();
             btnEquivalencia = new Button();
             PictureBox1 = new PictureBox();
             lblSelecion = new Label();
@@ -165,11 +166,11 @@ namespace DistribuidoraPalomarNet
             TimerVerOfertas = new System.Windows.Forms.Timer(components);
             TimerVerOfertasEquivalencias = new System.Windows.Forms.Timer(components);
             PictureBox3 = new PictureBox();
-            btnWhatsapp = new Button();
             statusStrip1 = new StatusStrip();
             toolStringBannerTxt = new ToolStripStatusLabel();
             toolStripProgressBar1 = new ToolStripProgressBar();
             lblAlertaUpdate = new ToolStripStatusLabel();
+            confPorFamiliaToolStripMenuItem = new ToolStripMenuItem();
             GroupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)ptbImagen).BeginInit();
             Panel1.SuspendLayout();
@@ -198,19 +199,19 @@ namespace DistribuidoraPalomarNet
             // btnActualizar
             // 
             btnActualizar.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnActualizar.BackColor = Color.FromArgb(87, 151, 161);
             btnActualizar.Image = (Image)resources.GetObject("btnActualizar.Image");
             btnActualizar.Location = new Point(1083, 27);
             btnActualizar.Name = "btnActualizar";
             btnActualizar.Size = new Size(52, 52);
             btnActualizar.TabIndex = 15;
+            ToolTip1.SetToolTip(btnActualizar, "ACTUALIZAR BASE");
             btnActualizar.UseVisualStyleBackColor = false;
             btnActualizar.Click += BtnActualizar_Click;
             // 
             // GroupBox1
             // 
             GroupBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            GroupBox1.BackColor = Color.FromArgb(87, 151, 161);
+            GroupBox1.BackColor = Color.FromArgb(32, 59, 175);
             GroupBox1.Controls.Add(btnConfUsu);
             GroupBox1.Controls.Add(Label3);
             GroupBox1.Controls.Add(CheckBox1);
@@ -237,12 +238,13 @@ namespace DistribuidoraPalomarNet
             // btnConfUsu
             // 
             btnConfUsu.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnConfUsu.BackColor = Color.FromArgb(87, 151, 161);
+            btnConfUsu.BackColor = Color.FromArgb(32, 59, 175);
             btnConfUsu.Image = (Image)resources.GetObject("btnConfUsu.Image");
             btnConfUsu.Location = new Point(463, 10);
             btnConfUsu.Name = "btnConfUsu";
             btnConfUsu.Size = new Size(52, 52);
             btnConfUsu.TabIndex = 19;
+            ToolTip1.SetToolTip(btnConfUsu, "MIS DATOS");
             btnConfUsu.UseVisualStyleBackColor = false;
             btnConfUsu.Click += BtnConfUsu_Click;
             // 
@@ -415,7 +417,7 @@ namespace DistribuidoraPalomarNet
             // 
             // Panel1
             // 
-            Panel1.BackColor = Color.FromArgb(87, 151, 161);
+            Panel1.BackColor = Color.FromArgb(32, 59, 175);
             Panel1.Controls.Add(lblTotalRegistros);
             Panel1.Controls.Add(cmbRubros);
             Panel1.Controls.Add(txtModelo);
@@ -536,6 +538,7 @@ namespace DistribuidoraPalomarNet
             btnLimpiar.Name = "btnLimpiar";
             btnLimpiar.Size = new Size(52, 52);
             btnLimpiar.TabIndex = 6;
+            ToolTip1.SetToolTip(btnLimpiar, "LIMPIAR");
             btnLimpiar.UseVisualStyleBackColor = true;
             btnLimpiar.Click += BtnLimpiar_Click;
             // 
@@ -579,7 +582,7 @@ namespace DistribuidoraPalomarNet
             // 
             // ConfiguracionToolStripMenuItem
             // 
-            ConfiguracionToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { ClientesToolStripMenuItem, DescPorMarcaToolStripMenuItem });
+            ConfiguracionToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { ClientesToolStripMenuItem, DescPorMarcaToolStripMenuItem, confPorFamiliaToolStripMenuItem });
             ConfiguracionToolStripMenuItem.Name = "ConfiguracionToolStripMenuItem";
             ConfiguracionToolStripMenuItem.Size = new Size(95, 20);
             ConfiguracionToolStripMenuItem.Text = "Configuración";
@@ -587,15 +590,16 @@ namespace DistribuidoraPalomarNet
             // ClientesToolStripMenuItem
             // 
             ClientesToolStripMenuItem.Name = "ClientesToolStripMenuItem";
-            ClientesToolStripMenuItem.Size = new Size(159, 22);
+            ClientesToolStripMenuItem.Size = new Size(180, 22);
             ClientesToolStripMenuItem.Text = "Clientes";
             ClientesToolStripMenuItem.Click += ClientesToolStripMenuItem_Click;
             // 
             // DescPorMarcaToolStripMenuItem
             // 
             DescPorMarcaToolStripMenuItem.Name = "DescPorMarcaToolStripMenuItem";
-            DescPorMarcaToolStripMenuItem.Size = new Size(159, 22);
+            DescPorMarcaToolStripMenuItem.Size = new Size(180, 22);
             DescPorMarcaToolStripMenuItem.Text = "Desc. por Marca";
+            DescPorMarcaToolStripMenuItem.Visible = false;
             DescPorMarcaToolStripMenuItem.Click += DescPorMarcaToolStripMenuItem_Click;
             // 
             // VerToolStripMenuItem
@@ -631,9 +635,34 @@ namespace DistribuidoraPalomarNet
             btnGenerarTxt.Name = "btnGenerarTxt";
             btnGenerarTxt.Size = new Size(52, 52);
             btnGenerarTxt.TabIndex = 16;
-            ToolTip1.SetToolTip(btnGenerarTxt, "Articulos a Excel");
+            ToolTip1.SetToolTip(btnGenerarTxt, "EXPORTAR LISTA");
             btnGenerarTxt.UseVisualStyleBackColor = true;
             btnGenerarTxt.Click += BtnGenerarTxt_Click;
+            // 
+            // btnVerCarrito
+            // 
+            btnVerCarrito.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnVerCarrito.Image = (Image)resources.GetObject("btnVerCarrito.Image");
+            btnVerCarrito.Location = new Point(1135, 27);
+            btnVerCarrito.Margin = new Padding(4, 3, 4, 3);
+            btnVerCarrito.Name = "btnVerCarrito";
+            btnVerCarrito.Size = new Size(52, 52);
+            btnVerCarrito.TabIndex = 6;
+            ToolTip1.SetToolTip(btnVerCarrito, "VER CARRITO");
+            btnVerCarrito.UseVisualStyleBackColor = false;
+            // 
+            // btnWhatsapp
+            // 
+            btnWhatsapp.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnWhatsapp.Image = (Image)resources.GetObject("btnWhatsapp.Image");
+            btnWhatsapp.Location = new Point(1135, 81);
+            btnWhatsapp.Margin = new Padding(4, 3, 4, 3);
+            btnWhatsapp.Name = "btnWhatsapp";
+            btnWhatsapp.Size = new Size(52, 52);
+            btnWhatsapp.TabIndex = 184;
+            ToolTip1.SetToolTip(btnWhatsapp, "CONTACTENOS");
+            btnWhatsapp.UseVisualStyleBackColor = false;
+            btnWhatsapp.Click += btnWhatsapp_Click;
             // 
             // DataGridView1
             // 
@@ -663,18 +692,6 @@ namespace DistribuidoraPalomarNet
             ckbOfertas.Name = "ckbOfertas";
             ckbOfertas.Size = new Size(104, 24);
             ckbOfertas.TabIndex = 0;
-            // 
-            // btnVerCarrito
-            // 
-            btnVerCarrito.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnVerCarrito.BackColor = Color.FromArgb(87, 151, 161);
-            btnVerCarrito.Image = (Image)resources.GetObject("btnVerCarrito.Image");
-            btnVerCarrito.Location = new Point(1135, 27);
-            btnVerCarrito.Margin = new Padding(4, 3, 4, 3);
-            btnVerCarrito.Name = "btnVerCarrito";
-            btnVerCarrito.Size = new Size(52, 52);
-            btnVerCarrito.TabIndex = 6;
-            btnVerCarrito.UseVisualStyleBackColor = false;
             // 
             // btnEquivalencia
             // 
@@ -899,24 +916,12 @@ namespace DistribuidoraPalomarNet
             PictureBox3.TabIndex = 183;
             PictureBox3.TabStop = false;
             // 
-            // btnWhatsapp
-            // 
-            btnWhatsapp.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnWhatsapp.Image = (Image)resources.GetObject("btnWhatsapp.Image");
-            btnWhatsapp.Location = new Point(1135, 81);
-            btnWhatsapp.Margin = new Padding(4, 3, 4, 3);
-            btnWhatsapp.Name = "btnWhatsapp";
-            btnWhatsapp.Size = new Size(52, 52);
-            btnWhatsapp.TabIndex = 184;
-            btnWhatsapp.UseVisualStyleBackColor = false;
-            btnWhatsapp.Click += btnWhatsapp_Click;
-            // 
             // statusStrip1
             // 
             statusStrip1.Items.AddRange(new ToolStripItem[] { toolStringBannerTxt, toolStripProgressBar1, lblAlertaUpdate });
-            statusStrip1.Location = new Point(0, 677);
+            statusStrip1.Location = new Point(0, 676);
             statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(1195, 24);
+            statusStrip1.Size = new Size(1195, 25);
             statusStrip1.TabIndex = 185;
             statusStrip1.Text = "statusStrip1";
             // 
@@ -925,19 +930,28 @@ namespace DistribuidoraPalomarNet
             toolStringBannerTxt.Font = new Font("Century Gothic", 9F, FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point, 0);
             toolStringBannerTxt.ForeColor = Color.Purple;
             toolStringBannerTxt.Name = "toolStringBannerTxt";
-            toolStringBannerTxt.Size = new Size(0, 19);
+            toolStringBannerTxt.Size = new Size(0, 20);
             // 
             // toolStripProgressBar1
             // 
             toolStripProgressBar1.Name = "toolStripProgressBar1";
-            toolStripProgressBar1.Size = new Size(400, 18);
+            toolStripProgressBar1.Size = new Size(200, 19);
             // 
             // lblAlertaUpdate
             // 
+            lblAlertaUpdate.Font = new Font("Segoe UI", 11.25F, FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point, 0);
+            lblAlertaUpdate.ForeColor = Color.FromArgb(64, 0, 64);
             lblAlertaUpdate.Name = "lblAlertaUpdate";
-            lblAlertaUpdate.Size = new Size(264, 19);
+            lblAlertaUpdate.Size = new Size(361, 20);
             lblAlertaUpdate.Text = "\"Usted tiene una nueva actualización disponible\"";
             lblAlertaUpdate.Visible = false;
+            // 
+            // confPorFamiliaToolStripMenuItem
+            // 
+            confPorFamiliaToolStripMenuItem.Name = "confPorFamiliaToolStripMenuItem";
+            confPorFamiliaToolStripMenuItem.Size = new Size(180, 22);
+            confPorFamiliaToolStripMenuItem.Text = "Conf. por Familia";
+            confPorFamiliaToolStripMenuItem.Click += confPorFamiliaToolStripMenuItem_Click;
             // 
             // frmPrincipal
             // 
@@ -1027,5 +1041,6 @@ namespace DistribuidoraPalomarNet
         public ToolStripProgressBar toolStripProgressBar1;
         public ToolStripStatusLabel toolStringBannerTxt;
         public ToolStripStatusLabel lblAlertaUpdate;
+        private ToolStripMenuItem confPorFamiliaToolStripMenuItem;
     }
 }

@@ -94,6 +94,7 @@ C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\zh-Hant\System.ServiceModel.Primitives.resources.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.csproj.AssemblyReference.cache
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmCarroCompras.resources
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmConfFamilia.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmDatosUsuario.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmDescMarcas.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmImagen.resources

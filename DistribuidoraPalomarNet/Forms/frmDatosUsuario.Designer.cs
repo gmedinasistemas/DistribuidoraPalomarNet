@@ -88,6 +88,8 @@ namespace DistribuidoraPalomarNet
             txtBene.Name = "txtBene";
             txtBene.Size = new Size(116, 23);
             txtBene.TabIndex = 76;
+            txtBene.Text = "0";
+            txtBene.Visible = false;
             // 
             // btnGrabar
             // 
@@ -141,6 +143,7 @@ namespace DistribuidoraPalomarNet
             // lblCodCliente
             // 
             lblCodCliente.AutoSize = true;
+            lblCodCliente.ForeColor = Color.White;
             lblCodCliente.Location = new Point(12, 67);
             lblCodCliente.Margin = new Padding(4, 0, 4, 0);
             lblCodCliente.Name = "lblCodCliente";
@@ -151,6 +154,7 @@ namespace DistribuidoraPalomarNet
             // lblCuitCliente
             // 
             lblCuitCliente.AutoSize = true;
+            lblCuitCliente.ForeColor = Color.White;
             lblCuitCliente.Location = new Point(12, 115);
             lblCuitCliente.Margin = new Padding(4, 0, 4, 0);
             lblCuitCliente.Name = "lblCuitCliente";
@@ -161,6 +165,7 @@ namespace DistribuidoraPalomarNet
             // lblEmail
             // 
             lblEmail.AutoSize = true;
+            lblEmail.ForeColor = Color.White;
             lblEmail.Location = new Point(12, 145);
             lblEmail.Margin = new Padding(4, 0, 4, 0);
             lblEmail.Name = "lblEmail";
@@ -171,6 +176,7 @@ namespace DistribuidoraPalomarNet
             // lblDesc1
             // 
             lblDesc1.AutoSize = true;
+            lblDesc1.ForeColor = Color.White;
             lblDesc1.Location = new Point(12, 189);
             lblDesc1.Margin = new Padding(4, 0, 4, 0);
             lblDesc1.Name = "lblDesc1";
@@ -181,6 +187,7 @@ namespace DistribuidoraPalomarNet
             // lblDesc2
             // 
             lblDesc2.AutoSize = true;
+            lblDesc2.ForeColor = Color.White;
             lblDesc2.Location = new Point(12, 219);
             lblDesc2.Margin = new Padding(4, 0, 4, 0);
             lblDesc2.Name = "lblDesc2";
@@ -191,12 +198,14 @@ namespace DistribuidoraPalomarNet
             // lblBene
             // 
             lblBene.AutoSize = true;
-            lblBene.Location = new Point(93, 248);
+            lblBene.ForeColor = Color.White;
+            lblBene.Location = new Point(12, 248);
             lblBene.Margin = new Padding(4, 0, 4, 0);
             lblBene.Name = "lblBene";
             lblBene.Size = new Size(59, 15);
             lblBene.TabIndex = 87;
             lblBene.Text = "Beneficio:";
+            lblBene.Visible = false;
             // 
             // lblUsuario
             // 
@@ -209,6 +218,7 @@ namespace DistribuidoraPalomarNet
             // label1
             // 
             label1.AutoSize = true;
+            label1.ForeColor = Color.White;
             label1.Location = new Point(166, 93);
             label1.Name = "label1";
             label1.Size = new Size(147, 15);
@@ -219,6 +229,7 @@ namespace DistribuidoraPalomarNet
             // 
             label2.AutoSize = true;
             label2.Font = new Font("Georgia", 9.75F, FontStyle.Bold);
+            label2.ForeColor = Color.White;
             label2.Location = new Point(12, 17);
             label2.Name = "label2";
             label2.Size = new Size(220, 16);
@@ -230,7 +241,7 @@ namespace DistribuidoraPalomarNet
             AcceptButton = btnGrabar;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            BackColor = Color.FromArgb(0, 82, 94);
+            BackColor = Color.FromArgb(32, 59, 175);
             CancelButton = btnSalir;
             ClientSize = new Size(474, 301);
             Controls.Add(label2);

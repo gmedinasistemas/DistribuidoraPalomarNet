@@ -159,6 +159,7 @@ namespace DistribuidoraPalomarNet
         public static string ini_ruta_base;
         public static string ini_ruta_base_descarga;
         public static string ini_ruta_banner;
+        public static string ini_ruta_gral;
 
 
         //'para el semaforo de Stock.
@@ -180,6 +181,9 @@ namespace DistribuidoraPalomarNet
         public static int US_CLCIVA = 0;
         public static int US_CLVEND = 0;
         public static int US_CLCPAG = 0;
+
+        // Variables globales de artículo
+        private static int _ARTI_ARFLIA;
 
         public static int accionDatosUsu;
 
@@ -590,7 +594,7 @@ namespace DistribuidoraPalomarNet
                 Application.DoEvents();
                 LeerConfig();
                 Cargar_Usuario();
-                ActualizarFAMIVA();
+                //ActualizarFAMIVA();
                 funcion_inicial(0);
                 aplicar_desc_Cliente(); // Cargo Descuentos 1 y 2
                 _frmPrincipal.lblFechaAct.Text = $"Actualizado al {FechaActualizacion()}";
@@ -781,7 +785,7 @@ namespace DistribuidoraPalomarNet
                 // aplicar_desc_Benef_prov(DataGridView1[2, NumFila].Value); // Cargo Descuente 3 y Beneficio Cliente y el iva
                 
                 Calculadora();
-                aplicar_descuento3();
+                //aplicar_descuento3();
                 aplicar_beneficio();
             }
             catch (Exception ex)
@@ -810,7 +814,7 @@ namespace DistribuidoraPalomarNet
                 }
                 _frmPrincipal.DataGridView1.Columns["arobse"].Visible = false;
 
-                string sqlString = $"select arubic1, arobse, arff from listas where arterc='{pieza}' and ardesc='{desc}' and arobse='{mode}'";
+                string sqlString = $"select arubic1, arobse, arff, arflia from listas where arterc='{pieza}' and ardesc='{desc}' and arobse='{mode}'";
 
                 ConectarDBArti();
                 cm.Connection = cnn;
@@ -824,6 +828,7 @@ namespace DistribuidoraPalomarNet
                 {
                     _frmPrincipal.lblSelecion.Text = $"{dr["arubic1"]} | {dr["arobse"]}";
                     _frmPrincipal.txtStock.Text = dr["arff"].ToString();
+                    _ARTI_ARFLIA = Convert.ToInt32(dr["arflia"]);
                 }
 
                 if (cnn.State == ConnectionState.Open)
@@ -906,30 +911,61 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
-                if (precio_final_desc3 != 0)
+                // Base para sugerido: si hay desc3 aplicado, usar precio_final_desc3; si no, precio_final
+                decimal baseSugerido = precio_final_desc3 != 0 && _frmPrincipal.txtDescuento3.Text != "0"
+                    ? precio_final_desc3
+                    : precio_final;
+
+                // Buscar FADESC por _ARTI_ARFLIA en base de artículos
+                string fad = string.Empty;
+                using (var cmArti = new OleDbCommand("SELECT TOP 1 FADESC FROM familias WHERE FACODI = ?", cnn))
                 {
-                    if (!string.IsNullOrEmpty(_frmPrincipal.txtBeneficio.Text) && _frmPrincipal.txtBeneficio.Text != "0")
+                    try
                     {
-                        if (_frmPrincipal.txtDescuento3.Text != "0")
-                        {
-                            _frmPrincipal.txtSugerido.Text = string.Format("{0:F2}", 
-                                precio_final_desc3 + (precio_final_desc3 * Convert.ToDecimal(_frmPrincipal.txtBeneficio.Text) / 100));
-                        }
-                        else // sin descuento 3
-                        {
-                            _frmPrincipal.txtSugerido.Text = string.Format("{0:F2}", 
-                                precio_final + (precio_final * Convert.ToDecimal(_frmPrincipal.txtBeneficio.Text) / 100));
-                        }
+                        ConectarDBArti();
+                        cmArti.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
+                        var objF = cmArti.ExecuteScalar();
+                        if (objF != null && objF != DBNull.Value)
+                            fad = objF.ToString();
                     }
-                    else
+                    finally
                     {
-                        _frmPrincipal.txtSugerido.Text = string.Empty;
+                        if (cnn.State == ConnectionState.Open)
+                            cnn.Close();
                     }
                 }
-                else if (!string.IsNullOrEmpty(_frmPrincipal.txtBeneficio.Text) && _frmPrincipal.txtBeneficio.Text != "0")
+
+                // Buscar FABEN1 por FADESC en base de usuario
+                decimal? faben1 = null;
+                if (!string.IsNullOrEmpty(fad))
                 {
-                    _frmPrincipal.txtSugerido.Text = string.Format("{0:F2}", 
-                        precio_final + (precio_final * Convert.ToDecimal(_frmPrincipal.txtBeneficio.Text) / 100));
+                    using (var cmUsu = new OleDbCommand("SELECT TOP 1 FABEN1 FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                    {
+                        try
+                        {
+                            ConectarDBUsuario();
+                            cmUsu.Parameters.AddWithValue("@p1", fad);
+                            var objB = cmUsu.ExecuteScalar();
+                            if (objB != null && objB != DBNull.Value && decimal.TryParse(objB.ToString(), out var benTmp))
+                                faben1 = benTmp;
+                        }
+                        finally
+                        {
+                            if (cnnU.State == ConnectionState.Open)
+                                cnnU.Close();
+                        }
+                    }
+                }
+
+                if (faben1.HasValue && faben1.Value != 0)
+                {
+                    _frmPrincipal.txtBeneficio.Text = string.Format("{0:F2}", faben1.Value);
+                    _frmPrincipal.txtSugerido.Text = string.Format("{0:F2}", baseSugerido + (baseSugerido * faben1.Value / 100));
+                }
+                else
+                {
+                    _frmPrincipal.txtBeneficio.Text = "0";
+                    _frmPrincipal.txtSugerido.Text = string.Format("{0:F2}", baseSugerido);
                 }
             }
             catch (Exception ex)
@@ -989,17 +1025,102 @@ namespace DistribuidoraPalomarNet
                             // descuentos 1 y 2
                             precio_desc1 = precio_lista - (precio_lista * Descuento1 / 100);
                             precio_desc2 = precio_desc1 - (precio_desc1 * Descuento2 / 100);
-                            // precio al publico con desc y iva
-                            // precio_final = Format((precio_lista - precio_desc1 - precio_desc2) * frmPrincipal.txtIva.Text, "fixed");
+                            // neto sin IVA
                             precio_costo_sin_iva = precio_desc2;
-                            precio_final = Convert.ToDecimal(precio_desc2);
+
+                            // aplicar IVA por familia si existe
+                            decimal precioConIva = precio_desc2;
+                            string fad = string.Empty;
+                            using (var cmArti = new OleDbCommand("SELECT TOP 1 FADESC FROM familias WHERE FACODI = ?", cnn))
+                            {
+                                try
+                                {
+                                    ConectarDBArti();
+                                    cmArti.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
+                                    var objF = cmArti.ExecuteScalar();
+                                    if (objF != null && objF != DBNull.Value)
+                                        fad = objF.ToString();
+                                }
+                                finally
+                                {
+                                    if (cnn.State == ConnectionState.Open)
+                                        cnn.Close();
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(fad))
+                            {
+                                using (var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                                {
+                                    try
+                                    {
+                                        ConectarDBUsuario();
+                                        cmUsu.Parameters.AddWithValue("@p1", fad);
+                                        var objI = cmUsu.ExecuteScalar();
+                                        if (objI != null && objI != DBNull.Value && decimal.TryParse(objI.ToString(), out var ivaTmp) && ivaTmp != 0)
+                                        {
+                                            precioConIva = precio_desc2 + (precio_desc2 * ivaTmp / 100);
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        if (cnnU.State == ConnectionState.Open)
+                                            cnnU.Close();
+                                    }
+                                }
+                            }
+
+                            precio_final = Convert.ToDecimal(precioConIva);
                             _frmPrincipal.txtPreciopublico.Text = string.Format("{0:F2}", precio_final);
                         }
                         if (!decimal.TryParse(Descuento1.ToString(), out _) || Descuento1 == 0)
                         {
                             _frmPrincipal.txtPreciolista.Text = string.Format("{0:F2}", precio_lista);
                             precio_costo_sin_iva = Convert.ToDecimal(_frmPrincipal.txtPreciolista.Text);
-                            precio_final = precio_lista;
+
+                            // aplicar IVA por familia también cuando no hay descuentos
+                            decimal precioConIva = precio_lista;
+                            string fad = string.Empty;
+                            using (var cmArti = new OleDbCommand("SELECT TOP 1 FADESC FROM familias WHERE FACODI = ?", cnn))
+                            {
+                                try
+                                {
+                                    ConectarDBArti();
+                                    cmArti.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
+                                    var objF = cmArti.ExecuteScalar();
+                                    if (objF != null && objF != DBNull.Value)
+                                        fad = objF.ToString();
+                                }
+                                finally
+                                {
+                                    if (cnn.State == ConnectionState.Open)
+                                        cnn.Close();
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(fad))
+                            {
+                                using (var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                                {
+                                    try
+                                    {
+                                        ConectarDBUsuario();
+                                        cmUsu.Parameters.AddWithValue("@p1", fad);
+                                        var objI = cmUsu.ExecuteScalar();
+                                        if (objI != null && objI != DBNull.Value && decimal.TryParse(objI.ToString(), out var ivaTmp) && ivaTmp != 0)
+                                        {
+                                            precioConIva = precio_lista + (precio_lista * ivaTmp / 100);
+                                        }
+                                    }
+                                    finally
+                                    {
+                                        if (cnnU.State == ConnectionState.Open)
+                                            cnnU.Close();
+                                    }
+                                }
+                            }
+
+                            precio_final = precioConIva;
                             _frmPrincipal.txtPreciopublico.Text = string.Format("{0:F2}", precio_final);
                         }
                     }
@@ -1864,6 +1985,13 @@ namespace DistribuidoraPalomarNet
                             ini_ruta_banner = Convert.ToString(cadena.Substring(11, largoCadena - 11));
                             LeerRutaBanner(ini_ruta_banner);
                         }
+                        // RutaGral
+                        cadena = leer.ReadLine();
+                        if (cadena.Substring(0, 8) == "RutaGral")
+                        {
+                            largoCadena = cadena.Length;
+                            ini_ruta_gral = cadena.Substring(9, largoCadena - 9);
+                        }
                     }
                 }
                 else
@@ -1953,21 +2081,6 @@ namespace DistribuidoraPalomarNet
             catch (Exception)
             {
                 return dte.ToString();
-            }
-        }
-
-        public static void Update_Precios_Ofertas()
-        {
-            string Desc_Calc_PList = "0";
-            try
-            {
-                Application.DoEvents();
-                Update_PrecioCosto_Ofertas();
-                Update_PrecioSug_Ofertas();
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($", dentro de 'Update_Precios_Ofertas': {(ex.InnerException?.ToString() ?? "")} - {ex.Message}");
             }
         }
 
@@ -2135,13 +2248,14 @@ namespace DistribuidoraPalomarNet
             string FechaFTP;
             try
             {
-                FechaFTP = FechaArchivoFTP(ini_arch_ftp, "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Descargas\\" + ini_arch_ftp, ini_usu_ftp, ini_pass_ftp, ini_ruta_ftp);
+                FechaFTP = FechaArchivoFTP(ini_arch_ftp, ini_ruta_gral + "\\DistribuidoraPalomarNet\\Descargas\\" + ini_arch_ftp, ini_usu_ftp, ini_pass_ftp, ini_ruta_ftp);
                 if (Convert.ToDateTime(FechaFTP) != Convert.ToDateTime("01/01/1900"))
                 {
                     //MessageBox.Show("Fecha Base en FTP: " + FechaFTP.ToString())
                     if (Convert.ToDateTime(fecha) < Convert.ToDateTime(FechaFTP))
                     {
                         _frmPrincipal.lblAlertaUpdate.Visible = true;
+                        //_frmPrincipal.lblAlertaUpdate.Text = "Hay una Actualizacion disponible, por favor actualice la base de datos";
                     }
                     else
                     {
@@ -2190,7 +2304,13 @@ namespace DistribuidoraPalomarNet
                     //          "Enviaste el pedido de cotizacion correctamente. <br>" +
                     //          "Un ejecutivo de ventas te va a contactar a la brevedad.<br>" +
                     //          "</p>";
-                    asunto = "Pedido Generado desktop. Cliente " + US_CODI;
+                    
+                    //asunto = "Pedido Generado desktop. Cliente " + US_CODI;
+
+                    asunto = !string.IsNullOrWhiteSpace(_frmCarroCompras.txtNotaPedido.Text)
+                    ? "Pedido Catalogo. VER NOTA - Cliente " + US_CLRAZO
+                    : "Pedido Catalogo. Cliente " + US_CLRAZO;
+
                     receptor = ini_receptor_email;
 
                     if (!string.IsNullOrEmpty(US_EMAIL))//_frmPrincipal.lblemail.Text))
@@ -2403,7 +2523,20 @@ namespace DistribuidoraPalomarNet
                 throw new Exception($"Error en Update_Precios: {ex.InnerException} - {ex.Message}");
             }
         }
-
+        public static void Update_Precios_Ofertas()
+        {
+            string Desc_Calc_PList = "0";
+            try
+            {
+                Application.DoEvents();
+                Update_PrecioCosto_Ofertas();
+                Update_PrecioSug_Ofertas();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($", dentro de 'Update_Precios_Ofertas': {(ex.InnerException?.ToString() ?? "")} - {ex.Message}");
+            }
+        }
 
         public static void Pintar_Ofertas()
         {
@@ -2796,13 +2929,13 @@ namespace DistribuidoraPalomarNet
                 {
                         _frmPrincipal.txtDescuento1.Text = recCliente["US_DESCUENTO1"].ToString();
                         _frmPrincipal.txtDescuento2.Text = recCliente["US_DESCUENTO2"].ToString();
-                        _frmPrincipal.txtBeneficio.Text = recCliente["US_BENEFICIO"].ToString();
+                        //_frmPrincipal.txtBeneficio.Text = recCliente["US_BENEFICIO"].ToString();
                 }
                 else
                 {
                         _frmPrincipal.txtDescuento1.Text = "";
                         _frmPrincipal.txtDescuento2.Text = "";
-                        _frmPrincipal.txtBeneficio.Text = "";
+                        //_frmPrincipal.txtBeneficio.Text = "";
                 }
             }
             catch (Exception ex)
@@ -3217,6 +3350,77 @@ namespace DistribuidoraPalomarNet
                         cmaccessUpdate.ExecuteNonQuery();
                     }
 
+                    //using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FADESC FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
+                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FADESC FROM [familias] F ", cnn))
+                    using (var drFam = cmdFam.ExecuteReader())
+                    {
+                        while (drFam.Read())
+                        {
+                            string fad = drFam[0]?.ToString() ?? string.Empty;
+                            if (string.IsNullOrEmpty(fad))
+                                continue;
+
+                            // Releemos descuentos para decidir dónde aplicar IVA
+                            decimal d1 = 0, d2 = 0;
+                            decimal.TryParse(_frmPrincipal.txtDescuento1.Text, out d1);
+                            decimal.TryParse(_frmPrincipal.txtDescuento2.Text, out d2);
+
+                            decimal? faiva = null;
+                            using (var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                            {
+                                ConectarDBUsuario();
+                                cmUsu.Parameters.AddWithValue("@p1", fad);
+                                var obj = cmUsu.ExecuteScalar();
+                                if (obj != null && obj != DBNull.Value)
+                                {
+                                    if (decimal.TryParse(obj.ToString(), out var ivaTmp))
+                                        faiva = ivaTmp;
+                                }
+                                if (cnnU.State == ConnectionState.Open)
+                                    cnnU.Close();
+                            }
+
+                            if (faiva.HasValue)
+                            {
+                                string iva = faiva.Value.ToString().Replace(",", ".");
+                                // Si hay desc2, el final está en arpre1 -> IVA sobre arpre1
+                                if (d2 != 0)
+                                {
+                                    cmaccessUpdate.Parameters.Clear();
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 + (L.arpre1*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.ExecuteNonQuery();
+                                }
+                                else if (d1 != 0)
+                                {
+                                    // Solo desc1: IVA sobre arpre0 y luego reflejar en arpre1
+                                    cmaccessUpdate.Parameters.Clear();
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre0 = FORMAT(L.arpre0 + (L.arpre0*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.ExecuteNonQuery();
+
+                                    cmaccessUpdate.Parameters.Clear();
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = L.arpre0 WHERE F.FADESC = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.ExecuteNonQuery();
+                                }
+                                else
+                                {
+                                    // Sin descuentos: IVA directo sobre arpre1
+                                    cmaccessUpdate.Parameters.Clear();
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 + (L.arpre1*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.ExecuteNonQuery();
+                                }
+                            }
+                            else
+                            {
+                                //si no encuentra la familia o el iva esta en 0?
+                                //MessageBox.Show(faiva.HasValue.ToString());
+                            }
+                        }
+                    }
+
                     if (cnn.State == ConnectionState.Open)
                         cnn.Close();
                 }
@@ -3264,6 +3468,70 @@ namespace DistribuidoraPalomarNet
                         cmaccessUpdate.ExecuteNonQuery();
                     }
 
+                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FADESC FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
+                    using (var drFam = cmdFam.ExecuteReader())
+                    {
+                        while (drFam.Read())
+                        {
+                            string fad = drFam[0]?.ToString() ?? string.Empty;
+                            if (string.IsNullOrEmpty(fad))
+                                continue;
+
+                            decimal d1 = 0, d2 = 0;
+                            decimal.TryParse(_frmPrincipal.txtDescuento1.Text, out d1);
+                            decimal.TryParse(_frmPrincipal.txtDescuento2.Text, out d2);
+
+                            decimal? faiva = null;
+                            using (var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                            {
+                                ConectarDBUsuario();
+                                cmUsu.Parameters.AddWithValue("@p1", fad);
+                                var obj = cmUsu.ExecuteScalar();
+                                if (obj != null && obj != DBNull.Value)
+                                {
+                                    if (decimal.TryParse(obj.ToString(), out var ivaTmp))
+                                        faiva = ivaTmp;
+                                }
+                                if (cnnU.State == ConnectionState.Open)
+                                    cnnU.Close();
+                            }
+
+                            if (faiva.HasValue)
+                            {
+                                string iva = faiva.Value.ToString().Replace(",", ".");
+                                if (d2 != 0)
+                                {
+                                    // Con desc2: final en arpre4
+                                    cmaccessUpdate.Parameters.Clear();
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 + (L.arpre4*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.ExecuteNonQuery();
+                                }
+                                else if (d1 != 0)
+                                {
+                                    // Solo desc1: IVA sobre arpre3 y luego reflejar en arpre4
+                                    cmaccessUpdate.Parameters.Clear();
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre3 = FORMAT(L.arpre3 + (L.arpre3*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.ExecuteNonQuery();
+
+                                    cmaccessUpdate.Parameters.Clear();
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = L.arpre3 WHERE F.FADESC = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.ExecuteNonQuery();
+                                }
+                                else
+                                {
+                                    // Sin descuentos: IVA directo sobre arpre4
+                                    cmaccessUpdate.Parameters.Clear();
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 + (L.arpre4*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.ExecuteNonQuery();
+                                }
+                            }
+                        }
+                    }
+
                     if (cnn.State == ConnectionState.Open)
                         cnn.Close();
                 }
@@ -3284,24 +3552,51 @@ namespace DistribuidoraPalomarNet
             {
                 try
                 {
-                    if (!string.IsNullOrEmpty(_frmPrincipal.txtBeneficio.Text))
+                    ConectarDBArti();
+                    cmaccess.Connection = cnn;
+                    cmaccess.CommandType = CommandType.Text;
+
+                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FADESC FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
+                    using (var drFam = cmdFam.ExecuteReader())
                     {
-                        ConectarDBArti();
-                        cmaccess.Connection = cnn;
-                        cmaccess.CommandType = CommandType.Text;
-
-                        if (!string.IsNullOrEmpty(_frmPrincipal.txtBeneficio.Text) && _frmPrincipal.txtBeneficio.Text != "0")
+                        while (drFam.Read())
                         {
-                            cmaccess.CommandText = "update listas set arpre2=format(arpre1+(arpre1*" +
-                                                 _frmPrincipal.txtBeneficio.Text.Replace(",", ".") + "/100),'Fixed')";
-                        }
-                        else
-                        {
-                            cmaccess.CommandText = "update listas set arpre2=format(arpre1,'Fixed')";
-                        }
+                            string fad = drFam[0]?.ToString() ?? string.Empty;
+                            if (string.IsNullOrEmpty(fad))
+                                continue;
 
-                        Application.DoEvents();
-                        cmaccess.ExecuteNonQuery();
+                            decimal? faben1 = null;
+                            using (var cmUsu = new OleDbCommand("SELECT TOP 1 FABEN1 FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                            {
+                                ConectarDBUsuario();
+                                cmUsu.Parameters.AddWithValue("@p1", fad);
+                                var obj = cmUsu.ExecuteScalar();
+                                if (obj != null && obj != DBNull.Value)
+                                {
+                                    if (decimal.TryParse(obj.ToString(), out var benTmp))
+                                        faben1 = benTmp;
+                                }
+                                if (cnnU.State == ConnectionState.Open)
+                                    cnnU.Close();
+                            }
+
+                            if (faben1.HasValue && faben1.Value != 0)
+                            {
+                                string ben = faben1.Value.ToString().Replace(",", ".");
+                                cmaccess.Parameters.Clear();
+                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre2 = FORMAT(L.arpre1 + (L.arpre1*" + ben + "/100),'Fixed') WHERE F.FADESC = ?";
+                                cmaccess.Parameters.AddWithValue("@p1", fad);
+                                cmaccess.ExecuteNonQuery();
+                            }
+                            else
+                            {
+                                cmaccess.Parameters.Clear();
+                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre2 = FORMAT(L.arpre1,'Fixed') WHERE F.FADESC = ?";
+                                cmaccess.Parameters.AddWithValue("@p1", fad);
+                                try { GrabarError($"Familia sin FABEN1 (o 0) al sugerir precio: '{fad}'"); } catch {}
+                                cmaccess.ExecuteNonQuery();
+                            }
+                        }
                     }
 
                     if (cnn.State == ConnectionState.Open)
@@ -3311,6 +3606,8 @@ namespace DistribuidoraPalomarNet
                 {
                     if (cnn.State == ConnectionState.Open)
                         cnn.Close();
+                    GrabarError($", dentro de 'Update_PrecioSug': " +
+                  (ex.InnerException?.ToString() ?? "") + " - " + ex.Message);
 
                     throw new Exception(", dentro de 'Update_PrecioSug': " +
                                       (ex.InnerException?.ToString() ?? "") + " - " + ex.Message);
@@ -3324,24 +3621,51 @@ namespace DistribuidoraPalomarNet
             {
                 try
                 {
-                    if (!string.IsNullOrEmpty(_frmPrincipal.txtBeneficio.Text))
+                    ConectarDBArti();
+                    cmaccess.Connection = cnn;
+                    cmaccess.CommandType = CommandType.Text;
+
+                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FADESC FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
+                    using (var drFam = cmdFam.ExecuteReader())
                     {
-                        ConectarDBArti();
-                        cmaccess.Connection = cnn;
-                        cmaccess.CommandType = CommandType.Text;
-
-                        if (!string.IsNullOrEmpty(_frmPrincipal.txtBeneficio.Text) && _frmPrincipal.txtBeneficio.Text != "0")
+                        while (drFam.Read())
                         {
-                            cmaccess.CommandText = "update listas set arpre5=format(arpre4+(arpre4*" +
-                                                 _frmPrincipal.txtBeneficio.Text.Replace(",", ".") + "/100),'Fixed')";
-                        }
-                        else
-                        {
-                            cmaccess.CommandText = "update listas set arpre5=format(arpre4,'Fixed')";
-                        }
+                            string fad = drFam[0]?.ToString() ?? string.Empty;
+                            if (string.IsNullOrEmpty(fad))
+                                continue;
 
-                        Application.DoEvents();
-                        cmaccess.ExecuteNonQuery();
+                            decimal? faben1 = null;
+                            using (var cmUsu = new OleDbCommand("SELECT TOP 1 FABEN1 FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                            {
+                                ConectarDBUsuario();
+                                cmUsu.Parameters.AddWithValue("@p1", fad);
+                                var obj = cmUsu.ExecuteScalar();
+                                if (obj != null && obj != DBNull.Value)
+                                {
+                                    if (decimal.TryParse(obj.ToString(), out var benTmp))
+                                        faben1 = benTmp;
+                                }
+                                if (cnnU.State == ConnectionState.Open)
+                                    cnnU.Close();
+                            }
+
+                            if (faben1.HasValue && faben1.Value != 0)
+                            {
+                                string ben = faben1.Value.ToString().Replace(",", ".");
+                                cmaccess.Parameters.Clear();
+                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre5 = FORMAT(L.arpre4 + (L.arpre4*" + ben + "/100),'Fixed') WHERE F.FADESC = ?";
+                                cmaccess.Parameters.AddWithValue("@p1", fad);
+                                cmaccess.ExecuteNonQuery();
+                            }
+                            else
+                            {
+                                cmaccess.Parameters.Clear();
+                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre5 = FORMAT(L.arpre4,'Fixed') WHERE F.FADESC = ?";
+                                cmaccess.Parameters.AddWithValue("@p1", fad);
+                                try { GrabarError($"Familia sin FABEN1 (o 0) al sugerir precio ofertas: '{fad}'"); } catch {}
+                                cmaccess.ExecuteNonQuery();
+                            }
+                        }
                     }
 
                     if (cnn.State == ConnectionState.Open)
@@ -3351,7 +3675,8 @@ namespace DistribuidoraPalomarNet
                 {
                     if (cnn.State == ConnectionState.Open)
                         cnn.Close();
-
+                    GrabarError($", dentro de 'Update_PrecioSug_Ofertas': " +
+                                      (ex.InnerException?.ToString() ?? "") + " - " + ex.Message);
                     throw new Exception(", dentro de 'Update_PrecioSug_Ofertas': " +
                                       (ex.InnerException?.ToString() ?? "") + " - " + ex.Message);
                 }

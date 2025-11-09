@@ -235,8 +235,10 @@ namespace DistribuidoraPalomarNet
         {
             if (ptbImgSi.Visible)
             {
+                Module.aplicar_desc_Cliente(); // Cargo Descuentos 1 y 2
                 Module.Update_Precios();
-                Module.Update_PrecioSug_Ofertas();
+                Module.Update_Precios_Ofertas();
+                //Module.Update_PrecioSug_Ofertas();
                 Module.funcion_inicial(1);
             }
             Module.Cargar_Usuario();
