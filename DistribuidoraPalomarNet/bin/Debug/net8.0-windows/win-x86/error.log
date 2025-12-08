@@ -1,0 +1,257 @@
+ - martes, 11 de noviembre de 2025 => 14:34:52 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' , dentro de 'CargarComboRubros': System.Data.OleDb.OleDbException (0x80040E14): La expresión de combinación no está admitida.
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
+   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataSet dataSet, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataSet dataSet, String srcTable)
+   at DistribuidoraPalomarNet.Module.CargarComboRubros() in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 2629
+ - martes, 11 de noviembre de 2025 => 14:35:45 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' , dentro de 'CargarComboRubros': System.Data.OleDb.OleDbException (0x80040E14): La expresión de combinación no está admitida.
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
+   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataSet dataSet, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataSet dataSet, String srcTable)
+   at DistribuidoraPalomarNet.Module.CargarComboRubros() in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 2629
+ - martes, 11 de noviembre de 2025 => 14:39:22 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' , dentro de 'CargarComboRubros': System.Data.OleDb.OleDbException (0x80040E14): La expresión de combinación no está admitida.
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
+   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataSet dataSet, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataSet dataSet, String srcTable)
+   at DistribuidoraPalomarNet.Module.CargarComboRubros() in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 2629
+ - domingo, 16 de noviembre de 2025 => 14:10:58 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' La expresión de combinación no está admitida.
+ - domingo, 16 de noviembre de 2025 => 14:14:38 'Inicio Formulario Principal': Error dentro de 'Inicializacion': Error en la Funcion 'funcion_inicial' Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:20:56 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:21:00 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:21:02 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:21:05 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:21:08 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:22:12 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:22:16 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:22:50 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:22:53 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:22:59 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 02:23:44 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 14:56:37 'Limpiar Campos': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 14:56:38 'Filtro Rubros': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 14:56:44 'Limpiar Campos': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 14:56:44 'Filtro Rubros': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 14:56:47 'Limpiar Campos': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 14:56:47 'Filtro Rubros': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 14:56:51 'Limpiar Campos': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 14:56:51 'Filtro Rubros': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 03:05:06 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 15:13:49 'Filtro Modelo': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 15:13:49 'Filtro Modelo': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 15:13:49 'Filtro Modelo': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 15:13:53 'Filtro Modelo': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 15:13:57 'Filtro Modelo': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 15:14:03 'Limpiar Campos': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 15:14:03 'Filtro Rubros': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 15:14:06 'Limpiar Campos': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 15:14:06 'Filtro Rubros': Error en consultas_Relacionales: Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 03:19:56 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 03:20:02 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 03:20:03 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 16:22:55 'Filtro Rubros': , dentro de 'CargarComboLineas': System.Data.OleDb.OleDbException (0x80040E14): Error de sintaxis (falta operador) en la expresión de consulta 'LI.lidesc=LT.ARMODE INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI'.
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
+   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable[] dataTables, Int32 startRecord, Int32 maxRecords, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable dataTable)
+   at DistribuidoraPalomarNet.Module.CargarComboLineas(String _Armadora) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 3077
+ - domingo, 16 de noviembre de 2025 => 16:33:45 'Filtro Rubros': , dentro de 'CargarComboLineas': System.Data.OleDb.OleDbException (0x80040E14): Error de sintaxis (falta operador) en la expresión de consulta 'LI.lidesc=LT.ARMODE INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI'.
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
+   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable[] dataTables, Int32 startRecord, Int32 maxRecords, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable dataTable)
+   at DistribuidoraPalomarNet.Module.CargarComboLineas(String _Armadora) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 3077
+ - domingo, 16 de noviembre de 2025 => 16:35:47 'Filtro Rubros': , dentro de 'CargarComboLineas': System.Data.OleDb.OleDbException (0x80040E14): Error de sintaxis (falta operador) en la expresión de consulta 'LI.lidesc=LT.ARMODE INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI'.
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
+   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable[] dataTables, Int32 startRecord, Int32 maxRecords, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable dataTable)
+   at DistribuidoraPalomarNet.Module.CargarComboLineas(String _Armadora) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 3077
+ - domingo, 16 de noviembre de 2025 => 16:37:10 'Filtro Rubros': , dentro de 'CargarComboLineas': System.Data.OleDb.OleDbException (0x80040E14): Error de sintaxis (falta operador) en la expresión de consulta 'LI.lidesc=LT.ARMODE INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI'.
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
+   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable[] dataTables, Int32 startRecord, Int32 maxRecords, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable dataTable)
+   at DistribuidoraPalomarNet.Module.CargarComboLineas(String _Armadora) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 3077
+ - domingo, 16 de noviembre de 2025 => 16:39:54 'Filtro Rubros': , dentro de 'CargarComboLineas': System.Data.OleDb.OleDbException (0x80040E14): Error de sintaxis (falta operador) en la expresión de consulta 'LI.lidesc=LT.ARMODE INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI'.
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
+   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable[] dataTables, Int32 startRecord, Int32 maxRecords, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable dataTable)
+   at DistribuidoraPalomarNet.Module.CargarComboLineas(String _Armadora) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 3072
+ - domingo, 16 de noviembre de 2025 => 16:54:11 'Filtro Rubros': , dentro de 'CargarComboLineas': System.Data.OleDb.OleDbException (0x80040E14): Error de sintaxis (falta operador) en la expresión de consulta 'LI.lidesc = LT.ARMODE INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI'.
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextErrorHandling(OleDbHResult hr)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandTextForSingleResult(tagDBPARAMS dbParams, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommandText(Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteCommand(CommandBehavior behavior, Object& executeResult)
+   at System.Data.OleDb.OleDbCommand.ExecuteReaderInternal(CommandBehavior behavior, String method)
+   at System.Data.OleDb.OleDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.OleDb.OleDbCommand.System.Data.IDbCommand.ExecuteReader(CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.FillInternal(DataSet dataset, DataTable[] datatables, Int32 startRecord, Int32 maxRecords, String srcTable, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable[] dataTables, Int32 startRecord, Int32 maxRecords, IDbCommand command, CommandBehavior behavior)
+   at System.Data.Common.DbDataAdapter.Fill(DataTable dataTable)
+   at DistribuidoraPalomarNet.Module.CargarComboLineas(String _Armadora) in C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Module.cs:line 3067
+ - domingo, 16 de noviembre de 2025 => 05:06:36 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:06:48 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:06:49 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:06:51 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:06:52 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:06:53 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:06:54 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:06:55 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:06:57 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:07:01 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:07:04 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:07:06 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:07:08 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:17:28 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:19:27 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:19:27 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:22:37 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:22:40 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+ - domingo, 16 de noviembre de 2025 => 05:24:42 'Metodo CargarEquivalencias': Alias 'Marca' de resultados duplicado.
+
+
+ 
+ - domingo, 16 de noviembre de 2025 => 22:55:31 'Limpiar Campos': Error en consultas_Relacionales: Error de sintaxis (falta operador) en la expresión de consulta 'p.prcodi = a.arprov  INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI'.
+ - domingo, 16 de noviembre de 2025 => 22:55:31 'Filtro Rubros': Error en consultas_Relacionales: Error de sintaxis (falta operador) en la expresión de consulta 'p.prcodi = a.arprov  INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI'.
+ - domingo, 16 de noviembre de 2025 => 22:55:52 'Limpiar Campos': Error en consultas_Relacionales: Error de sintaxis (falta operador) en la expresión de consulta 'p.prcodi = a.arprov  INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI'.
+ - domingo, 16 de noviembre de 2025 => 22:55:52 'Filtro Rubros': Error en consultas_Relacionales: Error de sintaxis (falta operador) en la expresión de consulta 'p.prcodi = a.arprov  INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI'.
+ - domingo, 16 de noviembre de 2025 => 22:56:00 'Limpiar Campos': Error en consultas_Relacionales: Error de sintaxis (falta operador) en la expresión de consulta 'p.prcodi = a.arprov  INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI'.
+ - domingo, 16 de noviembre de 2025 => 22:56:00 'Filtro Rubros': Error en consultas_Relacionales: Error de sintaxis (falta operador) en la expresión de consulta 'p.prcodi = a.arprov  INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI'.
+ - domingo, 16 de noviembre de 2025 => 22:56:10 'Limpiar Campos': Error en consultas_Relacionales: Error de sintaxis (falta operador) en la expresión de consulta 'p.prcodi = a.arprov  INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI'.
+ - domingo, 16 de noviembre de 2025 => 22:56:11 'Filtro Rubros': Error en consultas_Relacionales: Error de sintaxis (falta operador) en la expresión de consulta 'p.prcodi = a.arprov  INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI'.
+ - domingo, 16 de noviembre de 2025 => 23:18:43 'Limpiar Campos': Error en consultas_Relacionales: Error de sintaxis (falta operador) en la expresión de consulta 'p.prcodi = a.arprov  INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI'.
+Familia sin FABEN1 (o 0) al sugerir precio: 'AMORTIGUADOR'
+Familia sin FABEN1 (o 0) al sugerir precio: 'AMORTIGUADOR CB'
+Familia sin FABEN1 (o 0) al sugerir precio: 'AXIALES'
+Familia sin FABEN1 (o 0) al sugerir precio: 'BIELETA'
+Familia sin FABEN1 (o 0) al sugerir precio: 'BIELETAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'BUJES'
+Familia sin FABEN1 (o 0) al sugerir precio: 'CAZOLETAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'CRAPODINAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'PARRILLAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'PARRILLAS CB'
+Familia sin FABEN1 (o 0) al sugerir precio: 'ROT Y EXTREM'
+Familia sin FABEN1 (o 0) al sugerir precio: 'ROTULA Y EXTREMO'
+Familia sin FABEN1 (o 0) al sugerir precio: 'SOPORTES AVELLREP'
+Familia sin FABEN1 (o 0) al sugerir precio: 'SOPORTES PHALES'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'AMORTIGUADOR'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'AMORTIGUADOR CB'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'AXIALES'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'BIELETA'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'BIELETAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'BUJES'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'CAZOLETAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'CRAPODINAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'PARRILLAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'PARRILLAS CB'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'ROT Y EXTREM'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'ROTULA Y EXTREMO'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'SOPORTES AVELLREP'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'SOPORTES PHALES'
+Familia sin FABEN1 (o 0) al sugerir precio: 'AMORTIGUADOR'
+Familia sin FABEN1 (o 0) al sugerir precio: 'AMORTIGUADOR CB'
+Familia sin FABEN1 (o 0) al sugerir precio: 'AXIALES'
+Familia sin FABEN1 (o 0) al sugerir precio: 'BIELETA'
+Familia sin FABEN1 (o 0) al sugerir precio: 'BIELETAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'BUJES'
+Familia sin FABEN1 (o 0) al sugerir precio: 'CAZOLETAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'CRAPODINAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'PARRILLAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'PARRILLAS CB'
+Familia sin FABEN1 (o 0) al sugerir precio: 'ROT Y EXTREM'
+Familia sin FABEN1 (o 0) al sugerir precio: 'ROTULA Y EXTREMO'
+Familia sin FABEN1 (o 0) al sugerir precio: 'SOPORTES AVELLREP'
+Familia sin FABEN1 (o 0) al sugerir precio: 'SOPORTES PHALES'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'AMORTIGUADOR'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'AMORTIGUADOR CB'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'AXIALES'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'BIELETA'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'BIELETAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'BUJES'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'CAZOLETAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'CRAPODINAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'PARRILLAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'PARRILLAS CB'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'ROT Y EXTREM'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'ROTULA Y EXTREMO'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'SOPORTES AVELLREP'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'SOPORTES PHALES'
+Familia sin FABEN1 (o 0) al sugerir precio: 'AMORTIGUADOR'
+Familia sin FABEN1 (o 0) al sugerir precio: 'AMORTIGUADOR CB'
+Familia sin FABEN1 (o 0) al sugerir precio: 'AXIALES'
+Familia sin FABEN1 (o 0) al sugerir precio: 'BIELETA'
+Familia sin FABEN1 (o 0) al sugerir precio: 'BIELETAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'BUJES'
+Familia sin FABEN1 (o 0) al sugerir precio: 'CAZOLETAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'CRAPODINAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'PARRILLAS'
+Familia sin FABEN1 (o 0) al sugerir precio: 'PARRILLAS CB'
+Familia sin FABEN1 (o 0) al sugerir precio: 'ROT Y EXTREM'
+Familia sin FABEN1 (o 0) al sugerir precio: 'ROTULA Y EXTREMO'
+Familia sin FABEN1 (o 0) al sugerir precio: 'SOPORTES AVELLREP'
+Familia sin FABEN1 (o 0) al sugerir precio: 'SOPORTES PHALES'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'AMORTIGUADOR'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'AMORTIGUADOR CB'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'AXIALES'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'BIELETA'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'BIELETAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'BUJES'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'CAZOLETAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'CRAPODINAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'PARRILLAS'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'PARRILLAS CB'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'ROT Y EXTREM'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'ROTULA Y EXTREMO'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'SOPORTES AVELLREP'
+Familia sin FABEN1 (o 0) al sugerir precio ofertas: 'SOPORTES PHALES'

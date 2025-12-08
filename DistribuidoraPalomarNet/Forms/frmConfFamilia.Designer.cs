@@ -54,7 +54,7 @@ namespace DistribuidoraPalomarNet
             lblbgral.Enabled = false;
             lblbgral.Font = new Font("MS Reference Sans Serif", 8.25F);
             lblbgral.ForeColor = Color.White;
-            lblbgral.Location = new Point(196, 688);
+            lblbgral.Location = new Point(200, 699);
             lblbgral.Margin = new Padding(4, 0, 4, 0);
             lblbgral.Name = "lblbgral";
             lblbgral.Size = new Size(94, 15);
@@ -65,7 +65,7 @@ namespace DistribuidoraPalomarNet
             // 
             txtbgral.Enabled = false;
             txtbgral.Font = new Font("MS Reference Sans Serif", 8.25F);
-            txtbgral.Location = new Point(296, 688);
+            txtbgral.Location = new Point(300, 699);
             txtbgral.Margin = new Padding(4, 3, 4, 3);
             txtbgral.Name = "txtbgral";
             txtbgral.Size = new Size(102, 21);
@@ -78,7 +78,7 @@ namespace DistribuidoraPalomarNet
             lbliva.Enabled = false;
             lbliva.Font = new Font("MS Reference Sans Serif", 8.25F);
             lbliva.ForeColor = Color.White;
-            lbliva.Location = new Point(196, 715);
+            lbliva.Location = new Point(200, 726);
             lbliva.Margin = new Padding(4, 0, 4, 0);
             lbliva.Name = "lbliva";
             lbliva.Size = new Size(33, 15);
@@ -89,7 +89,7 @@ namespace DistribuidoraPalomarNet
             // 
             txtiva.Enabled = false;
             txtiva.Font = new Font("MS Reference Sans Serif", 8.25F);
-            txtiva.Location = new Point(296, 715);
+            txtiva.Location = new Point(300, 726);
             txtiva.Margin = new Padding(4, 3, 4, 3);
             txtiva.Name = "txtiva";
             txtiva.Size = new Size(102, 21);
@@ -113,7 +113,7 @@ namespace DistribuidoraPalomarNet
             btnGrabar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnGrabar.Font = new Font("Calibri", 11.25F, FontStyle.Bold);
             btnGrabar.ForeColor = Color.Purple;
-            btnGrabar.Location = new Point(478, 688);
+            btnGrabar.Location = new Point(480, 692);
             btnGrabar.Margin = new Padding(4, 3, 4, 3);
             btnGrabar.Name = "btnGrabar";
             btnGrabar.Size = new Size(58, 60);
@@ -128,7 +128,7 @@ namespace DistribuidoraPalomarNet
             btnSalir.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             btnSalir.Font = new Font("Calibri", 11.25F, FontStyle.Bold);
             btnSalir.ForeColor = Color.Purple;
-            btnSalir.Location = new Point(545, 688);
+            btnSalir.Location = new Point(547, 692);
             btnSalir.Margin = new Padding(4, 3, 4, 3);
             btnSalir.Name = "btnSalir";
             btnSalir.Size = new Size(58, 60);
@@ -141,24 +141,25 @@ namespace DistribuidoraPalomarNet
             // btnRestaurar
             // 
             btnRestaurar.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            btnRestaurar.Font = new Font("Calibri", 11.25F, FontStyle.Bold);
-            btnRestaurar.ForeColor = Color.Purple;
-            btnRestaurar.Location = new Point(16, 715);
+            btnRestaurar.BackColor = Color.Red;
+            btnRestaurar.Font = new Font("Calibri", 20.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnRestaurar.ForeColor = Color.White;
+            btnRestaurar.Location = new Point(16, 707);
             btnRestaurar.Margin = new Padding(4, 3, 4, 3);
-            btnRestaurar.MaximumSize = new Size(58, 32);
             btnRestaurar.MinimumSize = new Size(58, 32);
             btnRestaurar.Name = "btnRestaurar";
-            btnRestaurar.Size = new Size(58, 32);
+            btnRestaurar.Size = new Size(58, 49);
             btnRestaurar.TabIndex = 8;
             btnRestaurar.Text = "↺";
-            ToolTip1.SetToolTip(btnRestaurar, "Restaurar Valores");
-            btnRestaurar.UseVisualStyleBackColor = true;
+            ToolTip1.SetToolTip(btnRestaurar, "Restaurar Valores a 0");
+            btnRestaurar.UseVisualStyleBackColor = false;
+            btnRestaurar.Click += btnRestaurar_Click;
             // 
             // ptbImgSi
             // 
             ptbImgSi.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             ptbImgSi.Image = (Image)resources.GetObject("ptbImgSi.Image");
-            ptbImgSi.Location = new Point(408, 688);
+            ptbImgSi.Location = new Point(410, 692);
             ptbImgSi.Margin = new Padding(4, 3, 4, 3);
             ptbImgSi.Name = "ptbImgSi";
             ptbImgSi.Size = new Size(61, 57);
@@ -171,7 +172,7 @@ namespace DistribuidoraPalomarNet
             // 
             ptbImgNo.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             ptbImgNo.Image = (Image)resources.GetObject("ptbImgNo.Image");
-            ptbImgNo.Location = new Point(408, 688);
+            ptbImgNo.Location = new Point(410, 692);
             ptbImgNo.Margin = new Padding(4, 3, 4, 3);
             ptbImgNo.Name = "ptbImgNo";
             ptbImgNo.Size = new Size(61, 57);

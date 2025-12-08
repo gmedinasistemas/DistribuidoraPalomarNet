@@ -147,7 +147,7 @@ namespace DistribuidoraPalomarNet
                             _PPASITI = Module.US_CLCIVA;
                             _PPAVEND = Module.US_CLVEND;
 
-                            string SelectFAMIVA = $"SELECT familias.FAMIVA FROM familias INNER JOIN PREPARAC ON familias.FACODI = PREPARAC.PPAFLIA WHERE PREPARAC.PPACODI='{_PPACODI}'";
+                            string SelectFAMIVA = $"SELECT familias.FAIVA FROM familias INNER JOIN PREPARAC ON familias.FACODI = PREPARAC.PPAFLIA WHERE PREPARAC.PPACODI='{_PPACODI}'";
                             _PPAFIVA = await TraerFAMIVAAsync(SelectFAMIVA);
                             if (_PPAFIVA == 0) _PPAFIVA = 21;
 
@@ -233,8 +233,8 @@ namespace DistribuidoraPalomarNet
         public static async Task BuscarArticuloParaPreparacAsync(string accion)
         {
             using var da = new OleDbDataAdapter();
-            string sql = "SELECT TOP 1 A.ARPRIM AS PRIMERA, A.ARSEGU AS SEGUNDA, A.ARTERC AS TERCERA, A.ARCUAR AS CUARTA, A.ARCODI AS CODIGO, A.ARDESC AS DESCRIPCION, A.ARMODE AS MODELO " +
-                        ", A.ARMARC AS MARCA, A.ARFF AS STOCK" +
+            string sql = "SELECT TOP 1 A.ARPRIM AS PRIMERA, A.ARSEGU AS SEGUNDA, A.ARTERC AS TERCERA, A.ARCUAR AS CUARTA, A.ARCODI AS CODIGO, A.ARDESC AS DESCRIPCION, a.armode as Linea " +
+                        ", P.PRMARC AS MARCA, A.ARFF AS STOCK" +
                         ", format (A.AROO+(A.AROO*F.FAMIVA/100),'Currency') as PPAORIG" +
                         $", format ({Module.precio_costo_sin_iva.ToString().Replace(",", ".")}+({Module.precio_costo_sin_iva.ToString().Replace(",", ".")}*F.FAMIVA/100),'Currency') AS PRECIO" +
                         ", format (A.AROO,'Currency') AS PPAPREC" +
@@ -406,7 +406,7 @@ namespace DistribuidoraPalomarNet
             {
                 try
                 {
-                    string SelectPreparacExtras = "SELECT familias.FAMIVA,PREPARAC.PPAPRECUNITARIO,PREPARAC.PPAPRECCOSTO " +
+                    string SelectPreparacExtras = "SELECT familias.FAIVA,PREPARAC.PPAPRECUNITARIO,PREPARAC.PPAPRECCOSTO " +
                                                 "FROM familias INNER JOIN PREPARAC ON familias.FACODI = PREPARAC.PPAFLIA " +
                                                 "WHERE PREPARAC.PPAAUTN=" + _item.ToString();
 
@@ -457,7 +457,7 @@ namespace DistribuidoraPalomarNet
 
                 if (drUsu.Read())
                 {
-                    _FAMIVA = Convert.ToDecimal(drUsu["FAMIVA"]);
+                    _FAMIVA = Convert.ToDecimal(drUsu["FAIVA"]);
                     _PPAPRECUNITARIO = Convert.ToDecimal(drUsu["PPAPRECUNITARIO"]);
                     _PPAPRECCOSTO = Convert.ToDecimal(drUsu["PPAPRECCOSTO"]);
                 }
@@ -507,7 +507,7 @@ namespace DistribuidoraPalomarNet
                     {
                         if (await drUsu.ReadAsync())
                         {
-                            _IVA = Convert.ToDecimal(drUsu["FAMIVA"]);
+                            _IVA = Convert.ToDecimal(drUsu["FAIVA"]);
                         }
                         else
                         {

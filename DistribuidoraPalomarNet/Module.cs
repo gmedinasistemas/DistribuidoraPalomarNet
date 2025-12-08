@@ -7,6 +7,7 @@ using System.Data.OleDb;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Policy;
 using System.Threading.Tasks;
@@ -65,12 +66,15 @@ namespace DistribuidoraPalomarNet
                 
                 da.SelectCommand = new OleDbCommand(
                     "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-                    "'Dato Pendiente' as Linea," +
+                    "p.PRMARC as Marca," +
                     //"l.lidesc as Linea," +
-                    "a.armode as Modelo, a.arinte as Posición, a.ARMARC as Marca," +
+                    "a.armode as Linea," +
+                    " a.arinte as Posición," +
+                    //" a.ARMARC as Marca2," + 
                     "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
                     " from listas as a " +
+                    "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
                     "WHERE a.ARFECASIG <> 0 and a.arprim<>'000' order by a.arterc", cnn);
 
                 var ds = new DataSet();
@@ -505,36 +509,6 @@ namespace DistribuidoraPalomarNet
                 throw new Exception($"Error al generar TXT: {ex.Message}");
             }
         }
-
-        public static void BuscarEquivalencias(string codigo)
-        {
-            try
-            {
-                ConectarDBArti();
-                string sql = $"SELECT equivalencia from listass WHERE codigo = '{codigo}'";
-                OleDbCommand cmd = new OleDbCommand(sql, cnn);
-                object result = cmd.ExecuteScalar();
-
-                if (result != null && result != DBNull.Value)
-                {
-                    string equivalencias = result.ToString();
-                    MessageBox.Show($"Equivalencias para {codigo}:\n{equivalencias}", "Equivalencias", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    MessageBox.Show($"No se encontraron equivalencias para el código {codigo}", "Sin equivalencias", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error al buscar equivalencias: {ex.Message}");
-            }
-            finally
-            {
-                if (cnn.State == ConnectionState.Open)
-                    cnn.Close();
-            }
-        }
         #endregion
 
         #region Conexiones
@@ -616,35 +590,57 @@ namespace DistribuidoraPalomarNet
                 
                 if (opc == 0)
                 {
+                    // Solo inicialización visual: combos + estructura de columnas vacía
                     CargarComboRubros();
-                    CargarComboLineas("1");
-                }
-                
-                Application.DoEvents();
-                
-                da.SelectCommand = new OleDbCommand(
-                    "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-                    "'Dato Pendiente' as Linea," +
-                    //"l.lidesc as Linea," +
-                    "a.armode as Modelo, a.arinte as Posición, a.ARMARC as Marca," + 
-                    "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
-                    ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
-                    " from listas as a " +
-                    //" inner join lineas as l on l.licodi=arcuar " +
-                    "where a.arprim<>'000' order by a.arterc", cnn);
+                    CargarComboLineas("0");
 
-                var ds = new DataSet();
-                da.Fill(ds);
-                
-                _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
-                _frmPrincipal.DataGridView1.Refresh();
-                
-                if (opc == 0)
-                {
+                    // Crear una tabla vacía con las columnas que se usan en la grilla
+                    var tablaVacia = new DataTable();
+                    tablaVacia.Columns.Add("Codigo", typeof(string));
+                    tablaVacia.Columns.Add("Descripcion", typeof(string));
+                    tablaVacia.Columns.Add("Marca", typeof(string));
+                    tablaVacia.Columns.Add("Linea", typeof(string));
+                    tablaVacia.Columns.Add("Posición", typeof(string));
+                    tablaVacia.Columns.Add("Preciopublico", typeof(decimal));
+                    tablaVacia.Columns.Add("aroo", typeof(decimal));
+                    tablaVacia.Columns.Add("Stock", typeof(int));
+                    tablaVacia.Columns.Add("artt", typeof(decimal));
+                    tablaVacia.Columns.Add("arubic1", typeof(string));
+                    tablaVacia.Columns.Add("arobse", typeof(string));
+
+                    _frmPrincipal.DataGridView1.DataSource = tablaVacia;
+                    _frmPrincipal.DataGridView1.Refresh();
+
+                    Application.DoEvents();
                     Definir_Grilla();
                 }
-                
-                SeleccionarGrilla();
+                else
+                {
+                    Application.DoEvents();
+
+                    da.SelectCommand = new OleDbCommand(
+                        "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
+                        "p.PRMARC as Marca," +
+                        //"a.armarc as Marca," +
+                        //"l.lidesc as Linea," +
+                        "a.armode as Linea," + 
+                        " a.arinte as Posición," +
+                        //" a.ARMARC as Marca2," + 
+                        "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
+                        ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
+                        " from listas as a " +
+                        "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                        //" left join lineas as l on a.arcuar=l.licodi= " +
+                        "where a.arprim<>'000' order by a.arterc", cnn);
+
+                    var ds = new DataSet();
+                    da.Fill(ds);
+
+                    _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
+                    _frmPrincipal.DataGridView1.Refresh();
+
+                    SeleccionarGrilla();
+                }
                 
                 if (cnn.State == ConnectionState.Open)
                 {
@@ -728,20 +724,21 @@ namespace DistribuidoraPalomarNet
             _frmPrincipal.DataGridView1.Columns["Marca"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             _frmPrincipal.DataGridView1.Columns["Descripcion"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             _frmPrincipal.DataGridView1.Columns["Linea"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            _frmPrincipal.DataGridView1.Columns["Modelo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            //_frmPrincipal.DataGridView1.Columns["Modelo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             _frmPrincipal.DataGridView1.Columns["Posición"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             _frmPrincipal.DataGridView1.Columns["Preciopublico"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             _frmPrincipal.DataGridView1.Columns["aroo"].Visible = false; // Cod familia
             _frmPrincipal.DataGridView1.Columns["artt"].Visible = false;
             _frmPrincipal.DataGridView1.Columns["arubic1"].Visible = false;
             _frmPrincipal.DataGridView1.Columns["arobse"].Visible = false;
+            _frmPrincipal.DataGridView1.Columns["Posición"].Visible = false;
 
             // Establecer pesos de llenado para cada columna
             _frmPrincipal.DataGridView1.Columns["Codigo"].FillWeight = 7;
             _frmPrincipal.DataGridView1.Columns["Marca"].FillWeight = 7;
             _frmPrincipal.DataGridView1.Columns["Descripcion"].FillWeight = 30;
             _frmPrincipal.DataGridView1.Columns["Linea"].FillWeight = 30;
-            _frmPrincipal.DataGridView1.Columns["Modelo"].FillWeight = 30;
+            //_frmPrincipal.DataGridView1.Columns["Modelo"].FillWeight = 30;
             _frmPrincipal.DataGridView1.Columns["Posición"].FillWeight = 30;
             _frmPrincipal.DataGridView1.Columns["Preciopublico"].FillWeight = 15;
         }
@@ -752,7 +749,7 @@ namespace DistribuidoraPalomarNet
             {
                 if (_frmPrincipal.DataGridView1.RowCount != 0)
                 {
-                    _frmPrincipal.lblTotalRegistros.Text = $"articulo: {_frmPrincipal.DataGridView1.RowCount}";
+                    _frmPrincipal.lblTotalRegistros.Text = $"ARTÍCULO: {_frmPrincipal.DataGridView1.RowCount}";
                     _frmPrincipal.DataGridView1.CurrentCell = _frmPrincipal.DataGridView1.Rows[0].Cells[0];
                     AccionGrilla(_frmPrincipal.DataGridView1);
                 }
@@ -1190,9 +1187,9 @@ namespace DistribuidoraPalomarNet
         //    using var da = new OleDbDataAdapter();
         //    string QueryFinal = string.Empty;
         //    string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-        //            "'Dato Pendiente' as Linea," +
+        //            "a.armarc as Marca," +
         //            //"l.lidesc as Linea," +
-        //            "a.armode as Modelo, a.arinte as Posición, a.ARMARC as Marca," +
+        //            "a.armode as Linea, a.arinte as Posición, a.ARMARC as Marca," +
         //            "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
         //            ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
         //            " from listas as a ";
@@ -1278,7 +1275,7 @@ namespace DistribuidoraPalomarNet
         //        else if (!string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
         //        {
         //            // solo por descripcion
-        //            campo = "a.ARMODE";
+        //            campo = "a.AROBSE";
         //            valor = _frmPrincipal.txtModelo.Text;
         //            string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
         //            if (arraymode.Length > 1)
@@ -1311,7 +1308,7 @@ namespace DistribuidoraPalomarNet
         //        else if (!string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
         //        {
         //            // solo rubro y descripcion
-        //            campo = "a.ARMODE";
+        //            campo = "a.AROBSE";
         //            valor = _frmPrincipal.txtModelo.Text;
         //            string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
         //            if (arraymode.Length > 1)
@@ -1379,12 +1376,14 @@ namespace DistribuidoraPalomarNet
             using var da = new OleDbDataAdapter();
             string QueryFinal = string.Empty;
             string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-                    "'Dato Pendiente' as Linea," +
+                    "p.PRMARC as Marca," +
                     //"l.lidesc as Linea," +
-                    "a.armode as Modelo, a.arinte as Posición, a.ARMARC as Marca," +
+                    "a.armode as Linea," +
+                    " a.arinte as Posición," +
+                    //" a.ARMARC as Marca2," + 
                     "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
-                    " from listas as a ";
+                    " from (listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) ";
 
             string WhereQuery = string.Empty;
             try
@@ -1468,7 +1467,7 @@ namespace DistribuidoraPalomarNet
                 else if (string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && !string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
                 {
                     // solo por modelo
-                    campo = "a.ARMODE";
+                    campo = "a.AROBSE";
                     valor = _frmPrincipal.txtModelo.Text;
                     string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
                     if (arraymode.Length > 1)
@@ -1501,7 +1500,7 @@ namespace DistribuidoraPalomarNet
                 else if (string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && !string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
                 {
                     // solo rubro y modelo
-                    campo = "a.ARMODE";
+                    campo = "a.AROBSE";
                     valor = _frmPrincipal.txtModelo.Text;
                     string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
                     if (arraymode.Length > 1)
@@ -1564,18 +1563,18 @@ namespace DistribuidoraPalomarNet
                         {
                             if (r == 0 && !string.IsNullOrEmpty(arraymode[r]))
                             {
-                                condicionModelo = $"(a.ARMODE like '%{arraymode[r]}%'";
+                                condicionModelo = $"(a.AROBSE like '%{arraymode[r]}%'";
                             }
                             else if (!string.IsNullOrEmpty(arraymode[r]))
                             {
-                                condicionModelo = $"{condicionModelo} AND a.ARMODE like '%{arraymode[r]}%'";
+                                condicionModelo = $"{condicionModelo} AND a.AROBSE like '%{arraymode[r]}%'";
                             }
                         }
                         condicionModelo = $"{condicionModelo})";
                     }
                     else
                     {
-                        condicionModelo = $"a.ARMODE like '%{_frmPrincipal.txtModelo.Text}%'";
+                        condicionModelo = $"a.AROBSE like '%{_frmPrincipal.txtModelo.Text}%'";
                     }
 
                     WhereQuery = $" where {condicionDesc} AND {condicionModelo} and a.arprim<>'000' ";
@@ -1618,18 +1617,18 @@ namespace DistribuidoraPalomarNet
                         {
                             if (r == 0 && !string.IsNullOrEmpty(arraymode[r]))
                             {
-                                condicionModelo = $"(a.ARMODE like '%{arraymode[r]}%'";
+                                condicionModelo = $"(a.AROBSE like '%{arraymode[r]}%'";
                             }
                             else if (!string.IsNullOrEmpty(arraymode[r]))
                             {
-                                condicionModelo = $"{condicionModelo} AND a.ARMODE like '%{arraymode[r]}%'";
+                                condicionModelo = $"{condicionModelo} AND a.AROBSE like '%{arraymode[r]}%'";
                             }
                         }
                         condicionModelo = $"{condicionModelo})";
                     }
                     else
                     {
-                        condicionModelo = $"a.ARMODE like '%{_frmPrincipal.txtModelo.Text}%'";
+                        condicionModelo = $"a.AROBSE like '%{_frmPrincipal.txtModelo.Text}%'";
                     }
 
                     WhereQuery = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI where {condicionDesc} AND {condicionModelo} and r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
@@ -1662,8 +1661,16 @@ namespace DistribuidoraPalomarNet
                     }
                     else
                     {
-                        // Limpiar grid si no hay resultados
-                        _frmPrincipal.DataGridView1.DataSource = null;
+                        // Dejar la grilla vacía preservando configuración y encabezados
+                        if (_frmPrincipal.DataGridView1.DataSource is System.Data.DataTable dt)
+                        {
+                            dt.Rows.Clear();
+                            _frmPrincipal.DataGridView1.Refresh();
+                        }
+                        else
+                        {
+                            _frmPrincipal.DataGridView1.Rows.Clear();
+                        }
                     }
                 }
             }
@@ -1704,12 +1711,14 @@ namespace DistribuidoraPalomarNet
                 using var ds = new DataSet();
                 string QueryFinal = string.Empty;
                 string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-                    "'Dato Pendiente' as Linea," +
+                    "p.PRMARC as Marca," +
                     //"l.lidesc as Linea," +
-                    "a.armode as Modelo, a.arinte as Posición, a.ARMARC as Marca," +
+                    "a.armode as Linea," +
+                    " a.arinte as Posición," +
+                    //" a.ARMARC as Marca2," + 
                     "a.arpre5 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
-                    " from listas as a ";
+                    " from (listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) ";
 
                 string WhereQuery = string.Empty;
 
@@ -1744,7 +1753,7 @@ namespace DistribuidoraPalomarNet
                 else if (!string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
                 {
                     // solo por descripcion
-                    campo = "a.ARMODE";
+                    campo = "a.AROBSE";
                     valor = _frmPrincipal.txtModelo.Text;
                     string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
                     if (arraymode.Length > 1)
@@ -1777,7 +1786,7 @@ namespace DistribuidoraPalomarNet
                 else if (!string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
                 {
                     // solo rubro y descripcion
-                    campo = "a.ARMODE";
+                    campo = "a.AROBSE";
                     valor = _frmPrincipal.txtModelo.Text;
                     string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
                     if (arraymode.Length > 1)
@@ -1807,24 +1816,40 @@ namespace DistribuidoraPalomarNet
                 QueryFinal = SelectQuery + WhereQuery + " order by a.arterc";
                 if (!string.IsNullOrEmpty(QueryFinal))
                 {
-                    ConectarDBArti();
+                    // Validar longitud de consulta
+                    if (QueryFinal.Length > 4000)
+                        throw new InvalidOperationException("La consulta es demasiado larga");
+
                     da.SelectCommand = new OleDbCommand(QueryFinal, cnn);
                     da.Fill(ds);
 
-                    _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
-                    _frmPrincipal.DataGridView1.Refresh();
-
-                    if (_frmPrincipal.DataGridView1.RowCount > 0)
+                    // Validar que el DataSet y la tabla existen
+                    if (ds?.Tables?.Count > 0 && ds.Tables[0]?.Rows?.Count > 0)
                     {
-                        // Definir_Grilla_Negrita();
-                        SeleccionarGrilla();
+                        // Validar límite de resultados
+                        if (ds.Tables[0].Rows.Count > 10000)
+                            throw new InvalidOperationException("Demasiados resultados. Refine la búsqueda");
+
+                        _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
+
+                        if (_frmPrincipal.DataGridView1.RowCount > 0)
+                        {
+                            SeleccionarGrilla();
+                        }
                     }
-                    if (cnn.State == ConnectionState.Open)
-                        cnn.Close();
-                }
-                else
-                {
-                    MessageBox.Show("Debe ingresar datos de Busqueda", "Validacion", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    else
+                    {
+                        // Dejar la grilla vacía preservando configuración y encabezados
+                        if (_frmPrincipal.DataGridView1.DataSource is System.Data.DataTable dt)
+                        {
+                            dt.Rows.Clear();
+                            _frmPrincipal.DataGridView1.Refresh();
+                        }
+                        else
+                        {
+                            _frmPrincipal.DataGridView1.Rows.Clear();
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -1840,6 +1865,22 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+
+        public static string GenerarCondicionMultipalabra(string campo, string texto)
+        {
+            if (string.IsNullOrWhiteSpace(texto))
+                return "";
+
+            string[] palabras = texto.Trim().Split(' ')
+                                      .Where(p => !string.IsNullOrWhiteSpace(p))
+                                      .ToArray();
+
+            if (palabras.Length == 0)
+                return "";
+
+            var condiciones = palabras.Select(p => $"{campo} like '%{p.Trim()}%'");
+            return "(" + string.Join(" AND ", condiciones) + ")";
+        }
         public static void LeerConfig()
         {
             try
@@ -2255,7 +2296,7 @@ namespace DistribuidoraPalomarNet
                     if (Convert.ToDateTime(fecha) < Convert.ToDateTime(FechaFTP))
                     {
                         _frmPrincipal.lblAlertaUpdate.Visible = true;
-                        //_frmPrincipal.lblAlertaUpdate.Text = "Hay una Actualizacion disponible, por favor actualice la base de datos";
+                        _frmPrincipal.lblAlertaUpdate.Text = "Hay una Actualizacion disponible, por favor actualice la base de datos";
                     }
                     else
                     {
@@ -2617,7 +2658,9 @@ namespace DistribuidoraPalomarNet
         public static void CargarComboRubros()
         {
             Application.DoEvents();
-            var da = new OleDbDataAdapter("SELECT DISTINCT rbcodi, rbdesc from rubros order by rbdesc", cnn);
+            ConectarDBArti();
+            string sql = "SELECT DISTINCT R.rbcodi, R.rbdesc FROM rubros AS R INNER JOIN [listas] AS LT ON R.RBCODI = LT.ARRUB2 WHERE R.RBCODI > 100 ORDER BY R.rbdesc";
+            var da = new OleDbDataAdapter(sql, cnn);
             try
             {
                 if (_frmPrincipal == null) throw new InvalidOperationException("Formulario principal no inicializado");
@@ -2634,10 +2677,12 @@ namespace DistribuidoraPalomarNet
                 }
                 _frmPrincipal.cmbRubros.Items.Insert(0, "TODOS");
                 ds.Dispose();
+                if (cnn.State == ConnectionState.Open) cnn.Close();
             }
             catch (Exception ex)
             {
-                throw new Exception($", dentro de 'CargarComboRubros': {ex}");
+                if (cnn.State == ConnectionState.Open) cnn.Close();
+                throw new Exception(", dentro de 'CargarComboRubros': {ex}");
             }
             finally
             {
@@ -2645,9 +2690,9 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        public static void Cargar_Usuario()
+        public static void Cargar_Usuario(bool promptIfMissing = true)
         {
-            var cmUsu = new OleDbCommand();
+            OleDbCommand cmUsu = new OleDbCommand();
             OleDbDataReader drUsu = null;
             bool datos;
 
@@ -2684,8 +2729,12 @@ namespace DistribuidoraPalomarNet
                     US_CLVEND = 0;
                     US_CLRAZO = "";
                     US_CLCPAG = 0;
-                    var frmDatosUsuario = new frmDatosUsuario();
-                    frmDatosUsuario.ShowDialog();
+                    // Solo abrir el formulario si corresponde y no hay una instancia abierta
+                    if (promptIfMissing && !Application.OpenForms.OfType<frmDatosUsuario>().Any())
+                    {
+                        var frmDatosUsuario = new frmDatosUsuario();
+                        frmDatosUsuario.ShowDialog();
+                    }
                 }
             }
             catch (Exception ex)
@@ -2956,10 +3005,16 @@ namespace DistribuidoraPalomarNet
             try
             {
                 ConectarDBArti();
-                da = new OleDbDataAdapter("SELECT a.arterc as Codigo, A.ARMARC as Marca, a.ardesc as Descripcion," +
-                                      " a.arobse as Observaciones, a.arpre5 as Preciopublico, a.artt as aroo" +
-                                      ", a.arff as Stock, a.artt, a.arubic1 from listas as a " +
-                                      " WHERE a.ARTT <> 0 and a.arprim<>'000' order by a.arterc", cnn);
+                da = new OleDbDataAdapter("SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
+                    "p.PRMARC as Marca," +
+                    //"l.lidesc as Linea," +
+                    "a.armode as Linea," +
+                    " a.arinte as Posición," +
+                    //" a.ARMARC as Marca2," +
+                    " a.arpre5 as Preciopublico, a.artt as aroo" +
+                    ", a.arff as Stock, a.artt, a.arubic1 from listas as a " +
+                    "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                    " WHERE a.ARTT <> 0 and a.arprim<>'000' order by a.arterc", cnn);
                 var ds = new DataSet();
                 da.Fill(ds);
                 _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
@@ -2972,9 +3027,6 @@ namespace DistribuidoraPalomarNet
             {
                 if (cnn.State == ConnectionState.Open) cnn.Close();
                 throw new Exception("Error en la Funcion 'Funcion_Ofertas' " + ex.Message);
-            }
-            finally
-            {
                 da.Dispose();
             }
         }
@@ -2992,10 +3044,11 @@ namespace DistribuidoraPalomarNet
                 _frmPrincipal.txtModelo.Text = string.Empty;
                 _frmPrincipal.txtEquivalencia.Text = string.Empty;
                 _frmPrincipal.txtCodigo.Text = string.Empty;
-                if(p1!=1) _frmPrincipal.cmbRubros.SelectedIndex = -1;
+                if (p1 != 1) _frmPrincipal.cmbRubros.SelectedIndex = -1;
                 if (p1 != 1) _frmPrincipal.cmbLineas.SelectedIndex = -1;
                 // lblCodigoSelec.Text = string.Empty;
-                consultas_Relacionales();
+                if (p1 != 1)
+                    consultas_Relacionales();
                 Despintar_Ofertas();
             }
             catch (Exception ex)
@@ -3004,14 +3057,13 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        public static void CargarComboLineas(string idRubro)
+        public static void CargarComboLineas(string _Armadora)
         {
             OleDbDataAdapter da = new OleDbDataAdapter();
             try
             {
                 if (_frmPrincipal == null) throw new InvalidOperationException("Formulario principal no inicializado");
 
-                // abro la conexion
                 Application.DoEvents();
                 DataTable Dt_lineas = new DataTable();
                 Dt_lineas.Columns.Add("licodi", typeof(string));
@@ -3020,9 +3072,29 @@ namespace DistribuidoraPalomarNet
                 // Agregar TODOS como primera opción
                 Dt_lineas.Rows.Add("0", "TODOS");
 
-                // Obtener datos de la base de datos
-                da = new OleDbDataAdapter($"SELECT DISTINCT licodi, lidesc from lineas order by lidesc", cnn);
-                Application.DoEvents();
+                // Construir SQL base y agregar filtro opcional por armadora
+                bool filtrarPorArmadora = !string.IsNullOrEmpty(_Armadora) && _Armadora != "0";
+
+                string sql =
+                    "SELECT DISTINCT LI.licodi, LI.lidesc " +
+                    // En Jet/Access, al encadenar INNER JOIN conviene usar paréntesis
+                    "FROM (lineas AS LI INNER JOIN listas AS LT ON LI.lidesc = LT.ARMODE) ";
+
+                if (filtrarPorArmadora)
+                {
+                    sql +=
+                        "INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI " +
+                        "WHERE r.RBDESC = ? ";
+                }
+
+                sql += "ORDER BY LI.lidesc";
+
+                da = new OleDbDataAdapter(sql, cnn);
+
+                if (filtrarPorArmadora)
+                {
+                    da.SelectCommand.Parameters.AddWithValue("@Rubro", _Armadora);
+                }
 
                 DataTable Dt_temp = new DataTable();
                 da.Fill(Dt_temp);
@@ -3045,8 +3117,8 @@ namespace DistribuidoraPalomarNet
             {
                 if (_frmPrincipal != null)
                 {
-                    _frmPrincipal.cmbRubros.Visible = false;
-                    _frmPrincipal.cmbLineas.Visible = false;
+                    //_frmPrincipal.cmbRubros.Visible = false;
+                    //_frmPrincipal.cmbLineas.Visible = false;
                 }
 
                 if (cnn.State == ConnectionState.Open)
@@ -3266,8 +3338,9 @@ namespace DistribuidoraPalomarNet
                 response.Close();
                 return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'DescargaArchivo': {ex.Message}");
                 return false;
             }
         }
@@ -3295,10 +3368,10 @@ namespace DistribuidoraPalomarNet
                 int numFila = _frmPrincipal.DataGridView1.CurrentCellAddress.Y;
                 //_frmPrincipal.DataGridView1.Columns[7].Visible = true;
 
-                if (!string.IsNullOrEmpty(_frmPrincipal.DataGridView1["arubic1", numFila].Value?.ToString()))
+                if (!string.IsNullOrEmpty(_frmPrincipal.DataGridView1["AROBSE", numFila].Value?.ToString()))
                 {
                     _frmPrincipal.btnEquivalencia.Enabled = true;
-                    NumEqui = _frmPrincipal.DataGridView1["arubic1", numFila].Value.ToString();
+                    NumEqui = _frmPrincipal.DataGridView1["AROBSE", numFila].Value.ToString();
                 }
                 else
                 {
@@ -3695,7 +3768,8 @@ namespace DistribuidoraPalomarNet
                 {
                     _frmPrincipal.lblRubro.Text = "Rubro: " + dr["RBDESC"].ToString();
                     _frmPrincipal.lblOrigen.Text = "Origen: "+ dr["ARORIG"].ToString();
-                    _frmPrincipal.lblObservaciones.Text ="Observación: " + dr["ARUBIC1"].ToString();//AROBSE
+                    _frmPrincipal.lblObservaciones.Text = "Observación: " + dr["ARUBIC1"].ToString() + 
+                        Environment.NewLine + "Ubicación: " + dr["AROBSE"].ToString(); //AROBSE
                 }
             }
             catch (Exception ex)
@@ -3708,5 +3782,59 @@ namespace DistribuidoraPalomarNet
                     cnnU.Close();
             }
         }
+
+        //public static void MostrarAlertaUpdate(string message)
+        //{
+        //    try
+        //    {
+        //        if (_frmPrincipal == null) { GrabarError(" - MostrarAlertaUpdate: _frmPrincipal es null"); return; }
+        //        var f = _frmPrincipal;
+        //        void DoUI()
+        //        {
+        //            try
+        //            {
+        //                var item = f.lblAlertaUpdate;
+        //                if (item == null) { GrabarError(" - MostrarAlertaUpdate: lblAlertaUpdate es null"); return; }
+        //                item.Text = message ?? string.Empty;
+        //                item.Visible = true;
+        //                var parent = item.GetCurrentParent();
+        //                if (parent == null)
+        //                {
+        //                    var ss = f.Controls.OfType<System.Windows.Forms.StatusStrip>().FirstOrDefault();
+        //                    if (ss != null)
+        //                    {
+        //                        ss.Items.Add(item);
+        //                        parent = ss;
+        //                    }
+        //                }
+        //                if (parent != null)
+        //                {
+        //                    parent.Visible = true;
+        //                    parent.PerformLayout();
+        //                    parent.Invalidate();
+        //                    parent.Update();
+        //                    parent.Refresh();
+        //                    var bg = parent.BackColor;
+        //                    float b = bg.GetBrightness();
+        //                    item.ForeColor = (b < 0.5f) ? System.Drawing.Color.Yellow : System.Drawing.Color.Red;
+        //                    item.BackColor = System.Drawing.Color.Transparent;
+        //                }
+        //                if (!item.Visible) GrabarError(" - MostrarAlertaUpdate: lblAlertaUpdate.Visible es false");
+        //                if (parent == null) GrabarError(" - MostrarAlertaUpdate: GetCurrentParent() es null");
+        //                else if (!parent.Visible) GrabarError(" - MostrarAlertaUpdate: parent.Visible es false");
+        //                if (string.IsNullOrWhiteSpace(item.Text)) GrabarError(" - MostrarAlertaUpdate: lblAlertaUpdate.Text vacío");
+        //            }
+        //            catch (Exception exUI)
+        //            {
+        //                GrabarError($" - MostrarAlertaUpdate/UI: {exUI.Message}");
+        //            }
+        //        }
+        //        if (f.InvokeRequired) f.Invoke((Action)DoUI); else DoUI();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        GrabarError($" - MostrarAlertaUpdate: {ex.Message}");
+        //    }
+        //}
     }
 }

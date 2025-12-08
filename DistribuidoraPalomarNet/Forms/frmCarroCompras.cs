@@ -23,6 +23,7 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
+                Module.Cargar_Usuario(false);
                 Module.funcion_inicial_carrito();
             }
             catch (Exception ex)

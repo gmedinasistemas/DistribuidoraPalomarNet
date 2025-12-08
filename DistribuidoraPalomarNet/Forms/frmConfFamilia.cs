@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.Windows.Forms;
@@ -7,11 +8,15 @@ namespace DistribuidoraPalomarNet
 {
     public partial class frmConfFamilia : Form
     {
+        private static bool _familiasInicializadas = false;
+        private Label _lblCargando;
+
         public frmConfFamilia()
         {
             InitializeComponent();
             // Wire events similares al patrón del proyecto
             Load += frmConfFamilia_Load;
+            Shown += frmConfFamilia_Shown;
             btnGrabar.Click += btnGrabar_Click;
             btnSalir.Click += btnSalir_Click;
             CheckBox1.CheckedChanged += CheckBox1_CheckedChanged;
@@ -20,15 +25,58 @@ namespace DistribuidoraPalomarNet
 
         private void frmConfFamilia_Load(object sender, EventArgs e)
         {
+            // La carga pesada se realiza en el evento Shown para que el formulario se pinte primero
+        }
+
+        private void frmConfFamilia_Shown(object sender, EventArgs e)
+        {
+            Cursor previousCursor = Cursor.Current;
+            string previousText = this.Text;
             try
             {
-                Inicializacion();
+                // Mostrar indicador visual mientras se inicializa
+                Cursor.Current = Cursors.WaitCursor;
+                this.Text = string.IsNullOrEmpty(previousText)
+                    ? "Cargando familias..."
+                    : previousText + " - Cargando familias...";
+                // Crear label de estado si aún no existe
+                if (_lblCargando == null)
+                {
+                    _lblCargando = new Label();
+                    _lblCargando.Text = "Cargando familias...";
+                    _lblCargando.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
+                    _lblCargando.ForeColor = System.Drawing.Color.DarkSlateBlue;
+                    _lblCargando.BackColor = System.Drawing.Color.Transparent;
+                    _lblCargando.Dock = DockStyle.Fill;
+                    _lblCargando.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+                    this.Controls.Add(_lblCargando);
+                }
+                _lblCargando.BringToFront();
+                _lblCargando.Visible = true;
+                this.Refresh();
+
+                // Ejecutar Inicializacion solo la primera vez (usa conexiones compartidas en Module)
+                if (!_familiasInicializadas)
+                {
+                    Inicializacion();
+                    _familiasInicializadas = true;
+                }
+
                 CargarGrilla();
                 ConfigurarGrilla();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error al cargar datos: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                if (_lblCargando != null)
+                {
+                    _lblCargando.Visible = false;
+                }
+                Cursor.Current = previousCursor;
+                this.Text = previousText;
             }
         }
 
@@ -119,7 +167,22 @@ namespace DistribuidoraPalomarNet
                 Module.aplicar_desc_Cliente(); // Cargo Descuentos 1 y 2
                 Module.Update_Precios();
                 Module.Update_Precios_Ofertas();
-                Module.funcion_inicial(1);
+                // Solo llamar a Module.funcion_inicial(1) si existe el frmPrincipal
+                // y tiene datos visibles en la grilla
+                var fp = Application.OpenForms.OfType<frmPrincipal>().FirstOrDefault();
+
+                if (fp != null && fp.DataGridView1 != null)
+                {
+                    // Hay al menos una fila real (no la fila nueva vacía)
+                    bool hayFilasConDatos = fp.DataGridView1.Rows
+                        .Cast<DataGridViewRow>()
+                        .Any(r => !r.IsNewRow);
+
+                    if (hayFilasConDatos)
+                    {
+                        Module.funcion_inicial(1);
+                    }
+                }
             }
             this.Close();
         }
@@ -185,44 +248,76 @@ namespace DistribuidoraPalomarNet
 
         private void Inicializacion()
         {
-            OleDbCommand cmFamilias = new OleDbCommand();
-            OleDbDataReader drFamilias = null;
+            OleDbCommand cmFamiliasArt = new OleDbCommand();
+            OleDbDataReader drFamiliasArt = null;
             try
             {
-                if (!string.IsNullOrWhiteSpace(Module.US_CODI))
+                if (string.IsNullOrWhiteSpace(Module.US_CODI))
+                    return;
+
+                // 1) Cargar en memoria las familias existentes en la base de usuario (cnnU)
+                var familiasUsuario = new Dictionary<string, string>(); // FACODI -> FADESC
+                OleDbCommand cmFamiliasUsu = new OleDbCommand();
+                OleDbDataReader drFamiliasUsu = null;
+                try
                 {
-                    Module.ConectarDBArti();
-                    cmFamilias.Connection = Module.cnn;
-                    cmFamilias.CommandType = CommandType.Text;
-                    cmFamilias.CommandText = "SELECT DISTINCT f.facodi, f.fadesc from familias as f " +
-                                             //" inner join descuent as d on d.desflia=f.facodi " +
-                                             //" where d.desclie=" + Module.US_CODI +
-                                             " order by f.fadesc";
-                    drFamilias = cmFamilias.ExecuteReader();
-                    Application.DoEvents();
-                    while (drFamilias.Read())
+                    Module.ConectarDBUsuario();
+                    cmFamiliasUsu.Connection = Module.cnnU;
+                    cmFamiliasUsu.CommandType = CommandType.Text;
+                    cmFamiliasUsu.CommandText = "SELECT FACODI, FADESC FROM FAMILIAS";
+                    drFamiliasUsu = cmFamiliasUsu.ExecuteReader();
+                    while (drFamiliasUsu.Read())
                     {
-                        string facodi = drFamilias["FACODI"].ToString();
-                        string fadesc = drFamilias["FADESC"].ToString();
-                        if (IDFamiliaExiste(facodi) == false)
-                        {
-                            InsertarFamilia(facodi, fadesc);
-                        }
+                        string facodiU = Convert.ToString(drFamiliasUsu["FACODI"]);
+                        string fadescU = Convert.ToString(drFamiliasUsu["FADESC"]);
+                        if (!familiasUsuario.ContainsKey(facodiU))
+                            familiasUsuario.Add(facodiU, fadescU);
                         else
-                        {
-                            UpdateFamilia(facodi, fadesc);
-                        }
-                        // Si la descripción aún no existe en la base de usuario, insertarla
-                        ActualizarFAMIVA(facodi, fadesc);
+                            familiasUsuario[facodiU] = fadescU;
                     }
-                    drFamilias.Close();
-
-                    // Borrar de cnnU los FACODI que ya no existan en la base del conector cnn
-                    DepurarFamiliasUsuario();
-
-                    if (Module.cnn.State == ConnectionState.Open)
-                        Module.cnn.Close();
                 }
+                finally
+                {
+                    if (drFamiliasUsu != null && !drFamiliasUsu.IsClosed) drFamiliasUsu.Close();
+                    if (Module.cnnU.State == ConnectionState.Open) Module.cnnU.Close();
+                    cmFamiliasUsu.Dispose();
+                }
+
+                // 2) Recorrer familias de la base de articulos y sincronizar con la base de usuario
+                Module.ConectarDBArti();
+                cmFamiliasArt.Connection = Module.cnn;
+                cmFamiliasArt.CommandType = CommandType.Text;
+                cmFamiliasArt.CommandText = "SELECT DISTINCT f.facodi, f.fadesc from familias as f " +
+                                            //" inner join descuent as d on d.desflia=f.facodi " +
+                                            //" where d.desclie=" + Module.US_CODI +
+                                            " order by f.fadesc";
+                drFamiliasArt = cmFamiliasArt.ExecuteReader();
+                Application.DoEvents();
+                while (drFamiliasArt.Read())
+                {
+                    string facodi = drFamiliasArt["FACODI"].ToString();
+                    string fadesc = drFamiliasArt["FADESC"].ToString();
+
+                    if (!familiasUsuario.TryGetValue(facodi, out var descActual))
+                    {
+                        // No existe en la base de usuario, insertar
+                        InsertarFamilia(facodi, fadesc);
+                        familiasUsuario[facodi] = fadesc;
+                    }
+                    else if (!string.Equals(descActual, fadesc, StringComparison.Ordinal))
+                    {
+                        // Existe pero con descripcion distinta, actualizar
+                        UpdateFamilia(facodi, fadesc);
+                        familiasUsuario[facodi] = fadesc;
+                    }
+                }
+                drFamiliasArt.Close();
+
+                // 3) Borrar de cnnU los FACODI que ya no existan en la base del conector cnn
+                DepurarFamiliasUsuario();
+
+                if (Module.cnn.State == ConnectionState.Open)
+                    Module.cnn.Close();
             }
             catch (Exception ex)
             {
@@ -232,7 +327,7 @@ namespace DistribuidoraPalomarNet
             }
             finally
             {
-                cmFamilias.Dispose();
+                cmFamiliasArt.Dispose();
             }
         }
 

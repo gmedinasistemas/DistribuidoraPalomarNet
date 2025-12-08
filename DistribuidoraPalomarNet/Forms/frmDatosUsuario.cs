@@ -239,9 +239,25 @@ namespace DistribuidoraPalomarNet
                 Module.Update_Precios();
                 Module.Update_Precios_Ofertas();
                 //Module.Update_PrecioSug_Ofertas();
-                Module.funcion_inicial(1);
+
+                // Solo llamar a Module.funcion_inicial(1) si existe el frmPrincipal
+                // y tiene datos visibles en la grilla
+                var fp = Application.OpenForms.OfType<frmPrincipal>().FirstOrDefault();
+
+                if (fp != null && fp.DataGridView1 != null)
+                {
+                    // Hay al menos una fila real (no la fila nueva vacía)
+                    bool hayFilasConDatos = fp.DataGridView1.Rows
+                        .Cast<DataGridViewRow>()
+                        .Any(r => !r.IsNewRow);
+
+                    if (hayFilasConDatos)
+                    {
+                        Module.funcion_inicial(1);
+                    }
+                }
             }
-            Module.Cargar_Usuario();
+            Module.Cargar_Usuario(false);
             this.Close();
         }
         #endregion

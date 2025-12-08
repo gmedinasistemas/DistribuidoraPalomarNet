@@ -57,6 +57,93 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        private void Combo_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Back)
+            {
+                if (DateTime.Now - comboLastKeyTime > TimeSpan.FromSeconds(1))
+                    comboSearchBuffer = string.Empty;
+                else if (comboSearchBuffer.Length > 0)
+                    comboSearchBuffer = comboSearchBuffer.Substring(0, comboSearchBuffer.Length - 1);
+                comboLastKeyTime = DateTime.Now;
+                var cb = sender as ComboBox;
+                if (cb != null)
+                {
+                    int idx = FindIndex(cb, comboSearchBuffer);
+                    if (idx >= 0)
+                        cb.SelectedIndex = idx;
+                    cb.DroppedDown = true;
+                }
+                e.Handled = true;
+            }
+            else if (e.KeyCode == Keys.Escape)
+            {
+                comboSearchBuffer = string.Empty;
+                var cb = sender as ComboBox;
+                if (cb != null) cb.DroppedDown = false;
+                e.Handled = true;
+            }
+        }
+
+        private void Combo_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar))
+            {
+                if (DateTime.Now - comboLastKeyTime > TimeSpan.FromSeconds(1))
+                    comboSearchBuffer = string.Empty;
+                comboLastKeyTime = DateTime.Now;
+                comboSearchBuffer += e.KeyChar;
+                var cb = sender as ComboBox;
+                if (cb != null)
+                {
+                    int idx = FindIndex(cb, comboSearchBuffer);
+                    if (idx >= 0)
+                        cb.SelectedIndex = idx;
+                    cb.DroppedDown = true;
+                }
+                e.Handled = true;
+            }
+        }
+
+        private int FindIndex(ComboBox cb, string buffer)
+        {
+            if (string.IsNullOrEmpty(buffer)) return -1;
+            string buf = buffer.ToLowerInvariant();
+            string displayMember = cb.DisplayMember;
+            for (int i = 0; i < cb.Items.Count; i++)
+            {
+                object item = cb.Items[i];
+                string text = string.Empty;
+                if (item != null)
+                {
+                    if (!string.IsNullOrEmpty(displayMember))
+                    {
+                        if (item is System.Data.DataRowView drv)
+                        {
+                            try { text = Convert.ToString(drv[displayMember]); }
+                            catch { text = item.ToString(); }
+                        }
+                        else
+                        {
+                            var prop = item.GetType().GetProperty(displayMember);
+                            text = prop != null ? Convert.ToString(prop.GetValue(item, null)) : item.ToString();
+                        }
+                    }
+                    else
+                    {
+                        text = item.ToString();
+                    }
+                }
+                if (!string.IsNullOrEmpty(text))
+                {
+                    string cmp = text.ToLowerInvariant();
+                    if (cmp.StartsWith(buf) || cmp.Contains(buf))
+                        return i;
+                }
+            }
+            return -1;
+        }
+
 
         private void ColorearCelda(DataGridView dataGridView)
         {
@@ -110,8 +197,12 @@ namespace DistribuidoraPalomarNet
 
         private static frmCarroCompras _frmCarroCompras = new frmCarroCompras();
         private static bool Migra = false;
+        private string comboSearchBuffer = string.Empty;
+        private DateTime comboLastKeyTime = DateTime.MinValue;
 
         private static frmPrincipal _instance;
+        private bool _porLimpieza=false;
+
         public static frmPrincipal Instance
         {
             get
@@ -134,11 +225,15 @@ namespace DistribuidoraPalomarNet
             // Asignar manejadores de eventos para botones
             btnGenerarTxt.Click += BtnGenerarTxt_Click;
             btnEquivalencia.Click += BtnEquivalencia_Click;
-            btnConfUsu.Click += BtnConfUsu_Click;
+            //btnConfUsu.Click += BtnConfUsu_Click;
             btncerrar.Click += Btncerrar_Click;
             btnVerCarrito.Click += BtnVerCarrito_Click;
             btnLimpiar.Click += BtnLimpiar_Click;
             btnnovedades.Click += Btnnovedades_Click;
+            cmbLineas.KeyPress += Combo_KeyPress;
+            cmbRubros.KeyPress += Combo_KeyPress;
+            cmbLineas.KeyDown += Combo_KeyDown;
+            cmbRubros.KeyDown += Combo_KeyDown;
         }
         private void Btnnovedades_Click(object sender, EventArgs e)
         {
@@ -179,22 +274,31 @@ namespace DistribuidoraPalomarNet
 
         private void txtDescripcion_TextChanged(object sender, EventArgs e)
         {
+            //try
+            //{
+            //    Application.DoEvents();
+            //    if (!string.IsNullOrEmpty(txtDescripcion.Text))
+            //    {
+            //        Module.campo = "descripcion";
+            //        Module.valor = txtDescripcion.Text;
+            //        if (!ckbOfertas.Checked)
+            //        {
+            //            Module.consultas_Relacionales();
+            //        }
+            //        else
+            //        {
+            //            Module.consultas_Ofertas();
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Descripción': {ex.Message}");
+            //}
             try
             {
-                Application.DoEvents();
-                if (!string.IsNullOrEmpty(txtDescripcion.Text))
-                {
-                    Module.campo = "descripcion";
-                    Module.valor = txtDescripcion.Text;
-                    if (!ckbOfertas.Checked)
-                    {
-                        Module.consultas_Relacionales();
-                    }
-                    else
-                    {
-                        Module.consultas_Ofertas();
-                    }
-                }
+                timer2.Stop();
+                timer2.Start();
             }
             catch (Exception ex)
             {
@@ -218,23 +322,25 @@ namespace DistribuidoraPalomarNet
                     Application.DoEvents();
 
                     string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-                    "'Dato Pendiente' as Linea," +
+                    "p.prrazo as Marca," +
                     //"l.lidesc as Linea," +
-                    "a.armode as Modelo, a.arinte as Posición, a.ARMARC as Marca," +
+                    "a.armode as Linea," +
+                    " a.arinte as Posición," +
+                    //" a.ARMARC as Marca2," + 
                     "a.arpre2 as Preciopublico, " +//"IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
                     "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
-                    " from listas as a ";
+                    " from (listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) ";
 
                     //da = new OleDbDataAdapter(
-                    //    "SELECT a.arprim as Primera, a.arterc as Codigo, p.prrazo as Marca, a.ardesc as Descripcion, " +
+                    //    "SELECT a.arprim as Primera, a.arterc as Codigo, p.PRMARC as Marca, a.ardesc as Descripcion, " +
                     //    "a.arobse as Observacioness, a.arpre2 as Preciopublico , a.arprov, a.arobse, a.arubic1 as Obs from listas as a " +
                     //    "inner join proveedo as p on p.prcodi=a.arprov " +
                     //    "Where a.arubic1='" + Module.NumEqui + "' " +
                     //    "order by arcodi", Module.cnn);
                     da = new OleDbDataAdapter(
                         SelectQuery +
-                        "Where a.arubic1='" + Module.NumEqui + "' " +
+                        "Where a.AROBSE='" + Module.NumEqui + "' " +
                         "order by arcodi", Module.cnn);
 
                     DataSet ds = new DataSet();
@@ -249,7 +355,7 @@ namespace DistribuidoraPalomarNet
                     DataGridView2.Columns["arubic1"].Visible = false;
                     DataGridView2.Columns["arobse"].Visible = false;
                     DataGridView2.Columns["Linea"].Visible = false;
-                    DataGridView2.Columns["Modelo"].Visible = false;
+                    //DataGridView2.Columns["Modelo"].Visible = false;
                     DataGridView2.Columns["Descripcion"].Visible = false;
 
                     var miEstiloStock = new DataGridViewCellStyle(DataGridView2.Columns["Stock"].DefaultCellStyle)
@@ -261,7 +367,7 @@ namespace DistribuidoraPalomarNet
 
 
                     if (DataGridView1.RowCount > 0)
-                        lblTotalRegistros.Text = "articulo: " + DataGridView2.RowCount.ToString();
+                        lblTotalRegistros.Text = "ARTÍCULO: " + DataGridView2.RowCount.ToString();
                     if (Module.cnn.State == ConnectionState.Open)
                     {
                         Module.cnn.Close();
@@ -323,7 +429,45 @@ namespace DistribuidoraPalomarNet
             try
             {
                 btnLimpiar.Enabled = false;
-                Module.LimpiarCampos(0);
+                // Limpiar campos de búsqueda sin recargar datos
+                txtDescripcion.Text = string.Empty;
+                txtModelo.Text = string.Empty;
+                txtEquivalencia.Text = string.Empty;
+                txtCodigo.Text = string.Empty;
+                txtPreciolista.Text = string.Empty;
+                txtPreciopublico.Text = string.Empty;
+                txtSugerido.Text = string.Empty;
+                txtBeneficio.Text = string.Empty;
+                //txtDescuento1.Text = string.Empty;
+                //txtDescuento2.Text = string.Empty;
+                //txtDescuento3.Text = string.Empty;
+                if (cmbRubros.Items.Count > 0) cmbRubros.SelectedIndex = -1;
+                if (cmbLineas.Items.Count > 0) cmbLineas.SelectedIndex = -1;
+
+                // Dejar la grilla vacía preservando configuración y encabezados
+                if (DataGridView1.DataSource is System.Data.DataTable dt)
+                {
+                    dt.Rows.Clear();
+                    DataGridView1.Refresh();
+                }
+                else
+                {
+                    DataGridView1.Rows.Clear();
+                }
+
+                // Dejar la grilla equivalencias vacía preservando configuración y encabezados
+                if (DataGridView2.DataSource is System.Data.DataTable dte)
+                {
+                    dte.Rows.Clear();
+                    DataGridView2.Refresh();
+                }
+                else
+                {
+                    DataGridView2.Rows.Clear();
+                }
+
+                // Actualizar contador
+                lblTotalRegistros.Text = "Total Registros: 0";
                 btnLimpiar.Enabled = true;
             }
             catch (Exception ex)
@@ -342,15 +486,15 @@ namespace DistribuidoraPalomarNet
             ActualizarDatosLocalToolStripMenuItem.Click += new EventHandler(ActualizarDatosLocalToolStripMenuItem_Click);
 
             // Configuración
-            ClientesToolStripMenuItem.Click += new EventHandler(ClientesToolStripMenuItem_Click);
+            // ClientesToolStripMenuItem.Click += new EventHandler(ClientesToolStripMenuItem_Click); // ya está conectado en el Designer
             DescPorMarcaToolStripMenuItem.Click += new EventHandler(DescPorMarcaToolStripMenuItem_Click);
 
             // Ver
             PedidosEnviadosToolStripMenuItem.Click += new EventHandler(PedidosEnviadosToolStripMenuItem_Click);
 
             // Web y Acerca de
-            WwwsistemasvscomarToolStripMenuItem.Click += new EventHandler(WwwsistemasvscomarToolStripMenuItem_Click);
-            AcercaDeToolStripMenuItem.Click += new EventHandler(AcercaDeToolStripMenuItem_Click);
+            //WwwsistemasvscomarToolStripMenuItem.Click += new EventHandler(WwwsistemasvscomarToolStripMenuItem_Click);
+            //AcercaDeToolStripMenuItem.Click += new EventHandler(AcercaDeToolStripMenuItem_Click);
         }
 
         private void ActualizarBasesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -460,7 +604,7 @@ namespace DistribuidoraPalomarNet
 
         private void AcercaDeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Distribuidora Palomar\nVersión 1.0\n\nDesarrollado por Sistemas VS\nwww.sistemasvs.com.ar", "Acerca de", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("Distribuidora Palomar\nVersión 1.0\n\nDesarrollado por Sistemas VS\nwww.sistemavs.com", "Acerca de", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void frmPrincipal_FormClosed(object sender, FormClosedEventArgs e)
@@ -528,10 +672,10 @@ namespace DistribuidoraPalomarNet
                     string StringSelect = "SELECT TOP 1 IIF(R.RBDESC IS NULL, '', R.RBDESC) AS RBDESC, IIF(A.ARORIG IS NULL, '', A.ARORIG) AS ARORIG" +
                         ", IIF(A.AROBSE IS NULL, '', A.AROBSE) AS AROBSE " +
                         ", IIF(A.ARUBIC1 IS NULL, '', A.ARUBIC1) AS ARUBIC1 " +
-                    " from listas AS A " +
-                    " INNER JOIN RUBROS AS R ON A.ARRUB2 = R.RBCODI  " +
+                    " FROM (listas AS A INNER JOIN proveedo AS p ON p.prcodi = A.arprov) " +
+                    " INNER JOIN RUBROS AS R ON A.ARRUB2 = R.RBCODI " +
                     " WHERE A.ARTERC='" + this.DataGridView1["CODIGO", numFila].Value.ToString() +
-                    "' AND A.ARMARC='" + this.DataGridView1["Marca", numFila].Value.ToString() + "'";
+                    "' AND p.prmarc='" + this.DataGridView1["Marca", numFila].Value.ToString() + "'";
                     Module.CargarDatosExtras(StringSelect);
                 }
             }
@@ -661,14 +805,30 @@ namespace DistribuidoraPalomarNet
                     if (!string.IsNullOrEmpty(txtCodigo.Text))
                     {
                         string queryRel = ckbOfertas.Checked
-                            ? "SELECT a.arterc as Codigo, A.ARMARC as Marca, a.ardesc as Descripcion, " +
+                            ? "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
+                                "p.PRMARC as Marca," +
+                                //"a.armarc as Marca," 
+                                //"l.lidesc as Linea," +
+                                "a.armode as Linea," +
+                                " a.arinte as Posición," +
+                              //" a.ARMARC as Marca2," + 
                               "a.arpre5 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                               ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from listas as a " +
+                                "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                                //" left join lineas as l on a.arcuar=l.licodi= " +
                               "where a.ARTT<>0 AND a.arprim+a.arterc like '%" + txtCodigo.Text +
                               "%' order by a.arcodi"
-                            : "SELECT a.arterc as Codigo, A.ARMARC as Marca, a.ardesc as Descripcion, " +
+                            : "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
+                                "p.PRMARC as Marca," +
+                                //"a.armarc as Marca," 
+                                //"l.lidesc as Linea," +
+                                "a.armode as Linea," +
+                                " a.arinte as Posición," +
+                              //" a.ARMARC as Marca2," + 
                               "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                               ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from listas as a " +
+                                "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                                //" left join lineas as l on a.arcuar=l.licodi= " +
                               "where a.arprim+a.arterc like '%" + txtCodigo.Text +
                               "%' order by a.arcodi";
 
@@ -750,7 +910,7 @@ namespace DistribuidoraPalomarNet
                 {
                     Module.campo = string.Empty;
                     Module.valor = string.Empty;
-                    Module.LimpiarCampos(1);
+                    //Module.LimpiarCampos(1);
 
                     if (cmbRubros.Text == " TODOS" || cmbRubros.Text == "TODOS")
                     {
@@ -759,6 +919,7 @@ namespace DistribuidoraPalomarNet
                     }
                     else
                     {
+                        Module.CargarComboLineas(cmbRubros.Text);
                         Module.consultas_Relacionales();
                     }
                 }
@@ -857,7 +1018,7 @@ namespace DistribuidoraPalomarNet
                 {
                     if (selectedValue != 0)
                     {
-                        Filtrar_x_linea(selectedValue);
+                        Filtrar_x_linea(cmbLineas.Text);
                     }
                 }
                 //cmbLineas.Visible = false;
@@ -892,23 +1053,26 @@ namespace DistribuidoraPalomarNet
             //    Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Lineas': {ex.Message}");
             //}
         }
-        private void Filtrar_x_linea(int numL)
+
+        private void Filtrar_x_linea(string _linea)
         {
             OleDbDataAdapter da = null;
             try
             {
                 Application.DoEvents();
                 string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-                    "'Dato Pendiente' as Linea," +
+                    "p.prrazo as Marca," +
                     //"l.lidesc as Linea," +
-                    "a.armode as Modelo, a.arinte as Posición, a.ARMARC as Marca," +
+                    "a.armode as Linea," +
+                    " a.arinte as Posición," +
+                    //" a.ARMARC as Marca2," + 
                     "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
                     " from listas as a ";
 
                 da = new OleDbDataAdapter(SelectQuery +
                                          "inner join proveedo as p on p.prcodi=a.arprov " +
-                                         "where a.arcuar='" + numL.ToString() + "' " +
+                                         "where a.armode='" + _linea + "' " +
                                          "order by a.arcodi", Module.cnn);
 
                 DataSet ds = new DataSet();
@@ -937,7 +1101,7 @@ namespace DistribuidoraPalomarNet
 
                 if (this.DataGridView1.RowCount > 0)
                 {
-                    lblTotalRegistros.Text = "Articulo: " + DataGridView1.RowCount.ToString();
+                    lblTotalRegistros.Text = "ARTÍCULO: " + DataGridView1.RowCount.ToString();
                     if (!TimerVerOfertas.Enabled)
                         TimerVerOfertas.Enabled = true;
 
@@ -946,6 +1110,63 @@ namespace DistribuidoraPalomarNet
                 }
             }
         }
+
+        //private void Filtrar_x_linea(int numL)
+        //{
+        //    OleDbDataAdapter da = null;
+        //    try
+        //    {
+        //        Application.DoEvents();
+        //        string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
+        //            "a.armarc as Marca," +
+        //            //"l.lidesc as Linea," +
+        //            "a.armode as Linea," +
+        //            " a.arinte as Posición," +
+        //            //" a.ARMARC as Marca2," + 
+        //            "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
+        //            ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
+        //            " from listas as a ";
+
+        //        da = new OleDbDataAdapter(SelectQuery +
+        //                                 "inner join proveedo as p on p.prcodi=a.arprov " +
+        //                                 "where a.arcuar='" + numL.ToString() + "' " +
+        //                                 "order by a.arcodi", Module.cnn);
+
+        //        DataSet ds = new DataSet();
+        //        Application.DoEvents();
+        //        da.Fill(ds);
+        //        Application.DoEvents();
+        //        DataGridView1.DataSource = ds.Tables[0];
+        //        DataGridView1.Refresh();
+
+        //        Module.SeleccionarGrilla();
+
+        //        if (Module.cnn.State == ConnectionState.Open)
+        //            Module.cnn.Close();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        if (Module.cnn.State == ConnectionState.Open)
+        //            Module.cnn.Close();
+
+        //        throw new Exception(", error dentro de la Función 'Filtrar_x_linea': " + ex.Message);
+        //    }
+        //    finally
+        //    {
+        //        if (da != null)
+        //            da.Dispose();
+
+        //        if (this.DataGridView1.RowCount > 0)
+        //        {
+        //            lblTotalRegistros.Text = "ARTÍCULO: " + DataGridView1.RowCount.ToString();
+        //            if (!TimerVerOfertas.Enabled)
+        //                TimerVerOfertas.Enabled = true;
+
+        //            SimulateClickOnDataGridViewCell(DataGridView1, 0, 0);
+        //            SimulateClickOnDataGridViewCell(DataGridView1, 1, 0);
+        //        }
+        //    }
+        //}
 
 
         public void SimulateClickOnDataGridViewCell(DataGridView dgv, int rowIndex, int columnIndex)
@@ -1183,22 +1404,31 @@ namespace DistribuidoraPalomarNet
 
         private void txtModelo_TextChanged(object sender, EventArgs e)
         {
+            //try
+            //{
+            //    Application.DoEvents();
+            //    if (!string.IsNullOrEmpty(txtModelo.Text))
+            //    {
+            //        Module.campo = "a.AROBSE";
+            //        Module.valor = txtModelo.Text;
+            //        if (!ckbOfertas.Checked)
+            //        {
+            //            Module.consultas_Relacionales();
+            //        }
+            //        else
+            //        {
+            //            Module.consultas_Ofertas();
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Modelo': {ex.Message}");
+            //}
             try
             {
-                Application.DoEvents();
-                if (!string.IsNullOrEmpty(txtModelo.Text))
-                {
-                    Module.campo = "modelo";
-                    Module.valor = txtModelo.Text;
-                    if (!ckbOfertas.Checked)
-                    {
-                        Module.consultas_Relacionales();
-                    }
-                    else
-                    {
-                        Module.consultas_Ofertas();
-                    }
-                }
+                timer2.Stop();
+                timer2.Start();
             }
             catch (Exception ex)
             {
@@ -1259,9 +1489,11 @@ namespace DistribuidoraPalomarNet
                         "Agregar Pieza " + this.DataGridView1["CODIGO", NumFila].Value.ToString() +
                         " Marca " + this.DataGridView1["Marca", NumFila].Value.ToString(), "1");
 
-                    string StringSelect = "Select ARFLIA, ARPROV from listas " +
+                    string StringSelect = "Select ARFLIA, ARPROV " +
+                                        " from listas as a " +
+                                        "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
                                         " WHERE ARTERC='" + this.DataGridView1["CODIGO", NumFila].Value.ToString() +
-                                        "' AND ARMARC='" + this.DataGridView1["Marca", NumFila].Value.ToString() + "'";
+                                        "' AND p.prmarc='" + this.DataGridView1["Marca", NumFila].Value.ToString() + "'";
 
                     //"' AND ARPRE2='" + this.DataGridView1[4, NumFila].Value.ToString() + "'"
                     string[] ArraySimple = Module.TraerCamposArticulo(StringSelect);
@@ -1389,10 +1621,10 @@ namespace DistribuidoraPalomarNet
                     string StringSelect = "SELECT TOP 1 IIF(R.RBDESC IS NULL, '', R.RBDESC) AS RBDESC, IIF(A.ARORIG IS NULL, '', A.ARORIG) AS ARORIG" +
                         ", IIF(A.AROBSE IS NULL, '', A.AROBSE) AS AROBSE " +
                         ", IIF(A.ARUBIC1 IS NULL, '', A.ARUBIC1) AS ARUBIC1 " +
-                    " from listas AS A " +
-                    " INNER JOIN RUBROS AS R ON A.ARRUB2 = R.RBCODI  " +
+                    " FROM (listas AS A INNER JOIN proveedo AS p ON p.prcodi = A.arprov) " +
+                    " INNER JOIN RUBROS AS R ON A.ARRUB2 = R.RBCODI " +
                     " WHERE A.ARTERC='" + this.DataGridView2["CODIGO", numFila].Value.ToString() +
-                    "' AND A.ARMARC='" + this.DataGridView2["Marca", numFila].Value.ToString() + "'";
+                    "' AND p.prmarc='" + this.DataGridView2["Marca", numFila].Value.ToString() + "'";
                     Module.CargarDatosExtras(StringSelect);
                 }
             }
@@ -1432,9 +1664,16 @@ namespace DistribuidoraPalomarNet
                         "Agregar Pieza " + this.DataGridView2["CODIGO", NumFila].Value.ToString() +
                         " Marca " + this.DataGridView2["Marca", NumFila].Value.ToString(), "1");
 
-                    string StringSelect = "Select ARFLIA, ARPROV from listas " +
+                    //string StringSelect = "Select ARFLIA, ARPROV from listas " +
+                    //                    " WHERE ARTERC='" + this.DataGridView2["CODIGO", NumFila].Value.ToString() +
+                    //                    "' AND ARMARC='" + this.DataGridView2["Marca", NumFila].Value.ToString() + "'";
+
+
+                    string StringSelect = "Select ARFLIA, ARPROV " +
+                                        " from listas as a " +
+                                        "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
                                         " WHERE ARTERC='" + this.DataGridView2["CODIGO", NumFila].Value.ToString() +
-                                        "' AND ARMARC='" + this.DataGridView2["Marca", NumFila].Value.ToString() + "'";
+                                        "' AND p.prmarc='" + this.DataGridView2["Marca", NumFila].Value.ToString() + "'";
 
                     //"' AND ARPRE2='" + this.DataGridView2[4, NumFila].Value.ToString() + "'"
                     string[] ArraySimple = Module.TraerCamposArticulo(StringSelect);
@@ -1509,6 +1748,42 @@ namespace DistribuidoraPalomarNet
             {
                 Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Abrir Conf. por Familia': {ex.Message}");
                 MessageBox.Show("Error al abrir configuración por familia: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+            try
+            {
+                if (_porLimpieza == false)
+                {
+                    if (!string.IsNullOrWhiteSpace(txtDescripcion.Text) || !string.IsNullOrWhiteSpace(txtModelo.Text))
+                    {
+                        // Detiene el temporizador
+                        timer2.Stop();
+                        // Aquí puedes poner el código que deseas ejecutar cuando el usuario deja de escribir
+                        // MessageBox.Show("Terminaste de escribir en el TextBox");
+
+                        if (ckbOfertas.Checked == false) // Filtros comunes
+                        {
+                            // CargarComboCodigos(".", cmbFamilias.Text);
+                            Module.consultas_Relacionales();
+                        }
+                        else
+                        {
+                            Module.consultas_Ofertas();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Manejo de excepciones (puedes dejar vacío como en VB o agregar logging)
+            }
+            finally
+            {
+                // Detiene el temporizador
+                timer2.Stop();
             }
         }
 
