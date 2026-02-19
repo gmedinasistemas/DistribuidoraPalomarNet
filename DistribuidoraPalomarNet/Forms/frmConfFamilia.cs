@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace DistribuidoraPalomarNet
@@ -34,6 +35,16 @@ namespace DistribuidoraPalomarNet
             string previousText = this.Text;
             try
             {
+                AutoScroll = true;
+                var wa = Screen.FromControl(this).WorkingArea;
+                if (Width > wa.Width || Height > wa.Height)
+                {
+                    Size = new Size(Math.Min(Width, wa.Width), Math.Min(Height, wa.Height));
+                }
+                Location = new Point(
+                    wa.Left + Math.Max(0, (wa.Width - Width) / 2),
+                    wa.Top + Math.Max(0, (wa.Height - Height) / 2));
+
                 // Mostrar indicador visual mientras se inicializa
                 Cursor.Current = Cursors.WaitCursor;
                 this.Text = string.IsNullOrEmpty(previousText)
@@ -95,16 +106,23 @@ namespace DistribuidoraPalomarNet
                 DataGridView1.Columns["Familia"].ReadOnly = true;
                 DataGridView1.Columns["Familia"].Width = 200;
             }
-            if (DataGridView1.Columns.Contains("Beneficio"))
+            if (DataGridView1.Columns.Contains("FADES1"))
             {
-                DataGridView1.Columns["Beneficio"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-                DataGridView1.Columns["Beneficio"].DefaultCellStyle.Format = "N2";
+                DataGridView1.Columns["FADES1"].HeaderText = "Descuento Familia";
+                DataGridView1.Columns["FADES1"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                DataGridView1.Columns["FADES1"].DefaultCellStyle.Format = "N2";
             }
             if (DataGridView1.Columns.Contains("Iva"))
             {
                 DataGridView1.Columns["Iva"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
                 DataGridView1.Columns["Iva"].DefaultCellStyle.Format = "N2";
             }
+            if (DataGridView1.Columns.Contains("Beneficio"))
+            {
+                DataGridView1.Columns["Beneficio"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                DataGridView1.Columns["Beneficio"].DefaultCellStyle.Format = "N2";
+            }
+
         }
 
         private void CheckBox1_CheckedChanged(object sender, EventArgs e)
@@ -114,6 +132,8 @@ namespace DistribuidoraPalomarNet
             txtbgral.Enabled = enabled;
             lbliva.Enabled = enabled;
             txtiva.Enabled = enabled;
+            lblDescFlia.Enabled = enabled;
+            txtDescFlia.Enabled = enabled;
         }
 
         private void btnGrabar_Click(object sender, EventArgs e)
@@ -132,10 +152,15 @@ namespace DistribuidoraPalomarNet
                             Application.DoEvents();
                             var row = DataGridView1.Rows[s];
                             string familia = Convert.ToString(row.Cells[0].Value);
-                            string ben1 = Convert.ToString(row.Cells[1].Value);
+                            string ben1 = Convert.ToString(row.Cells[3].Value);
+                            string fades1 = Convert.ToString(row.Cells[1].Value);
                             string iva = Convert.ToString(row.Cells[2].Value);
-                            string stringQuery = "UPDATE FAMILIAS SET FABEN1='" + (ben1 ?? string.Empty).Replace("'", "''") + "',FAIVA='" + (iva ?? string.Empty).Replace("'", "''") + "' WHERE FADESC='" + (familia ?? string.Empty).Replace("'", "''") + "'";
-                            UpdateFamilias(stringQuery);
+
+                            decimal.TryParse((ben1 ?? string.Empty).Trim(), out var ben1Val);
+                            decimal.TryParse((fades1 ?? string.Empty).Trim(), out var fades1Val);
+                            decimal.TryParse((iva ?? string.Empty).Trim(), out var ivaVal);
+
+                            UpdateFamilias(familia, ben1Val, fades1Val, ivaVal);
                             s = s + 1;
                         }
                     }
@@ -162,25 +187,98 @@ namespace DistribuidoraPalomarNet
 
         private void btnSalir_Click(object sender, EventArgs e)
         {
-            if (ptbImgSi.Visible)
+            Form frmProgreso = null;
+            Label lblProgreso = null;
+            ProgressBar pbProgreso = null;
+
+            try
             {
-                Module.aplicar_desc_Cliente(); // Cargo Descuentos 1 y 2
-                Module.Update_Precios();
-                Module.Update_Precios_Ofertas();
-                // Solo llamar a Module.funcion_inicial(1) si existe el frmPrincipal
-                // y tiene datos visibles en la grilla
-                var fp = Application.OpenForms.OfType<frmPrincipal>().FirstOrDefault();
-
-                if (fp != null && fp.DataGridView1 != null)
+                if (ptbImgSi.Visible)
                 {
-                    // Hay al menos una fila real (no la fila nueva vacía)
-                    bool hayFilasConDatos = fp.DataGridView1.Rows
-                        .Cast<DataGridViewRow>()
-                        .Any(r => !r.IsNewRow);
+                    Cursor previousCursor = Cursor.Current;
+                    Cursor.Current = Cursors.WaitCursor;
 
-                    if (hayFilasConDatos)
+                    frmProgreso = new Form();
+                    frmProgreso.StartPosition = FormStartPosition.CenterScreen;
+                    frmProgreso.FormBorderStyle = FormBorderStyle.FixedDialog;
+                    frmProgreso.ControlBox = false;
+                    frmProgreso.MinimizeBox = false;
+                    frmProgreso.MaximizeBox = false;
+                    frmProgreso.ShowInTaskbar = false;
+                    frmProgreso.TopMost = true;
+                    frmProgreso.Width = 520;
+                    frmProgreso.Height = 160;
+                    frmProgreso.Text = "Cerrando configuracion";
+
+                    lblProgreso = new Label();
+                    lblProgreso.AutoSize = false;
+                    lblProgreso.Left = 16;
+                    lblProgreso.Top = 16;
+                    lblProgreso.Width = frmProgreso.ClientSize.Width - 32;
+                    lblProgreso.Height = 50;
+                    lblProgreso.Text = "Aplicando cambios...";
+
+                    pbProgreso = new ProgressBar();
+                    pbProgreso.Left = 16;
+                    pbProgreso.Top = 78;
+                    pbProgreso.Width = frmProgreso.ClientSize.Width - 32;
+                    pbProgreso.Height = 22;
+                    pbProgreso.Style = ProgressBarStyle.Marquee;
+                    pbProgreso.MarqueeAnimationSpeed = 30;
+
+                    frmProgreso.Controls.Add(lblProgreso);
+                    frmProgreso.Controls.Add(pbProgreso);
+                    frmProgreso.Show();
+                    Application.DoEvents();
+
+                    lblProgreso.Text = "Aplicando descuentos del cliente...";
+                    Application.DoEvents();
+                    Module.aplicar_desc_Cliente(); // Cargo Descuentos 1 y 2
+
+                    lblProgreso.Text = "Recalculando precios...";
+                    Application.DoEvents();
+                    Module.Update_Precios();
+
+                    lblProgreso.Text = "Recalculando precios de ofertas...";
+                    Application.DoEvents();
+                    Module.Update_Precios_Ofertas();
+
+                    lblProgreso.Text = "Actualizando catalogo...";
+                    Application.DoEvents();
+
+                    // Solo llamar a Module.funcion_inicial(1) si existe el frmPrincipal
+                    // y tiene datos visibles en la grilla
+                    var fp = Application.OpenForms.OfType<frmPrincipal>().FirstOrDefault();
+
+                    if (fp != null && fp.DataGridView1 != null)
                     {
-                        Module.funcion_inicial(1);
+                        bool hayFilasConDatos = fp.DataGridView1.Rows
+                            .Cast<DataGridViewRow>()
+                            .Any(r => !r.IsNewRow);
+
+                        if (hayFilasConDatos)
+                        {
+                            Module.funcion_inicial(1);
+                        }
+                    }
+
+                    Cursor.Current = previousCursor;
+                }
+            }
+            catch
+            {
+            }
+            finally
+            {
+                if (frmProgreso != null)
+                {
+                    try
+                    {
+                        frmProgreso.Close();
+                        frmProgreso.Dispose();
+                    }
+                    catch
+                    {
                     }
                 }
             }
@@ -227,7 +325,7 @@ namespace DistribuidoraPalomarNet
             try
             {
                 Module.ConectarDBUsuario();
-                da = new OleDbDataAdapter("SELECT DISTINCT FADESC as Familia, FABEN1 as Beneficio, FAIVA AS Iva from FAMILIAS", Module.cnnU);
+                da = new OleDbDataAdapter("SELECT DISTINCT FADESC as Familia, FADES1, FAIVA AS Iva, FABEN1 as Beneficio from FAMILIAS", Module.cnnU);
                 var ds = new DataSet();
                 da.Fill(ds);
                 DataGridView1.DataSource = ds.Tables[0];
@@ -452,7 +550,7 @@ namespace DistribuidoraPalomarNet
                 Module.ConectarDBUsuario();
                 cmFamilias.Connection = Module.cnnU;
                 cmFamilias.CommandType = CommandType.Text;
-                cmFamilias.CommandText = "insert into FAMILIAS (FACODI,FADESC,FABEN1,FAIVA) values ('" + (CodFamilia ?? string.Empty).Replace("'", "''") + "','" + (Familia ?? string.Empty).Replace("'", "''") + "',0,0)";
+                cmFamilias.CommandText = "insert into FAMILIAS (FACODI,FADESC,FABEN1,FADES1,FAIVA) values ('" + (CodFamilia ?? string.Empty).Replace("'", "''") + "','" + (Familia ?? string.Empty).Replace("'", "''") + "',0,0,0)";
                 Application.DoEvents();
                 cmFamilias.ExecuteNonQuery();
                 if (Module.cnnU.State == ConnectionState.Open)
@@ -495,6 +593,35 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        private void UpdateFamilias(string familia, decimal ben1, decimal fades1, decimal iva)
+        {
+            using var cmUsu = new OleDbCommand();
+            try
+            {
+                Module.ConectarDBUsuario();
+                cmUsu.Connection = Module.cnnU;
+                cmUsu.CommandType = CommandType.Text;
+                cmUsu.CommandText = "UPDATE FAMILIAS SET FABEN1 = ?, FADES1 = ?, FAIVA = ? WHERE FADESC = ?";
+                cmUsu.Parameters.AddWithValue("@p1", ben1);
+                cmUsu.Parameters.AddWithValue("@p2", fades1);
+                cmUsu.Parameters.AddWithValue("@p3", iva);
+                cmUsu.Parameters.AddWithValue("@p4", familia ?? string.Empty);
+                cmUsu.ExecuteNonQuery();
+                if (Module.cnnU.State == ConnectionState.Open)
+                    Module.cnnU.Close();
+                ptbImgSi.Visible = true;
+                ptbImgNo.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                if (Module.cnnU.State == ConnectionState.Open)
+                    Module.cnnU.Close();
+                ptbImgSi.Visible = false;
+                ptbImgNo.Visible = true;
+                throw new Exception(",Error dentro de 'UpdateFamilias' " + ex.Message);
+            }
+        }
+
         private void UpdateFamilias(string stringQuery)
         {
             OleDbCommand cmUsu = new OleDbCommand();
@@ -534,13 +661,16 @@ namespace DistribuidoraPalomarNet
                 {
                     bool hasBene = !string.IsNullOrWhiteSpace(txtbgral.Text);
                     bool hasIva = !string.IsNullOrWhiteSpace(txtiva.Text);
+                    bool hasDesc = !string.IsNullOrWhiteSpace(txtDescFlia.Text);
 
-                    if (hasBene && hasIva)
+                    if (hasBene && hasIva && hasDesc)
                     {
-                        if (float.TryParse(txtbgral.Text.Trim(), out _) && float.TryParse(txtiva.Text.Trim(), out _))
+                        if (float.TryParse(txtbgral.Text.Trim(), out _) && float.TryParse(txtiva.Text.Trim(), out _) && float.TryParse(txtDescFlia.Text.Trim(), out _))
                         {
-                            UQuery = "UPDATE FAMILIAS SET FABEN1=" + txtbgral.Text + ",FAIVA=" + txtiva.Text;
-                            UpdateFamilias(UQuery);
+                            decimal.TryParse(txtbgral.Text.Trim(), out var benVal);
+                            decimal.TryParse(txtiva.Text.Trim(), out var ivaVal);
+                            decimal.TryParse(txtDescFlia.Text.Trim(), out var descVal);
+                            UpdateFamiliasGeneral(benVal, ivaVal, descVal);
                         }
                         else
                         {
@@ -548,6 +678,8 @@ namespace DistribuidoraPalomarNet
                                 MessageBox.Show("El beneficio debe ser numerico", "Valor incorrecto", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             if (!float.TryParse(txtiva.Text.Trim(), out _))
                                 MessageBox.Show("El iva debe ser numerico", "Valor incorrecto", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            if (!float.TryParse(txtDescFlia.Text.Trim(), out _))
+                                MessageBox.Show("El descuento debe ser numerico", "Valor incorrecto", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
                     else
@@ -556,8 +688,8 @@ namespace DistribuidoraPalomarNet
                         {
                             if (float.TryParse(txtbgral.Text.Trim(), out _))
                             {
-                                UQuery = "UPDATE FAMILIAS SET FABEN1=" + txtbgral.Text;
-                                UpdateFamilias(UQuery);
+                                decimal.TryParse(txtbgral.Text.Trim(), out var benVal);
+                                UpdateFamiliasGeneral(benVal, null, null);
                             }
                             else
                             {
@@ -568,12 +700,25 @@ namespace DistribuidoraPalomarNet
                         {
                             if (float.TryParse(txtiva.Text.Trim(), out _))
                             {
-                                UQuery = "UPDATE FAMILIAS SET FAIVA=" + txtiva.Text;
-                                UpdateFamilias(UQuery);
+                                decimal.TryParse(txtiva.Text.Trim(), out var ivaVal);
+                                UpdateFamiliasGeneral(null, ivaVal, null);
                             }
                             else
                             {
                                 MessageBox.Show("El iva debe ser numerico", "Valor incorrecto", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+                        }
+
+                        if (hasDesc)
+                        {
+                            if (float.TryParse(txtDescFlia.Text.Trim(), out _))
+                            {
+                                decimal.TryParse(txtDescFlia.Text.Trim(), out var descVal);
+                                UpdateFamiliasGeneral(null, null, descVal);
+                            }
+                            else
+                            {
+                                MessageBox.Show("El descuento debe ser numerico", "Valor incorrecto", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             }
                         }
                     }
@@ -586,6 +731,54 @@ namespace DistribuidoraPalomarNet
             catch (Exception ex)
             {
                 throw new Exception(", error dentro de 'CargaGral': " + ex.Message);
+            }
+        }
+
+        private void UpdateFamiliasGeneral(decimal? ben1, decimal? iva, decimal? desc)
+        {
+            using var cmUsu = new OleDbCommand();
+            try
+            {
+                Module.ConectarDBUsuario();
+                cmUsu.Connection = Module.cnnU;
+                cmUsu.CommandType = CommandType.Text;
+
+                var sets = new List<string>();
+
+                if (ben1.HasValue)
+                {
+                    sets.Add("FABEN1 = ?");
+                    cmUsu.Parameters.AddWithValue("@p_ben", ben1.Value);
+                }
+                if (desc.HasValue)
+                {
+                    sets.Add("FADES1 = ?");
+                    cmUsu.Parameters.AddWithValue("@p_desc", desc.Value);
+                }
+                if (iva.HasValue)
+                {
+                    sets.Add("FAIVA = ?");
+                    cmUsu.Parameters.AddWithValue("@p_iva", iva.Value);
+                }
+
+                if (sets.Count == 0)
+                    return;
+
+                cmUsu.CommandText = "UPDATE FAMILIAS SET " + string.Join(", ", sets);
+
+                cmUsu.ExecuteNonQuery();
+                if (Module.cnnU.State == ConnectionState.Open)
+                    Module.cnnU.Close();
+                ptbImgSi.Visible = true;
+                ptbImgNo.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                if (Module.cnnU.State == ConnectionState.Open)
+                    Module.cnnU.Close();
+                ptbImgSi.Visible = false;
+                ptbImgNo.Visible = true;
+                throw new Exception(",Error dentro de 'UpdateFamiliasGeneral' " + ex.Message);
             }
         }
 

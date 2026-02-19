@@ -1,4 +1,5 @@
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\Resources\Images\loading.gif
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\Resources\Icons\iconoOferta.png
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.deps.json
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.runtimeconfig.json
@@ -94,6 +95,7 @@ C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\wi
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\zh-Hant\System.ServiceModel.Primitives.resources.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.csproj.AssemblyReference.cache
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmCarroCompras.resources
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmConfFamilia.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmDatosUsuario.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmDescMarcas.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmImagen.resources

@@ -78,7 +78,16 @@ namespace DistribuidoraPalomarNet
                 Module.ConectarDBArti();
                 cmaccess.Connection = Module.cnn;
                 cmaccess.CommandType = CommandType.Text;
-                cmaccess.CommandText = $"select clcodi,clrazo,clciva,clvend,clcpag from clientes WHERE clcodi={codi} and clcuit={cuit}";
+                cmaccess.CommandText = "SELECT clcodi, clrazo, clciva, clvend, clcpag, cldes1, cldes2 FROM clientes WHERE clcodi=@codi AND clcuit=@cuit";
+
+                if (!int.TryParse((codi ?? string.Empty).Trim(), out int cod))
+                    cod = 0;
+                if (!double.TryParse((cuit ?? string.Empty).Trim(), out double cuitNum))
+                    cuitNum = 0;
+
+                cmaccess.Parameters.Clear();
+                cmaccess.Parameters.AddWithValue("@codi", cod);
+                cmaccess.Parameters.AddWithValue("@cuit", cuitNum);
                 draccess = cmaccess.ExecuteReader();
 
                 if (draccess.Read())
@@ -87,6 +96,15 @@ namespace DistribuidoraPalomarNet
                     Module.US_CLCIVA = !string.IsNullOrEmpty(draccess["clciva"].ToString()) ? Convert.ToInt32(draccess["clciva"]) : 0;
                     Module.US_CLVEND = !string.IsNullOrEmpty(draccess["clvend"].ToString()) ? Convert.ToInt32(draccess["clvend"]) : 0;
                     Module.US_CLCPAG = !string.IsNullOrEmpty(draccess["clcpag"].ToString()) ? Convert.ToInt32(draccess["clcpag"]) : 0;
+
+                    Module.ClienteDescuento1 = draccess["cldes1"] != DBNull.Value ? Convert.ToDecimal(draccess["cldes1"]) : 0;
+                    Module.ClienteDescuento2 = draccess["cldes2"] != DBNull.Value ? Convert.ToDecimal(draccess["cldes2"]) : 0;
+                    Module.ClienteRestringido = Module.ClienteDescuento1 == 0 && Module.ClienteDescuento2 == 0;
+                    Module.ClienteAutorizado = !Module.ClienteRestringido;
+                    Module.ClienteMensajeValidacion = Module.ClienteRestringido
+                        ? "Notifique a la Distribuidora que no tiene descuentos aplicados"
+                        : string.Empty;
+
                     Module.ExisteCuit_Cliente = true;
                 }
                 else
@@ -96,6 +114,12 @@ namespace DistribuidoraPalomarNet
                     Module.US_CLVEND = 0;
                     Module.US_CLCPAG = 0;
                     Module.ExisteCuit_Cliente = false;
+
+                    Module.ClienteDescuento1 = 0;
+                    Module.ClienteDescuento2 = 0;
+                    Module.ClienteRestringido = false;
+                    Module.ClienteAutorizado = false;
+                    Module.ClienteMensajeValidacion = "Datos inválidos";
                 }
 
                 draccess.Close();
@@ -129,6 +153,14 @@ namespace DistribuidoraPalomarNet
             using var cmd = new OleDbCommand();
             try
             {
+                decimal desc1 = 0;
+                decimal desc2 = 0;
+                if (ValidarCuitCliente(p1, p2))
+                {
+                    desc1 = Module.ClienteDescuento1;
+                    desc2 = Module.ClienteDescuento2;
+                }
+
                 Module.ConectarDBUsuario();
                 cmd.Connection = Module.cnnU;
                 cmd.CommandType = CommandType.Text;
@@ -139,8 +171,8 @@ namespace DistribuidoraPalomarNet
                 cmd.Parameters.AddWithValue("@codi", p1);
                 cmd.Parameters.AddWithValue("@cuit", p2);
                 cmd.Parameters.AddWithValue("@mail", p3);
-                cmd.Parameters.AddWithValue("@desc1", p4);
-                cmd.Parameters.AddWithValue("@desc2", p5);
+                cmd.Parameters.AddWithValue("@desc1", desc1);
+                cmd.Parameters.AddWithValue("@desc2", desc2);
                 cmd.Parameters.AddWithValue("@clrazo", p6);
                 cmd.Parameters.AddWithValue("@clciva", p7);
                 cmd.Parameters.AddWithValue("@clvend", p8);
@@ -208,6 +240,14 @@ namespace DistribuidoraPalomarNet
             using var cmd = new OleDbCommand();
             try
             {
+                decimal desc1 = 0;
+                decimal desc2 = 0;
+                if (ValidarCuitCliente(p1, p2))
+                {
+                    desc1 = Module.ClienteDescuento1;
+                    desc2 = Module.ClienteDescuento2;
+                }
+
                 Module.ConectarDBUsuario();
                 cmd.Connection = Module.cnnU;
                 cmd.CommandType = CommandType.Text;
@@ -226,8 +266,8 @@ namespace DistribuidoraPalomarNet
                 cmd.Parameters.AddWithValue("@codi", p1);
                 cmd.Parameters.AddWithValue("@cuit", p2);
                 cmd.Parameters.AddWithValue("@mail", p3);
-                cmd.Parameters.AddWithValue("@desc1", p4);
-                cmd.Parameters.AddWithValue("@desc2", p5);
+                cmd.Parameters.AddWithValue("@desc1", desc1);
+                cmd.Parameters.AddWithValue("@desc2", desc2);
                 cmd.Parameters.AddWithValue("@usuario", p6);
                 cmd.Parameters.AddWithValue("@clciva", p7);
                 cmd.Parameters.AddWithValue("@clvend", p8);

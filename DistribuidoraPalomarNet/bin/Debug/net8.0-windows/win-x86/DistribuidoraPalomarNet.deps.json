@@ -10,6 +10,7 @@
       "DistribuidoraPalomarNet/1.0.0": {
         "dependencies": {
           "ClosedXML": "0.105.0",
+          "Microsoft.Web.WebView2": "1.0.3719.77",
           "System.Data.OleDb": "8.0.0",
           "System.Resources.Extensions": "8.0.0",
           "System.ServiceModel.Federation": "6.2.0",
@@ -17,7 +18,10 @@
           "System.ServiceModel.NetTcp": "6.2.0",
           "System.ServiceModel.Primitives": "6.2.0",
           "System.ServiceModel.Security": "6.0.0",
-          "iTextSharp": "5.5.13.3"
+          "iTextSharp": "5.5.13.3",
+          "Microsoft.Web.WebView2.Core": "1.0.3719.77",
+          "Microsoft.Web.WebView2.WinForms": "1.0.3719.77",
+          "Microsoft.Web.WebView2.Wpf": "1.0.3719.77"
         },
         "runtime": {
           "DistribuidoraPalomarNet.dll": {}
@@ -163,6 +167,13 @@
       },
       "Microsoft.NETCore.Platforms/1.1.0": {},
       "Microsoft.NETCore.Targets/1.1.0": {},
+      "Microsoft.Web.WebView2/1.0.3719.77": {
+        "native": {
+          "runtimes/win-x86/native/WebView2Loader.dll": {
+            "fileVersion": "1.0.3719.77"
+          }
+        }
+      },
       "RBush.Signed/4.0.0": {
         "runtime": {
           "lib/net8.0/RBush.dll": {
@@ -768,6 +779,30 @@
           "System.Threading": "4.3.0",
           "System.Xml.ReaderWriter": "4.3.0"
         }
+      },
+      "Microsoft.Web.WebView2.Core/1.0.3719.77": {
+        "runtime": {
+          "Microsoft.Web.WebView2.Core.dll": {
+            "assemblyVersion": "1.0.3719.77",
+            "fileVersion": "1.0.3719.77"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.WinForms/1.0.3719.77": {
+        "runtime": {
+          "Microsoft.Web.WebView2.WinForms.dll": {
+            "assemblyVersion": "1.0.3719.77",
+            "fileVersion": "1.0.3719.77"
+          }
+        }
+      },
+      "Microsoft.Web.WebView2.Wpf/1.0.3719.77": {
+        "runtime": {
+          "Microsoft.Web.WebView2.Wpf.dll": {
+            "assemblyVersion": "1.0.3719.77",
+            "fileVersion": "1.0.3719.77"
+          }
+        }
       }
     }
   },
@@ -888,6 +923,13 @@
       "sha512": "sha512-aOZA3BWfz9RXjpzt0sRJJMjAscAUm3Hoa4UWAfceV9UTYxgwZ1lZt5nO2myFf+/jetYQo4uTP7zS8sJY67BBxg==",
       "path": "microsoft.netcore.targets/1.1.0",
       "hashPath": "microsoft.netcore.targets.1.1.0.nupkg.sha512"
+    },
+    "Microsoft.Web.WebView2/1.0.3719.77": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-t+ucyKw5NTwMjsUrDF6R9Lk40lpcKQD1/HgyGFxl49tdA4h9dKlsj6FYGEmDRpFNfnTpENuTypMcdbrlkqBdDA==",
+      "path": "microsoft.web.webview2/1.0.3719.77",
+      "hashPath": "microsoft.web.webview2.1.0.3719.77.nupkg.sha512"
     },
     "RBush.Signed/4.0.0": {
       "type": "package",
@@ -1315,6 +1357,21 @@
       "sha512": "sha512-lJ8AxvkX7GQxpC6GFCeBj8ThYVyQczx2+f/cWHJU8tjS7YfI6Cv6bon70jVEgs2CiFbmmM8b9j1oZVx0dSI2Ww==",
       "path": "system.xml.xmldocument/4.3.0",
       "hashPath": "system.xml.xmldocument.4.3.0.nupkg.sha512"
+    },
+    "Microsoft.Web.WebView2.Core/1.0.3719.77": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Web.WebView2.WinForms/1.0.3719.77": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Web.WebView2.Wpf/1.0.3719.77": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

@@ -56,6 +56,10 @@
               "target": "Package",
               "version": "[0.105.0, )"
             },
+            "Microsoft.Web.WebView2": {
+              "target": "Package",
+              "version": "[1.0.3719.77, )"
+            },
             "System.Data.OleDb": {
               "target": "Package",
               "version": "[8.0.0, )"
@@ -108,7 +112,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.307/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.311/PortableRuntimeIdentifierGraph.json"
         }
       },
       "runtimes": {

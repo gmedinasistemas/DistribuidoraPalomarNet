@@ -16,6 +16,7 @@ namespace DistribuidoraPalomarNet
         public System.Windows.Forms.TextBox txtStock;
         public System.Windows.Forms.TextBox txtDescuento1;
         public System.Windows.Forms.TextBox txtDescuento2;
+        public System.Windows.Forms.TextBox txtDescuentoFamilia;
         public System.Windows.Forms.TextBox txtDescuento3;
         public System.Windows.Forms.TextBox txtPreciolista;
         public System.Windows.Forms.TextBox txtPreciopublico;
@@ -46,6 +47,7 @@ namespace DistribuidoraPalomarNet
         private System.Windows.Forms.Label lblPC;
         private System.Windows.Forms.Label lblD2;
         private System.Windows.Forms.Label lblD1;
+        private System.Windows.Forms.Label lblD3Fam;
         private System.Windows.Forms.Label lblPL;
         private System.Windows.Forms.ToolTip ToolTip1;
         private System.Windows.Forms.Panel Panel1;
@@ -92,21 +94,25 @@ namespace DistribuidoraPalomarNet
             btncerrar = new Button();
             btnActualizar = new Button();
             GroupBox1 = new GroupBox();
+            txtIvaFlia = new TextBox();
+            lblIvaFlia = new Label();
             btnConfUsu = new Button();
             Label3 = new Label();
-            CheckBox1 = new CheckBox();
             txtPreciolista = new TextBox();
             txtDescuento1 = new TextBox();
             txtDescuento2 = new TextBox();
+            txtDescuentoFamilia = new TextBox();
             txtPreciopublico = new TextBox();
             txtBeneficio = new TextBox();
             txtSugerido = new TextBox();
             lblD1 = new Label();
             lblD2 = new Label();
+            lblD3Fam = new Label();
             lblPC = new Label();
             lblB = new Label();
             lblPP = new Label();
             lblPL = new Label();
+            CheckBox1 = new CheckBox();
             txtStock = new TextBox();
             ptbImagen = new PictureBox();
             lblD3 = new Label();
@@ -128,6 +134,7 @@ namespace DistribuidoraPalomarNet
             ArchivoToolStripMenuItem = new ToolStripMenuItem();
             ActualizarBasesToolStripMenuItem = new ToolStripMenuItem();
             ActualizarDatosLocalToolStripMenuItem = new ToolStripMenuItem();
+            actualizarAplicaciónToolStripMenuItem = new ToolStripMenuItem();
             ConfiguracionToolStripMenuItem = new ToolStripMenuItem();
             ClientesToolStripMenuItem = new ToolStripMenuItem();
             DescPorMarcaToolStripMenuItem = new ToolStripMenuItem();
@@ -165,11 +172,11 @@ namespace DistribuidoraPalomarNet
             TimerVerOfertas = new System.Windows.Forms.Timer(components);
             TimerVerOfertasEquivalencias = new System.Windows.Forms.Timer(components);
             PictureBox3 = new PictureBox();
-            statusStrip1 = new StatusStrip();
-            toolStringBannerTxt = new ToolStripStatusLabel();
-            toolStripProgressBar1 = new ToolStripProgressBar();
             lblAlertaUpdate = new Label();
             timer2 = new System.Windows.Forms.Timer(components);
+            backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            webView21 = new Microsoft.Web.WebView2.WinForms.WebView2();
+            toolStripProgressBar1 = new ProgressBar();
             GroupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)ptbImagen).BeginInit();
             Panel1.SuspendLayout();
@@ -180,13 +187,13 @@ namespace DistribuidoraPalomarNet
             ((System.ComponentModel.ISupportInitialize)DataGridView2).BeginInit();
             groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PictureBox3).BeginInit();
-            statusStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)webView21).BeginInit();
             SuspendLayout();
             // 
             // btncerrar
             // 
             btncerrar.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btncerrar.Location = new Point(576, 610);
+            btncerrar.Location = new Point(621, 608);
             btncerrar.Margin = new Padding(4, 3, 4, 3);
             btncerrar.Name = "btncerrar";
             btncerrar.Size = new Size(52, 52);
@@ -211,35 +218,57 @@ namespace DistribuidoraPalomarNet
             // 
             GroupBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             GroupBox1.BackColor = Color.FromArgb(32, 59, 175);
+            GroupBox1.Controls.Add(txtIvaFlia);
+            GroupBox1.Controls.Add(lblIvaFlia);
             GroupBox1.Controls.Add(btnConfUsu);
             GroupBox1.Controls.Add(Label3);
-            GroupBox1.Controls.Add(CheckBox1);
             GroupBox1.Controls.Add(txtPreciolista);
             GroupBox1.Controls.Add(txtDescuento1);
             GroupBox1.Controls.Add(txtDescuento2);
+            GroupBox1.Controls.Add(txtDescuentoFamilia);
             GroupBox1.Controls.Add(txtPreciopublico);
             GroupBox1.Controls.Add(txtBeneficio);
             GroupBox1.Controls.Add(txtSugerido);
             GroupBox1.Controls.Add(lblD1);
             GroupBox1.Controls.Add(lblD2);
+            GroupBox1.Controls.Add(lblD3Fam);
             GroupBox1.Controls.Add(lblPC);
             GroupBox1.Controls.Add(lblB);
             GroupBox1.Controls.Add(lblPP);
             GroupBox1.Controls.Add(lblPL);
-            GroupBox1.Location = new Point(12, 600);
+            GroupBox1.Controls.Add(CheckBox1);
+            GroupBox1.Location = new Point(12, 598);
             GroupBox1.Margin = new Padding(4, 3, 4, 3);
             GroupBox1.Name = "GroupBox1";
             GroupBox1.Padding = new Padding(4, 3, 4, 3);
-            GroupBox1.Size = new Size(519, 67);
+            GroupBox1.Size = new Size(581, 67);
             GroupBox1.TabIndex = 4;
             GroupBox1.TabStop = false;
+            // 
+            // txtIvaFlia
+            // 
+            txtIvaFlia.Location = new Point(286, 38);
+            txtIvaFlia.Name = "txtIvaFlia";
+            txtIvaFlia.Size = new Size(37, 23);
+            txtIvaFlia.TabIndex = 21;
+            txtIvaFlia.TextAlign = HorizontalAlignment.Right;
+            // 
+            // lblIvaFlia
+            // 
+            lblIvaFlia.ForeColor = Color.White;
+            lblIvaFlia.Location = new Point(286, 20);
+            lblIvaFlia.Margin = new Padding(4, 0, 4, 0);
+            lblIvaFlia.Name = "lblIvaFlia";
+            lblIvaFlia.Size = new Size(29, 27);
+            lblIvaFlia.TabIndex = 20;
+            lblIvaFlia.Text = "IVA";
             // 
             // btnConfUsu
             // 
             btnConfUsu.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnConfUsu.BackColor = Color.FromArgb(32, 59, 175);
             btnConfUsu.Image = (Image)resources.GetObject("btnConfUsu.Image");
-            btnConfUsu.Location = new Point(463, 10);
+            btnConfUsu.Location = new Point(522, 9);
             btnConfUsu.Name = "btnConfUsu";
             btnConfUsu.Size = new Size(52, 52);
             btnConfUsu.TabIndex = 19;
@@ -258,16 +287,9 @@ namespace DistribuidoraPalomarNet
             Label3.TextAlign = ContentAlignment.MiddleLeft;
             Label3.Visible = false;
             // 
-            // CheckBox1
-            // 
-            CheckBox1.Location = new Point(7, 17);
-            CheckBox1.Name = "CheckBox1";
-            CheckBox1.Size = new Size(67, 20);
-            CheckBox1.TabIndex = 0;
-            // 
             // txtPreciolista
             // 
-            txtPreciolista.Location = new Point(70, 38);
+            txtPreciolista.Location = new Point(26, 38);
             txtPreciolista.Margin = new Padding(4, 3, 4, 3);
             txtPreciolista.Name = "txtPreciolista";
             txtPreciolista.Size = new Size(65, 23);
@@ -276,7 +298,7 @@ namespace DistribuidoraPalomarNet
             // 
             // txtDescuento1
             // 
-            txtDescuento1.Location = new Point(135, 38);
+            txtDescuento1.Location = new Point(91, 38);
             txtDescuento1.Margin = new Padding(4, 3, 4, 3);
             txtDescuento1.Name = "txtDescuento1";
             txtDescuento1.Size = new Size(65, 23);
@@ -285,16 +307,26 @@ namespace DistribuidoraPalomarNet
             // 
             // txtDescuento2
             // 
-            txtDescuento2.Location = new Point(200, 38);
+            txtDescuento2.Location = new Point(156, 38);
             txtDescuento2.Margin = new Padding(4, 3, 4, 3);
             txtDescuento2.Name = "txtDescuento2";
             txtDescuento2.Size = new Size(65, 23);
             txtDescuento2.TabIndex = 6;
             txtDescuento2.TextAlign = HorizontalAlignment.Right;
             // 
+            // txtDescuentoFamilia
+            // 
+            txtDescuentoFamilia.Location = new Point(221, 38);
+            txtDescuentoFamilia.Margin = new Padding(4, 3, 4, 3);
+            txtDescuentoFamilia.Name = "txtDescuentoFamilia";
+            txtDescuentoFamilia.ReadOnly = true;
+            txtDescuentoFamilia.Size = new Size(65, 23);
+            txtDescuentoFamilia.TabIndex = 7;
+            txtDescuentoFamilia.TextAlign = HorizontalAlignment.Right;
+            // 
             // txtPreciopublico
             // 
-            txtPreciopublico.Location = new Point(265, 38);
+            txtPreciopublico.Location = new Point(324, 38);
             txtPreciopublico.Margin = new Padding(4, 3, 4, 3);
             txtPreciopublico.Name = "txtPreciopublico";
             txtPreciopublico.Size = new Size(65, 23);
@@ -303,7 +335,7 @@ namespace DistribuidoraPalomarNet
             // 
             // txtBeneficio
             // 
-            txtBeneficio.Location = new Point(330, 38);
+            txtBeneficio.Location = new Point(389, 38);
             txtBeneficio.Name = "txtBeneficio";
             txtBeneficio.Size = new Size(65, 23);
             txtBeneficio.TabIndex = 10;
@@ -311,7 +343,7 @@ namespace DistribuidoraPalomarNet
             // 
             // txtSugerido
             // 
-            txtSugerido.Location = new Point(395, 38);
+            txtSugerido.Location = new Point(455, 38);
             txtSugerido.Name = "txtSugerido";
             txtSugerido.Size = new Size(65, 23);
             txtSugerido.TabIndex = 12;
@@ -320,7 +352,7 @@ namespace DistribuidoraPalomarNet
             // lblD1
             // 
             lblD1.ForeColor = Color.White;
-            lblD1.Location = new Point(135, 20);
+            lblD1.Location = new Point(91, 20);
             lblD1.Margin = new Padding(4, 0, 4, 0);
             lblD1.Name = "lblD1";
             lblD1.Size = new Size(66, 27);
@@ -330,17 +362,27 @@ namespace DistribuidoraPalomarNet
             // lblD2
             // 
             lblD2.ForeColor = Color.White;
-            lblD2.Location = new Point(200, 20);
+            lblD2.Location = new Point(156, 20);
             lblD2.Margin = new Padding(4, 0, 4, 0);
             lblD2.Name = "lblD2";
             lblD2.Size = new Size(66, 27);
             lblD2.TabIndex = 5;
             lblD2.Text = "DTO 2";
             // 
+            // lblD3Fam
+            // 
+            lblD3Fam.ForeColor = Color.White;
+            lblD3Fam.Location = new Point(221, 20);
+            lblD3Fam.Margin = new Padding(4, 0, 4, 0);
+            lblD3Fam.Name = "lblD3Fam";
+            lblD3Fam.Size = new Size(66, 27);
+            lblD3Fam.TabIndex = 6;
+            lblD3Fam.Text = "DTO FLIA";
+            // 
             // lblPC
             // 
             lblPC.ForeColor = Color.White;
-            lblPC.Location = new Point(265, 20);
+            lblPC.Location = new Point(324, 20);
             lblPC.Name = "lblPC";
             lblPC.Size = new Size(66, 27);
             lblPC.TabIndex = 7;
@@ -349,7 +391,7 @@ namespace DistribuidoraPalomarNet
             // lblB
             // 
             lblB.ForeColor = Color.White;
-            lblB.Location = new Point(330, 20);
+            lblB.Location = new Point(389, 20);
             lblB.Name = "lblB";
             lblB.Size = new Size(66, 27);
             lblB.TabIndex = 9;
@@ -358,7 +400,7 @@ namespace DistribuidoraPalomarNet
             // lblPP
             // 
             lblPP.ForeColor = Color.White;
-            lblPP.Location = new Point(394, 20);
+            lblPP.Location = new Point(455, 20);
             lblPP.Margin = new Padding(4, 0, 4, 0);
             lblPP.Name = "lblPP";
             lblPP.Size = new Size(66, 27);
@@ -368,17 +410,27 @@ namespace DistribuidoraPalomarNet
             // lblPL
             // 
             lblPL.ForeColor = Color.White;
-            lblPL.Location = new Point(70, 20);
+            lblPL.Location = new Point(26, 20);
             lblPL.Margin = new Padding(4, 0, 4, 0);
             lblPL.Name = "lblPL";
             lblPL.Size = new Size(66, 27);
             lblPL.TabIndex = 1;
             lblPL.Text = "LISTA";
             // 
+            // CheckBox1
+            // 
+            CheckBox1.Checked = true;
+            CheckBox1.CheckState = CheckState.Checked;
+            CheckBox1.Location = new Point(7, 17);
+            CheckBox1.Name = "CheckBox1";
+            CheckBox1.Size = new Size(67, 20);
+            CheckBox1.TabIndex = 0;
+            CheckBox1.Click += CheckBox1_Click;
+            // 
             // txtStock
             // 
             txtStock.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            txtStock.Location = new Point(539, 559);
+            txtStock.Location = new Point(539, 557);
             txtStock.Name = "txtStock";
             txtStock.Size = new Size(65, 23);
             txtStock.TabIndex = 14;
@@ -388,7 +440,7 @@ namespace DistribuidoraPalomarNet
             // ptbImagen
             // 
             ptbImagen.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            ptbImagen.Location = new Point(939, 435);
+            ptbImagen.Location = new Point(939, 433);
             ptbImagen.Margin = new Padding(4, 3, 4, 3);
             ptbImagen.Name = "ptbImagen";
             ptbImagen.Size = new Size(248, 212);
@@ -566,7 +618,7 @@ namespace DistribuidoraPalomarNet
             // 
             // ArchivoToolStripMenuItem
             // 
-            ArchivoToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { ActualizarBasesToolStripMenuItem, ActualizarDatosLocalToolStripMenuItem });
+            ArchivoToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { ActualizarBasesToolStripMenuItem, ActualizarDatosLocalToolStripMenuItem, actualizarAplicaciónToolStripMenuItem });
             ArchivoToolStripMenuItem.Name = "ArchivoToolStripMenuItem";
             ArchivoToolStripMenuItem.Size = new Size(60, 20);
             ArchivoToolStripMenuItem.Text = "Archivo";
@@ -582,6 +634,13 @@ namespace DistribuidoraPalomarNet
             ActualizarDatosLocalToolStripMenuItem.Name = "ActualizarDatosLocalToolStripMenuItem";
             ActualizarDatosLocalToolStripMenuItem.Size = new Size(190, 22);
             ActualizarDatosLocalToolStripMenuItem.Text = "Actualizar Datos Local";
+            // 
+            // actualizarAplicaciónToolStripMenuItem
+            // 
+            actualizarAplicaciónToolStripMenuItem.Name = "actualizarAplicaciónToolStripMenuItem";
+            actualizarAplicaciónToolStripMenuItem.Size = new Size(190, 22);
+            actualizarAplicaciónToolStripMenuItem.Text = "Actualizar Aplicación";
+            actualizarAplicaciónToolStripMenuItem.Click += actualizarAplicaciónToolStripMenuItem_Click;
             // 
             // ConfiguracionToolStripMenuItem
             // 
@@ -701,7 +760,7 @@ namespace DistribuidoraPalomarNet
             // btnEquivalencia
             // 
             btnEquivalencia.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnEquivalencia.Location = new Point(541, 610);
+            btnEquivalencia.Location = new Point(586, 608);
             btnEquivalencia.Name = "btnEquivalencia";
             btnEquivalencia.Size = new Size(52, 52);
             btnEquivalencia.TabIndex = 17;
@@ -730,20 +789,21 @@ namespace DistribuidoraPalomarNet
             // lblusuario
             // 
             lblusuario.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            lblusuario.Location = new Point(599, 537);
+            lblusuario.Location = new Point(599, 535);
             lblusuario.Margin = new Padding(4, 0, 4, 0);
             lblusuario.Name = "lblusuario";
             lblusuario.Size = new Size(117, 27);
             lblusuario.TabIndex = 8;
             lblusuario.Visible = false;
+            lblusuario.Click += lblusuario_Click;
             // 
             // lblFechaAct
             // 
             lblFechaAct.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            lblFechaAct.Location = new Point(939, 649);
+            lblFechaAct.Location = new Point(939, 647);
             lblFechaAct.Margin = new Padding(4, 0, 4, 0);
             lblFechaAct.Name = "lblFechaAct";
-            lblFechaAct.Size = new Size(117, 27);
+            lblFechaAct.Size = new Size(117, 18);
             lblFechaAct.TabIndex = 9;
             lblFechaAct.Visible = false;
             // 
@@ -782,7 +842,7 @@ namespace DistribuidoraPalomarNet
             DataGridView2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             DataGridView2.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             DataGridView2.EditMode = DataGridViewEditMode.EditProgrammatically;
-            DataGridView2.Location = new Point(12, 449);
+            DataGridView2.Location = new Point(12, 447);
             DataGridView2.Name = "DataGridView2";
             DataGridView2.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             DataGridView2.Size = new Size(519, 149);
@@ -797,7 +857,7 @@ namespace DistribuidoraPalomarNet
             label8.BackColor = Color.FromArgb(179, 179, 179);
             label8.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
             label8.ForeColor = Color.Black;
-            label8.Location = new Point(12, 434);
+            label8.Location = new Point(12, 432);
             label8.Margin = new Padding(4, 0, 4, 0);
             label8.Name = "label8";
             label8.Size = new Size(519, 23);
@@ -813,7 +873,7 @@ namespace DistribuidoraPalomarNet
             groupBox2.Controls.Add(label11);
             groupBox2.Controls.Add(lblObservaciones);
             groupBox2.Controls.Add(lblRubro);
-            groupBox2.Location = new Point(538, 434);
+            groupBox2.Location = new Point(538, 432);
             groupBox2.Name = "groupBox2";
             groupBox2.Size = new Size(394, 92);
             groupBox2.TabIndex = 178;
@@ -878,7 +938,7 @@ namespace DistribuidoraPalomarNet
             btnnovedades.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnnovedades.BackColor = Color.FromArgb(87, 151, 161);
             btnnovedades.ForeColor = Color.White;
-            btnnovedades.Location = new Point(533, 640);
+            btnnovedades.Location = new Point(598, 635);
             btnnovedades.Name = "btnnovedades";
             btnnovedades.Size = new Size(98, 24);
             btnnovedades.TabIndex = 179;
@@ -891,7 +951,7 @@ namespace DistribuidoraPalomarNet
             btnOfertas.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnOfertas.BackColor = Color.FromArgb(87, 151, 161);
             btnOfertas.ForeColor = Color.White;
-            btnOfertas.Location = new Point(533, 610);
+            btnOfertas.Location = new Point(598, 605);
             btnOfertas.Name = "btnOfertas";
             btnOfertas.Size = new Size(98, 24);
             btnOfertas.TabIndex = 180;
@@ -914,39 +974,18 @@ namespace DistribuidoraPalomarNet
             PictureBox3.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             PictureBox3.BackColor = Color.Transparent;
             PictureBox3.Image = (Image)resources.GetObject("PictureBox3.Image");
-            PictureBox3.Location = new Point(738, 530);
+            PictureBox3.Location = new Point(738, 535);
             PictureBox3.Name = "PictureBox3";
-            PictureBox3.Size = new Size(194, 117);
+            PictureBox3.Size = new Size(194, 110);
             PictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
             PictureBox3.TabIndex = 183;
             PictureBox3.TabStop = false;
-            // 
-            // statusStrip1
-            // 
-            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStringBannerTxt, toolStripProgressBar1 });
-            statusStrip1.Location = new Point(0, 676);
-            statusStrip1.Name = "statusStrip1";
-            statusStrip1.Size = new Size(1195, 25);
-            statusStrip1.TabIndex = 185;
-            statusStrip1.Text = "statusStrip1";
-            // 
-            // toolStringBannerTxt
-            // 
-            toolStringBannerTxt.Font = new Font("Century Gothic", 9F, FontStyle.Bold | FontStyle.Italic, GraphicsUnit.Point, 0);
-            toolStringBannerTxt.ForeColor = Color.Purple;
-            toolStringBannerTxt.Name = "toolStringBannerTxt";
-            toolStringBannerTxt.Size = new Size(0, 20);
-            // 
-            // toolStripProgressBar1
-            // 
-            toolStripProgressBar1.Name = "toolStripProgressBar1";
-            toolStripProgressBar1.Size = new Size(200, 19);
             // 
             // lblAlertaUpdate
             // 
             lblAlertaUpdate.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             lblAlertaUpdate.AutoSize = true;
-            lblAlertaUpdate.Location = new Point(738, 652);
+            lblAlertaUpdate.Location = new Point(738, 650);
             lblAlertaUpdate.Name = "lblAlertaUpdate";
             lblAlertaUpdate.Size = new Size(0, 15);
             lblAlertaUpdate.TabIndex = 186;
@@ -957,14 +996,35 @@ namespace DistribuidoraPalomarNet
             timer2.Interval = 1400;
             timer2.Tick += timer2_Tick;
             // 
+            // webView21
+            // 
+            webView21.AllowExternalDrop = true;
+            webView21.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            webView21.CreationProperties = null;
+            webView21.DefaultBackgroundColor = Color.White;
+            webView21.Location = new Point(0, 677);
+            webView21.Name = "webView21";
+            webView21.Size = new Size(1195, 23);
+            webView21.TabIndex = 187;
+            webView21.ZoomFactor = 1D;
+            // 
+            // toolStripProgressBar1
+            // 
+            toolStripProgressBar1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            toolStripProgressBar1.Location = new Point(538, 522);
+            toolStripProgressBar1.Name = "toolStripProgressBar1";
+            toolStripProgressBar1.Size = new Size(394, 11);
+            toolStripProgressBar1.TabIndex = 188;
+            // 
             // frmPrincipal
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(232, 234, 233);
             ClientSize = new Size(1195, 701);
+            Controls.Add(toolStripProgressBar1);
+            Controls.Add(webView21);
             Controls.Add(lblAlertaUpdate);
-            Controls.Add(statusStrip1);
             Controls.Add(btnWhatsapp);
             Controls.Add(btnOfertas);
             Controls.Add(btnnovedades);
@@ -1009,8 +1069,7 @@ namespace DistribuidoraPalomarNet
             ((System.ComponentModel.ISupportInitialize)DataGridView2).EndInit();
             groupBox2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)PictureBox3).EndInit();
-            statusStrip1.ResumeLayout(false);
-            statusStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)webView21).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -1042,11 +1101,14 @@ namespace DistribuidoraPalomarNet
         public Button btnWhatsapp;
         public Label lblemail;
         public Label lblTotalRegistros;
-        public StatusStrip statusStrip1;
-        public ToolStripProgressBar toolStripProgressBar1;
-        public ToolStripStatusLabel toolStringBannerTxt;
         private ToolStripMenuItem confPorFamiliaToolStripMenuItem;
         public Label lblAlertaUpdate;
         public System.Windows.Forms.Timer timer2;
+        private ToolStripMenuItem actualizarAplicaciónToolStripMenuItem;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        public Microsoft.Web.WebView2.WinForms.WebView2 webView21;
+        public ProgressBar toolStripProgressBar1;
+        public TextBox txtIvaFlia;
+        private Label lblIvaFlia;
     }
 }

@@ -48,6 +48,7 @@ namespace DistribuidoraPalomarNet
             txtCodCliente.Name = "txtCodCliente";
             txtCodCliente.Size = new Size(256, 23);
             txtCodCliente.TabIndex = 68;
+            txtCodCliente.KeyPress += txtCodCliente_KeyPress;
             // 
             // txtCuitCliente
             // 
@@ -56,6 +57,7 @@ namespace DistribuidoraPalomarNet
             txtCuitCliente.Name = "txtCuitCliente";
             txtCuitCliente.Size = new Size(256, 23);
             txtCuitCliente.TabIndex = 69;
+            txtCuitCliente.KeyPress += txtCuitCliente_KeyPress;
             // 
             // txtEmail
             // 
@@ -67,6 +69,7 @@ namespace DistribuidoraPalomarNet
             // 
             // txtDesc1
             // 
+            txtDesc1.Enabled = false;
             txtDesc1.Location = new Point(166, 189);
             txtDesc1.Margin = new Padding(4, 3, 4, 3);
             txtDesc1.Name = "txtDesc1";
@@ -75,6 +78,7 @@ namespace DistribuidoraPalomarNet
             // 
             // txtDesc2
             // 
+            txtDesc2.Enabled = false;
             txtDesc2.Location = new Point(166, 219);
             txtDesc2.Margin = new Padding(4, 3, 4, 3);
             txtDesc2.Name = "txtDesc2";

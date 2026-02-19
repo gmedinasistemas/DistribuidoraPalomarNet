@@ -1,27 +1,69 @@
+using DistribuidoraPalomarNet.Forms;
+using ImageViewerApp;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using Microsoft.VisualBasic.FileIO;
+using System;
 using System;
 using System.Data;
 using System.Data.OleDb;
-using System.IO;
-using Microsoft.VisualBasic.FileIO;
-using System.Net;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
+using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
+using System.IO;
+using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Font = System.Drawing.Font;
 using Image = System.Drawing.Image;
-using System.Threading.Tasks;
-using DistribuidoraPalomarNet.Forms;
-using System.Drawing.Imaging;
-using ImageViewerApp;
+
 
 namespace DistribuidoraPalomarNet
 {
     public partial class frmPrincipal : Form
     {
+        private static Image _iconoOferta;
+        private bool _mensajeClienteMostrado = false;
+
+        public void ApplyEstadoClienteToUI()
+        {
+            bool autorizado = Module.ClienteAutorizado;
+
+            if (autorizado)
+            {
+                _mensajeClienteMostrado = false;
+            }
+
+            if (DataGridView1 != null) DataGridView1.Enabled = autorizado;
+            if (DataGridView2 != null) DataGridView2.Enabled = autorizado;
+
+            if (txtCodigo != null) txtCodigo.Enabled = autorizado;
+            if (txtDescripcion != null) txtDescripcion.Enabled = autorizado;
+            if (txtModelo != null) txtModelo.Enabled = autorizado;
+            if (cmbRubros != null) cmbRubros.Enabled = autorizado;
+            if (cmbLineas != null) cmbLineas.Enabled = autorizado;
+            if (btnLimpiar != null) btnLimpiar.Enabled = autorizado;
+            if (ckbOfertas != null) ckbOfertas.Enabled = autorizado;
+
+            if (btnGenerarTxt != null) btnGenerarTxt.Enabled = autorizado;
+
+            if (btnVerCarrito != null) btnVerCarrito.Enabled = autorizado;
+            if (btnActualizar != null) btnActualizar.Enabled = true;
+
+            if (!autorizado && !_mensajeClienteMostrado)
+            {
+                string msg = string.IsNullOrWhiteSpace(Module.ClienteMensajeValidacion)
+                    ? "Datos inválidos"
+                    : Module.ClienteMensajeValidacion;
+                MessageBox.Show(msg, "Acceso restringido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _mensajeClienteMostrado = true;
+            }
+        }
+
         private void DataGridView2_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (!Module.ClienteAutorizado) return;
             Application.DoEvents();
             //DataGridView2.DefaultCellStyle.SelectionBackColor = Color.Transparent;
             //DataGridView2.DefaultCellStyle.SelectionForeColor = Color.Transparent;
@@ -31,6 +73,7 @@ namespace DistribuidoraPalomarNet
 
         private void DataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            if (!Module.ClienteAutorizado) return;
             try
             {
                 /*
@@ -201,7 +244,9 @@ namespace DistribuidoraPalomarNet
         private DateTime comboLastKeyTime = DateTime.MinValue;
 
         private static frmPrincipal _instance;
-        private bool _porLimpieza=false;
+        private bool _porLimpieza = false;
+        private bool _webView2Inicializado = false;
+        private string _textoMarquesinaPendiente = string.Empty;
 
         public static frmPrincipal Instance
         {
@@ -220,6 +265,8 @@ namespace DistribuidoraPalomarNet
             InitializeComponent();
             DataGridView1.CellClick += DataGridView1_CellClick;
             DataGridView2.CellClick += DataGridView2_CellClick;
+            DataGridView1.CellPainting += DataGridView_CellPainting_OfertaIcon;
+            DataGridView2.CellPainting += DataGridView_CellPainting_OfertaIcon;
             InitializeMenuEvents();
 
             // Asignar manejadores de eventos para botones
@@ -234,6 +281,174 @@ namespace DistribuidoraPalomarNet
             cmbRubros.KeyPress += Combo_KeyPress;
             cmbLineas.KeyDown += Combo_KeyDown;
             cmbRubros.KeyDown += Combo_KeyDown;
+
+
+            InitializeWebView2Async();
+        }
+
+        private async void InitializeWebView2Async()
+        {
+            try
+            {
+                await webView21.EnsureCoreWebView2Async(null);
+                _webView2Inicializado = true;
+                CargarMarquesina();
+
+                if (!string.IsNullOrWhiteSpace(_textoMarquesinaPendiente))
+                {
+                    var txt = _textoMarquesinaPendiente;
+                    _textoMarquesinaPendiente = string.Empty;
+                    ActualizarTexto(txt);
+                }
+            }
+            catch
+            {
+                _webView2Inicializado = false;
+            }
+        }
+
+        private void CargarMarquesina()
+        {
+            string textoLargo = "📢 AVISO 1: Oferta especial esta semana... || " +
+                                "📢 AVISO 2: Pronto tendra Novedades Especiales...";
+
+            string htmlContent = $@"
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='UTF-8'>
+            <style>
+                body {{
+                    margin: 0;
+                    padding: 0;
+                    overflow: hidden;
+                    background-color: transparent;
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    font-size: 14pt;
+                    color: white;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                }}
+                .marquee {{
+                    white-space: nowrap;
+                    display: inline-block;
+                    animation: scroll 35s linear infinite;
+                    padding-left: 100%;
+                }}
+                @keyframes scroll {{
+                    0% {{ transform: translateX(0); }}
+                    100% {{ transform: translateX(-100%); }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class='marquee'>{textoLargo}</div>
+        </body>
+        </html>";
+
+            webView21.NavigateToString(htmlContent);
+        }
+
+        // Método público para actualizar el texto sin recargar todo
+        public void ActualizarTexto(string nuevoTexto)
+        {
+            if (!_webView2Inicializado)
+            {
+                _textoMarquesinaPendiente = nuevoTexto ?? string.Empty;
+                return;
+            }
+
+            try
+            {
+                string script = $@"
+                var marqueeDiv = document.querySelector('.marquee');
+                if (marqueeDiv) {{
+                    marqueeDiv.innerHTML = '{nuevoTexto.Replace("'", @"\'")}';
+                }}
+            ";
+                webView21.CoreWebView2.ExecuteScriptAsync(script);
+            }
+            catch
+            {
+                _textoMarquesinaPendiente = nuevoTexto ?? string.Empty;
+            }
+        }
+
+        private static Image GetIconoOferta()
+        {
+            if (_iconoOferta != null) return _iconoOferta;
+
+            try
+            {
+                string path = Path.Combine(AppContext.BaseDirectory, "Resources", "Icons", "iconoOferta.png");
+                if (File.Exists(path))
+                {
+                    using (var img = Image.FromFile(path))
+                    {
+                        _iconoOferta = new Bitmap(img);
+                    }
+                }
+            }
+            catch
+            {
+                _iconoOferta = null;
+            }
+
+            return _iconoOferta;
+        }
+
+        private void DataGridView_CellPainting_OfertaIcon(object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+
+            var dgv = sender as DataGridView;
+            if (dgv == null) return;
+
+            if (!string.Equals(dgv.Columns[e.ColumnIndex].Name, "Preciopublico", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            DataGridViewRow row = dgv.Rows[e.RowIndex];
+            if (row == null) return;
+
+            object arttValue = null;
+            try { arttValue = row.Cells["artt"].Value; } catch { return; }
+
+            int artt;
+            if (arttValue == null || !int.TryParse(Convert.ToString(arttValue), out artt) || artt <= 0)
+                return;
+
+            var icon = GetIconoOferta();
+            if (icon == null) return;
+
+            e.PaintBackground(e.ClipBounds, true);
+
+            var cellBounds = e.CellBounds;
+            int padding = 2;
+            int iconSize = 16;
+
+            int iconX = cellBounds.Left + padding;
+            int iconY = cellBounds.Top + (cellBounds.Height - iconSize) / 2;
+            var iconRect = new System.Drawing.Rectangle(iconX, iconY, iconSize, iconSize);
+            e.Graphics.DrawImage(icon, iconRect);
+
+            string text = Convert.ToString(e.FormattedValue) ?? string.Empty;
+            var textRect = new System.Drawing.Rectangle(
+                cellBounds.Left + iconSize + (padding * 2),
+                cellBounds.Top,
+                cellBounds.Width - iconSize - (padding * 3),
+                cellBounds.Height);
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                text,
+                e.CellStyle.Font,
+                textRect,
+                e.CellStyle.ForeColor,
+                TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+
+            e.Paint(cellBounds, DataGridViewPaintParts.Border);
+            e.Handled = true;
         }
         private void Btnnovedades_Click(object sender, EventArgs e)
         {
@@ -619,12 +834,30 @@ namespace DistribuidoraPalomarNet
             {
                 // Carga general de combos, grillas, imágenes (banners)
                 Module.LeerConfig();
+                if (!string.IsNullOrWhiteSpace(Module._textoBanner))
+                    ActualizarTexto(Module._textoBanner);
                 bool ret = Module.DescargaArchivo("BannerPalomar.gif",
                     Module.ini_ruta_gral + "\\DistribuidoraPalomarNet\\Imagenes\\BannerPalomar.gif",
                     Module.ini_usu_ftp, Module.ini_pass_ftp, Module.ini_ruta_ftp);
                 CargarBanner();
                 Module.Inicializacion();
-                Module.BuscarActualizacionDisponible();
+                //Module.BuscarActualizacionDisponible();
+                if (Module.BuscarActualizacionDisponible())
+                {
+                    Application.DoEvents();
+                    if (MessageBox.Show("Hay una nueva actualización de la lista", "", MessageBoxButtons.OK, MessageBoxIcon.Information) == DialogResult.OK)
+                    {
+                        Application.DoEvents();
+                        Module.ActualizacionXFTP();
+                        //// llamo a la actualizacion automatica de precio, formulario DatosUsuario y a su timerAutoUpdatPrecios.
+                        //// pongo la bandera en true, para que el formulario detecte que se esta abriendo automaticamente luego de 
+                        //// la actualizacion de la base por ftp.
+                        //bandUpdatexActualizacion = true;
+                        //// llamo al formulario.
+                        //// frmDatosUsuario.ShowDialog()
+                    }
+                }
+                ApplyEstadoClienteToUI();
             }
             catch (Exception ex)
             {
@@ -637,6 +870,48 @@ namespace DistribuidoraPalomarNet
                 //PictureBox3.Parent = panel2;
                 //PictureBox3.BackColor = Color.Transparent; // Asegura que el PictureBox no tape el Panel
             }
+        }
+
+        private void CargarTextoBanner(string textoBanner)
+        {
+            string textoLargo = textoBanner;
+
+            string htmlContent = $@"
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset='UTF-8'>
+                    <style>
+                        body {{
+                            margin: 0;
+                            padding: 0;
+                            overflow: hidden;
+                            background-color: transparent;
+                            font-family: 'Segoe UI', Arial, sans-serif;
+                            font-size: 14pt;
+                            color: white;
+                            height: 100%;
+                            display: flex;
+                            align-items: center;
+                        }}
+                        .marquee {{
+                            white-space: nowrap;
+                            display: inline-block;
+                            animation: scroll 25s linear infinite;
+                            padding-left: 100%;
+                        }}
+                        @keyframes scroll {{
+                            0% {{ transform: translateX(0); }}
+                            100% {{ transform: translateX(-100%); }}
+                        }}
+                    </style>
+                </head>
+                <body>
+                    <div class='marquee'>{textoLargo}</div>
+                </body>
+                </html>";
+
+            webView21.NavigateToString(htmlContent);
         }
 
         private void btncerrar_Click(object sender, EventArgs e)
@@ -768,17 +1043,21 @@ namespace DistribuidoraPalomarNet
             lblPL.Visible = visible;
             lblD1.Visible = visible;
             lblD2.Visible = visible;
+            lblD3Fam.Visible = visible;
             lblPC.Visible = visible;
             lblB.Visible = visible;
-            lblPP.Visible = visible;
+            lblIvaFlia.Visible = visible;
+            //lblPP.Visible = visible;
 
             // TextBoxes
             txtPreciolista.Visible = visible;
             txtDescuento1.Visible = visible;
             txtDescuento2.Visible = visible;
+            txtDescuentoFamilia.Visible = visible;
             txtPreciopublico.Visible = visible;
             txtBeneficio.Visible = visible;
-            txtSugerido.Visible = visible;
+            txtIvaFlia.Visible = visible;
+            //txtSugerido.Visible = visible;
         }
 
         private void Timer1_Tick(object sender, EventArgs e)
@@ -815,7 +1094,7 @@ namespace DistribuidoraPalomarNet
                               "a.arpre5 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                               ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from listas as a " +
                                 "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
-                                //" left join lineas as l on a.arcuar=l.licodi= " +
+                              //" left join lineas as l on a.arcuar=l.licodi= " +
                               "where a.ARTT<>0 AND a.arprim+a.arterc like '%" + txtCodigo.Text +
                               "%' order by a.arcodi"
                             : "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
@@ -828,7 +1107,7 @@ namespace DistribuidoraPalomarNet
                               "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                               ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from listas as a " +
                                 "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
-                                //" left join lineas as l on a.arcuar=l.licodi= " +
+                              //" left join lineas as l on a.arcuar=l.licodi= " +
                               "where a.arprim+a.arterc like '%" + txtCodigo.Text +
                               "%' order by a.arcodi";
 
@@ -1463,6 +1742,12 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
+                if (!Module.ClienteAutorizado)
+                {
+                    ApplyEstadoClienteToUI();
+                    return;
+                }
+
                 if (this.DataGridView1.RowCount > 0)
                 {
                     Module.AccionGrilla(DataGridView1);
@@ -1638,6 +1923,12 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
+                if (!Module.ClienteAutorizado)
+                {
+                    ApplyEstadoClienteToUI();
+                    return;
+                }
+
                 if (this.DataGridView2.RowCount > 0)
                 {
                     Module.AccionGrilla(DataGridView2);
@@ -1785,6 +2076,56 @@ namespace DistribuidoraPalomarNet
                 // Detiene el temporizador
                 timer2.Stop();
             }
+        }
+
+        private void actualizarAplicaciónToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ActualizarAplicacionToolStripMenuItem_Click(sender, e);
+        }
+
+        private void ActualizarAplicacionToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bool ret = false;
+            try
+            {
+                //TimerVerificaUpdate.Stop();
+                //ret = Module.DescargaArchivo("UpdateDistribuidoraPalomarNet.exe",
+                //                      @"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Descargas\UpdateDistribuidoraPalomarNet.exe",
+                //                      "Descargas",
+                //                      "Noelia_1056",
+                //                      Module.ini_ruta_ftp.Replace("CatalagoPinky", "UpdateDesktop"));//ini_ruta_ftp ruta donde se aloja el update.
+
+                ret = Module.DescargaArchivo(Module.ini_apli_ftp,
+                                    @"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Descargas\" + Module.ini_apli_ftp,
+                                    Module.ini_usu_ftp,
+                                    Module.ini_pass_ftp,
+                                    Module.ini_ruta_ftp);
+
+
+                if (ret && File.Exists(@"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Descargas\" + Module.ini_apli_ftp))
+                {
+                    Process.Start(@"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Descargas\TerminarUpdateDistribuidoraPalomarNet.bat"); //Funciona, pero no es lo ideal
+                }
+            }
+            catch (Exception ex)
+            {
+                // Puedes agregar manejo de errores aquí si lo deseas
+                // Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                //TimerVerificaUpdate.Start();
+            }
+        }
+
+        private void lblusuario_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void CheckBox1_Click_1(object sender, EventArgs e)
+        {
+
         }
 
 

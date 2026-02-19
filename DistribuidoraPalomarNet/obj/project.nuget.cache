@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "cORePc2dwt8=",
+  "dgSpecHash": "MB5TdS+Q9kU=",
   "success": true,
   "projectFilePath": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj",
   "expectedPackageFiles": [
@@ -20,6 +20,7 @@
     "C:\\Users\\gmam_\\.nuget\\packages\\microsoft.identitymodel.xml\\6.8.0\\microsoft.identitymodel.xml.6.8.0.nupkg.sha512",
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
     "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder\\microsoft.netcore.targets\\1.1.0\\microsoft.netcore.targets.1.1.0.nupkg.sha512",
+    "C:\\Users\\gmam_\\.nuget\\packages\\microsoft.web.webview2\\1.0.3719.77\\microsoft.web.webview2.1.0.3719.77.nupkg.sha512",
     "C:\\Users\\gmam_\\.nuget\\packages\\rbush.signed\\4.0.0\\rbush.signed.4.0.0.nupkg.sha512",
     "C:\\Users\\gmam_\\.nuget\\packages\\runtime.any.system.collections\\4.3.0\\runtime.any.system.collections.4.3.0.nupkg.sha512",
     "C:\\Users\\gmam_\\.nuget\\packages\\runtime.any.system.diagnostics.tracing\\4.3.0\\runtime.any.system.diagnostics.tracing.4.3.0.nupkg.sha512",

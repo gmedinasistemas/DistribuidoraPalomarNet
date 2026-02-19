@@ -14,15 +14,42 @@ namespace DistribuidoraPalomarNet
             Module.SetDatosUsuarioForm(this);
         }
 
+        private void RefreshEstadoEnPrincipal()
+        {
+            try
+            {
+                var fp = Application.OpenForms.OfType<frmPrincipal>().FirstOrDefault();
+                if (fp != null)
+                {
+                    fp.ApplyEstadoClienteToUI();
+                }
+            }
+            catch
+            {
+            }
+        }
+
         #region Metodos
         private void frmDatosUsuario_Load(object sender, EventArgs e)
         {
             try
             {
+                txtDesc1.ReadOnly = true;
+                txtDesc2.ReadOnly = true;
+
                 if (ModuloUsuario.existeUsuario())
                 {
                     Module.accionDatosUsu = 1;
                     Module.CargarDatos();
+
+                    if (!string.IsNullOrWhiteSpace(txtCodCliente.Text) && !string.IsNullOrWhiteSpace(txtCuitCliente.Text))
+                    {
+                        if (Module.ValidarCuitCliente(txtCodCliente.Text.Trim(), txtCuitCliente.Text.Trim()))
+                        {
+                            txtDesc1.Text = Module.ClienteDescuento1.ToString();
+                            txtDesc2.Text = Module.ClienteDescuento2.ToString();
+                        }
+                    }
                 }
                 else
                 {
@@ -102,6 +129,16 @@ namespace DistribuidoraPalomarNet
                             btnGrabar.Enabled = true;
                             txtEmail.Enabled = true;
                             txtEmail.Focus();
+
+                            txtDesc1.Text = Module.ClienteDescuento1.ToString();
+                            txtDesc2.Text = Module.ClienteDescuento2.ToString();
+
+                            if (Module.ClienteRestringido && !string.IsNullOrWhiteSpace(Module.ClienteMensajeValidacion))
+                            {
+                                MessageBox.Show(Module.ClienteMensajeValidacion, "Acceso restringido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            }
+
+                            RefreshEstadoEnPrincipal();
                         }
                     }
                 }
@@ -137,6 +174,16 @@ namespace DistribuidoraPalomarNet
                 {
                     if (!string.IsNullOrEmpty(txtCuitCliente.Text.Trim()))
                     {
+                        if (!Module.ValidarCuitCliente(txtCodCliente.Text.Trim(), txtCuitCliente.Text.Trim()))
+                        {
+                            MessageBox.Show("Datos inválidos", "Acceso restringido", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            btnGrabar.Enabled = true;
+                            return;
+                        }
+
+                        txtDesc1.Text = Module.ClienteDescuento1.ToString();
+                        txtDesc2.Text = Module.ClienteDescuento2.ToString();
+
                         if (!string.IsNullOrEmpty(txtDesc1.Text.Trim()))
                         {
                             if (decimal.TryParse(txtDesc1.Text.Trim(), out _))
@@ -165,6 +212,9 @@ namespace DistribuidoraPalomarNet
                                                 Module.Cargar_Usuario();
                                                 Module.aplicar_desc_Cliente();
                                                 Module.Calculadora();
+
+                                                Module.ValidarCuitCliente(txtCodCliente.Text.Trim(), txtCuitCliente.Text.Trim());
+                                                RefreshEstadoEnPrincipal();
                                                 // aplicar_descuento3()
                                                 // aplicar_beneficio()
                                                 // Cargar_Usuario()
@@ -238,6 +288,7 @@ namespace DistribuidoraPalomarNet
                 Module.aplicar_desc_Cliente(); // Cargo Descuentos 1 y 2
                 Module.Update_Precios();
                 Module.Update_Precios_Ofertas();
+
                 //Module.Update_PrecioSug_Ofertas();
 
                 // Solo llamar a Module.funcion_inicial(1) si existe el frmPrincipal
@@ -257,6 +308,9 @@ namespace DistribuidoraPalomarNet
                     }
                 }
             }
+
+            Module.ValidarCuitCliente(txtCodCliente.Text.Trim(), txtCuitCliente.Text.Trim());
+            RefreshEstadoEnPrincipal();
             Module.Cargar_Usuario(false);
             this.Close();
         }

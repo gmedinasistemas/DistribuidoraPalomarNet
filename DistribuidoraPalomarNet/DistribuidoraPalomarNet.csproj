@@ -34,6 +34,7 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3719.77" />
     <PackageReference Include="System.Data.OleDb" Version="8.0.0" />
     <PackageReference Include="iTextSharp" Version="5.5.13.3" />
     <PackageReference Include="System.ServiceModel.Primitives" Version="6.2.0" />
@@ -80,6 +81,9 @@
 
   <ItemGroup>
     <Content Include="Resources\Images\loading.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Icons\iconoOferta.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
