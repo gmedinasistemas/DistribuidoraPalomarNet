@@ -68,7 +68,7 @@ namespace DistribuidoraPalomarNet
             DataGridView1.Location = new Point(4, 3);
             DataGridView1.Margin = new Padding(4, 3, 4, 3);
             DataGridView1.Name = "DataGridView1";
-            DataGridView1.Size = new Size(613, 678);
+            DataGridView1.Size = new Size(613, 652);
             DataGridView1.TabIndex = 0;
             // 
             // pnlBottom
@@ -86,7 +86,7 @@ namespace DistribuidoraPalomarNet
             pnlBottom.Controls.Add(btnSalir);
             pnlBottom.Controls.Add(btnGrabar);
             pnlBottom.Dock = DockStyle.Fill;
-            pnlBottom.Location = new Point(0, 684);
+            pnlBottom.Location = new Point(0, 658);
             pnlBottom.Margin = new Padding(0);
             pnlBottom.Name = "pnlBottom";
             pnlBottom.Size = new Size(621, 110);
@@ -122,10 +122,10 @@ namespace DistribuidoraPalomarNet
             lblDescFlia.Enabled = false;
             lblDescFlia.Font = new Font("MS Reference Sans Serif", 8.25F);
             lblDescFlia.ForeColor = Color.White;
-            lblDescFlia.Location = new Point(184, 72);
+            lblDescFlia.Location = new Point(184, 17);
             lblDescFlia.Margin = new Padding(4, 0, 4, 0);
             lblDescFlia.Name = "lblDescFlia";
-            lblDescFlia.Size = new Size(74, 15);
+            lblDescFlia.Size = new Size(67, 15);
             lblDescFlia.TabIndex = 11;
             lblDescFlia.Text = "Desc. Flia:";
             // 
@@ -133,7 +133,7 @@ namespace DistribuidoraPalomarNet
             // 
             txtDescFlia.Enabled = false;
             txtDescFlia.Font = new Font("MS Reference Sans Serif", 8.25F);
-            txtDescFlia.Location = new Point(284, 69);
+            txtDescFlia.Location = new Point(284, 14);
             txtDescFlia.Margin = new Padding(4, 3, 4, 3);
             txtDescFlia.Name = "txtDescFlia";
             txtDescFlia.Size = new Size(102, 21);
@@ -151,6 +151,7 @@ namespace DistribuidoraPalomarNet
             CheckBox1.TabIndex = 5;
             CheckBox1.Text = "Habilitar Carga General";
             CheckBox1.UseVisualStyleBackColor = true;
+            CheckBox1.Click += CheckBox1_CheckedChanged;
             // 
             // lblbgral
             // 
@@ -158,7 +159,7 @@ namespace DistribuidoraPalomarNet
             lblbgral.Enabled = false;
             lblbgral.Font = new Font("MS Reference Sans Serif", 8.25F);
             lblbgral.ForeColor = Color.White;
-            lblbgral.Location = new Point(184, 18);
+            lblbgral.Location = new Point(184, 72);
             lblbgral.Margin = new Padding(4, 0, 4, 0);
             lblbgral.Name = "lblbgral";
             lblbgral.Size = new Size(94, 15);
@@ -169,7 +170,7 @@ namespace DistribuidoraPalomarNet
             // 
             txtbgral.Enabled = false;
             txtbgral.Font = new Font("MS Reference Sans Serif", 8.25F);
-            txtbgral.Location = new Point(284, 15);
+            txtbgral.Location = new Point(284, 69);
             txtbgral.Margin = new Padding(4, 3, 4, 3);
             txtbgral.Name = "txtbgral";
             txtbgral.Size = new Size(102, 21);

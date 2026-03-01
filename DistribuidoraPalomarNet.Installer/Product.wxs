@@ -1,0 +1,74 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package
+    Name="Distribuidora Palomar"
+    Manufacturer="Distribuidora Palomar"
+    Version="1.0.0.0"
+    UpgradeCode="B1B0E4FD-9F50-4B2B-A6E9-7BDF7A8A0D1C">
+
+    <SummaryInformation Description="Catalogo Distribuidora Palomar" />
+
+    <MajorUpgrade DowngradeErrorMessage="Ya hay una versión más nueva instalada." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="ProgramFilesFolder">
+      <Directory Id="INSTALLFOLDER" Name="DistribuidoraPalomarNet">
+        <Directory Id="IMAGESDIR" Name="imagenes" />
+        <Directory Id="DOWNLOADSDIR" Name="Descargas" />
+      </Directory>
+    </StandardDirectory>
+
+    <Property Id="INSTALLFOLDER" Value="C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\" />
+
+    <StandardDirectory Id="DesktopFolder" />
+
+    <Feature Id="MainFeature" Title="Distribuidora Palomar" Level="1">
+      <ComponentGroupRef Id="AppBinariesGroup" />
+      <ComponentGroupRef Id="ImagesGroup" />
+      <ComponentGroupRef Id="DownloadsGroup" />
+      <ComponentGroupRef Id="RootDataGroup" />
+      <ComponentRef Id="DesktopShortcutComponent" />
+    </Feature>
+
+    <ComponentGroup Id="AppBinariesGroup" Directory="INSTALLFOLDER">
+      <Files Include="$(var.AppOutputDir)**" />
+    </ComponentGroup>
+
+    <ComponentGroup Id="ImagesGroup" Directory="IMAGESDIR">
+      <Files Include="$(var.ImagesDir)**" />
+    </ComponentGroup>
+
+    <ComponentGroup Id="DownloadsGroup" Directory="DOWNLOADSDIR">
+      <Files Include="$(var.DownloadsDir)**" />
+    </ComponentGroup>
+
+    <ComponentGroup Id="RootDataGroup" Directory="INSTALLFOLDER">
+      <Component>
+        <File Source="$(var.RootDir)BASEPALOMARNET.mdb" />
+      </Component>
+      <Component>
+        <File Source="$(var.RootDir)cliente.dat" />
+      </Component>
+      <Component>
+        <File Source="$(var.RootDir)Config.ini" />
+      </Component>
+    </ComponentGroup>
+
+    <Component Id="DesktopShortcutComponent" Directory="DesktopFolder" Guid="*">
+      <Shortcut
+        Id="DesktopShortcut"
+        Name="Distribuidora Palomar"
+        Description="Distribuidora Palomar"
+        Target="[INSTALLFOLDER]DistribuidoraPalomarNet.exe"
+        WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="RemoveDesktopShortcut" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\DistribuidoraPalomarNet" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <ui:WixUI Id="WixUI_Minimal" />
+
+  </Package>
+
+</Wix>

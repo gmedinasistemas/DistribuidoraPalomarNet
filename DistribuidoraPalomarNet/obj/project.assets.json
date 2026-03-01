@@ -1129,6 +1129,12 @@
         "runtime": {
           "lib/netstandard1.3/System.Xml.XmlDocument.dll": {}
         }
+      },
+      "WixToolset.UI.wixext/7.0.0-rc.1": {
+        "type": "package",
+        "build": {
+          "build/WixToolset.UI.wixext.targets": {}
+        }
       }
     },
     "net8.0-windows7.0/win-x86": {
@@ -2450,6 +2456,12 @@
         },
         "runtime": {
           "lib/netstandard1.3/System.Xml.XmlDocument.dll": {}
+        }
+      },
+      "WixToolset.UI.wixext/7.0.0-rc.1": {
+        "type": "package",
+        "build": {
+          "build/WixToolset.UI.wixext.targets": {}
         }
       }
     }
@@ -5369,6 +5381,23 @@
         "system.xml.xmldocument.4.3.0.nupkg.sha512",
         "system.xml.xmldocument.nuspec"
       ]
+    },
+    "WixToolset.UI.wixext/7.0.0-rc.1": {
+      "sha512": "2ydMq54slxeAGjD+oSPQex33wL0Pw1bxT15SnZdotIXWcFfHVVNFdmayuO6vkB3T+wxRwe0dpEf5wO0N2yaIzQ==",
+      "type": "package",
+      "path": "wixtoolset.ui.wixext/7.0.0-rc.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "OSMFEULA.txt",
+        "README.md",
+        "build/CheckLicenseAcceptance.targets",
+        "build/WixToolset.UI.wixext.targets",
+        "icon.png",
+        "wixext7/WixToolset.UI.wixext.dll",
+        "wixtoolset.ui.wixext.7.0.0-rc.1.nupkg.sha512",
+        "wixtoolset.ui.wixext.nuspec"
+      ]
     }
   },
   "projectFileDependencyGroups": {
@@ -5382,6 +5411,7 @@
       "System.ServiceModel.NetTcp >= 6.2.0",
       "System.ServiceModel.Primitives >= 6.2.0",
       "System.ServiceModel.Security >= 6.0.0",
+      "WixToolset.UI.wixext >= 7.0.0-rc.1",
       "iTextSharp >= 5.5.13.3"
     ]
   },
@@ -5473,6 +5503,10 @@
           "System.ServiceModel.Security": {
             "target": "Package",
             "version": "[6.0.0, )"
+          },
+          "WixToolset.UI.wixext": {
+            "target": "Package",
+            "version": "[7.0.0-rc.1, )"
           },
           "iTextSharp": {
             "target": "Package",

@@ -88,6 +88,10 @@
               "target": "Package",
               "version": "[6.0.0, )"
             },
+            "WixToolset.UI.wixext": {
+              "target": "Package",
+              "version": "[7.0.0-rc.1, )"
+            },
             "iTextSharp": {
               "target": "Package",
               "version": "[5.5.13.3, )"

@@ -1,0 +1,6 @@
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet.Installer\obj\Release\DistribuidoraPalomarNet.Installer.wixproj.CoreCompileInputs.cache
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet.Installer\obj\Release\DistribuidoraPalomarNet.Installer.msi
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet.Installer\obj\Release\DistribuidoraPalomarNet.Installer.wixpdb
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet.Installer\obj\Release\DistribuidoraPalomarNet.Installer.wixproj.BindTracking-neutral.txt
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet.Installer\bin\Release\DistribuidoraPalomarNet.Installer.msi
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet.Installer\bin\Release\DistribuidoraPalomarNet.Installer.wixpdb

@@ -1,5 +1,6 @@
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\Resources\Images\loading.gif
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\Resources\Icons\iconoOferta.png
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\runtimes\win-x86\native\WebView2Loader.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.deps.json
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.runtimeconfig.json
@@ -93,6 +94,13 @@ C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\wi
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\tr\System.ServiceModel.Primitives.resources.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\zh-Hans\System.ServiceModel.Primitives.resources.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\zh-Hant\System.ServiceModel.Primitives.resources.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\WebView2Loader.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\Microsoft.Web.WebView2.Core.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\Microsoft.Web.WebView2.WinForms.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\Microsoft.Web.WebView2.Wpf.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\Microsoft.Web.WebView2.Core.xml
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\Microsoft.Web.WebView2.WinForms.xml
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Release\net8.0-windows\win-x86\Microsoft.Web.WebView2.Wpf.xml
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.csproj.AssemblyReference.cache
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmCarroCompras.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Release\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmConfFamilia.resources

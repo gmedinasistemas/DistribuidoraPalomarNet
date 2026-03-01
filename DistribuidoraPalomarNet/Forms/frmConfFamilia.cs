@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
 using System.Drawing;
+using System.Globalization;
 using System.Windows.Forms;
 
 namespace DistribuidoraPalomarNet
@@ -11,6 +12,77 @@ namespace DistribuidoraPalomarNet
     {
         private static bool _familiasInicializadas = false;
         private Label _lblCargando;
+
+        private static bool TryParseDecimalFlexible(string input, out decimal value)
+        {
+            value = 0m;
+            if (string.IsNullOrWhiteSpace(input))
+                return false;
+
+            var s = input.Trim();
+
+            if (decimal.TryParse(s, NumberStyles.Number, CultureInfo.CurrentCulture, out value))
+                return true;
+            if (decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out value))
+                return true;
+
+            var swapped = s.Contains(',')
+                ? s.Replace(",", ".")
+                : s.Replace(".", ",");
+
+            if (decimal.TryParse(swapped, NumberStyles.Number, CultureInfo.CurrentCulture, out value))
+                return true;
+            if (decimal.TryParse(swapped, NumberStyles.Number, CultureInfo.InvariantCulture, out value))
+                return true;
+
+            return false;
+        }
+
+        private static void NumericTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (char.IsControl(e.KeyChar) || char.IsDigit(e.KeyChar))
+                return;
+
+            if (e.KeyChar == '.' || e.KeyChar == ',')
+            {
+                if (sender is TextBox tb)
+                {
+                    if (tb.Text.Contains(",") || tb.Text.Contains("."))
+                    {
+                        e.Handled = true;
+                        return;
+                    }
+                }
+                return;
+            }
+
+            e.Handled = true;
+        }
+
+        private void DataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            if (e.Control is TextBox tb)
+            {
+                tb.KeyPress -= NumericTextBox_KeyPress;
+
+                string colName = DataGridView1.CurrentCell?.OwningColumn?.Name;
+                if (string.Equals(colName, "FADES1", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(colName, "Iva", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(colName, "Beneficio", StringComparison.OrdinalIgnoreCase))
+                {
+                    tb.KeyPress += NumericTextBox_KeyPress;
+                }
+            }
+        }
+
+        private void NumericTextBox_Leave(object sender, EventArgs e)
+        {
+            if (sender is TextBox tb)
+            {
+                if (TryParseDecimalFlexible(tb.Text, out var v))
+                    tb.Text = v.ToString("N2", CultureInfo.CurrentCulture);
+            }
+        }
 
         public frmConfFamilia()
         {
@@ -22,6 +94,14 @@ namespace DistribuidoraPalomarNet
             btnSalir.Click += btnSalir_Click;
             CheckBox1.CheckedChanged += CheckBox1_CheckedChanged;
             btnRestaurar.Click += btnRestaurar_Click;
+
+            DataGridView1.EditingControlShowing += DataGridView1_EditingControlShowing;
+            txtbgral.KeyPress += NumericTextBox_KeyPress;
+            txtiva.KeyPress += NumericTextBox_KeyPress;
+            txtDescFlia.KeyPress += NumericTextBox_KeyPress;
+            txtbgral.Leave += NumericTextBox_Leave;
+            txtiva.Leave += NumericTextBox_Leave;
+            txtDescFlia.Leave += NumericTextBox_Leave;
         }
 
         private void frmConfFamilia_Load(object sender, EventArgs e)
@@ -146,6 +226,8 @@ namespace DistribuidoraPalomarNet
                     // Carga por grilla: recorre filas y actualiza FABEN1 y FAIVA por familia
                     if (DataGridView1.RowCount > 1)
                     {
+                        //destilo la carga general.
+                        CheckBox1_CheckedChanged(CheckBox1, EventArgs.Empty);
                         int s = 0;
                         while (s < DataGridView1.Rows.Count - 1)
                         {
@@ -156,9 +238,9 @@ namespace DistribuidoraPalomarNet
                             string fades1 = Convert.ToString(row.Cells[1].Value);
                             string iva = Convert.ToString(row.Cells[2].Value);
 
-                            decimal.TryParse((ben1 ?? string.Empty).Trim(), out var ben1Val);
-                            decimal.TryParse((fades1 ?? string.Empty).Trim(), out var fades1Val);
-                            decimal.TryParse((iva ?? string.Empty).Trim(), out var ivaVal);
+                            TryParseDecimalFlexible((ben1 ?? string.Empty).Trim(), out var ben1Val);
+                            TryParseDecimalFlexible((fades1 ?? string.Empty).Trim(), out var fades1Val);
+                            TryParseDecimalFlexible((iva ?? string.Empty).Trim(), out var ivaVal);
 
                             UpdateFamilias(familia, ben1Val, fades1Val, ivaVal);
                             s = s + 1;
@@ -665,20 +747,19 @@ namespace DistribuidoraPalomarNet
 
                     if (hasBene && hasIva && hasDesc)
                     {
-                        if (float.TryParse(txtbgral.Text.Trim(), out _) && float.TryParse(txtiva.Text.Trim(), out _) && float.TryParse(txtDescFlia.Text.Trim(), out _))
+                        if (TryParseDecimalFlexible(txtbgral.Text.Trim(), out var benVal)
+                            && TryParseDecimalFlexible(txtiva.Text.Trim(), out var ivaVal)
+                            && TryParseDecimalFlexible(txtDescFlia.Text.Trim(), out var descVal))
                         {
-                            decimal.TryParse(txtbgral.Text.Trim(), out var benVal);
-                            decimal.TryParse(txtiva.Text.Trim(), out var ivaVal);
-                            decimal.TryParse(txtDescFlia.Text.Trim(), out var descVal);
                             UpdateFamiliasGeneral(benVal, ivaVal, descVal);
                         }
                         else
                         {
-                            if (!float.TryParse(txtbgral.Text.Trim(), out _))
+                            if (!TryParseDecimalFlexible(txtbgral.Text.Trim(), out _))
                                 MessageBox.Show("El beneficio debe ser numerico", "Valor incorrecto", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            if (!float.TryParse(txtiva.Text.Trim(), out _))
+                            if (!TryParseDecimalFlexible(txtiva.Text.Trim(), out _))
                                 MessageBox.Show("El iva debe ser numerico", "Valor incorrecto", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            if (!float.TryParse(txtDescFlia.Text.Trim(), out _))
+                            if (!TryParseDecimalFlexible(txtDescFlia.Text.Trim(), out _))
                                 MessageBox.Show("El descuento debe ser numerico", "Valor incorrecto", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
                     }
@@ -686,9 +767,8 @@ namespace DistribuidoraPalomarNet
                     {
                         if (hasBene)
                         {
-                            if (float.TryParse(txtbgral.Text.Trim(), out _))
+                            if (TryParseDecimalFlexible(txtbgral.Text.Trim(), out var benVal))
                             {
-                                decimal.TryParse(txtbgral.Text.Trim(), out var benVal);
                                 UpdateFamiliasGeneral(benVal, null, null);
                             }
                             else
@@ -698,9 +778,8 @@ namespace DistribuidoraPalomarNet
                         }
                         if (hasIva)
                         {
-                            if (float.TryParse(txtiva.Text.Trim(), out _))
+                            if (TryParseDecimalFlexible(txtiva.Text.Trim(), out var ivaVal))
                             {
-                                decimal.TryParse(txtiva.Text.Trim(), out var ivaVal);
                                 UpdateFamiliasGeneral(null, ivaVal, null);
                             }
                             else
@@ -711,9 +790,8 @@ namespace DistribuidoraPalomarNet
 
                         if (hasDesc)
                         {
-                            if (float.TryParse(txtDescFlia.Text.Trim(), out _))
+                            if (TryParseDecimalFlexible(txtDescFlia.Text.Trim(), out var descVal))
                             {
-                                decimal.TryParse(txtDescFlia.Text.Trim(), out var descVal);
                                 UpdateFamiliasGeneral(null, null, descVal);
                             }
                             else

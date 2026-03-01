@@ -2371,7 +2371,11 @@ namespace DistribuidoraPalomarNet
                             _frmPrincipal.lblFechaAct.Text = "Actualizado al  " + FechaActualizacion();
                             BuscarActualizacionDisponible();
                             _frmPrincipal.cmbRubros.DropDownWidth = 280;
-                            MessageBox.Show("Actualizacion Realizada con Exito");
+                            if (lblProgreso != null)
+                            {
+                                lblProgreso.Text = "Actualizacion realizada con exito.";
+                                Application.DoEvents();
+                            }
                             _frmPrincipal.lblAlertaUpdate.Visible = false;
                             Migra = false;
                         }

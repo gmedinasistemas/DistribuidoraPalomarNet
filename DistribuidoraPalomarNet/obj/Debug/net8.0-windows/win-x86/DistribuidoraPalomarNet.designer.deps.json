@@ -772,7 +772,8 @@
             "fileVersion": "4.6.24705.1"
           }
         }
-      }
+      },
+      "WixToolset.UI.wixext/7.0.0-rc.1": {}
     }
   },
   "libraries": {
@@ -1181,6 +1182,13 @@
       "sha512": "sha512-lJ8AxvkX7GQxpC6GFCeBj8ThYVyQczx2+f/cWHJU8tjS7YfI6Cv6bon70jVEgs2CiFbmmM8b9j1oZVx0dSI2Ww==",
       "path": "system.xml.xmldocument/4.3.0",
       "hashPath": "system.xml.xmldocument.4.3.0.nupkg.sha512"
+    },
+    "WixToolset.UI.wixext/7.0.0-rc.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-2ydMq54slxeAGjD+oSPQex33wL0Pw1bxT15SnZdotIXWcFfHVVNFdmayuO6vkB3T+wxRwe0dpEf5wO0N2yaIzQ==",
+      "path": "wixtoolset.ui.wixext/7.0.0-rc.1",
+      "hashPath": "wixtoolset.ui.wixext.7.0.0-rc.1.nupkg.sha512"
     }
   }
 }

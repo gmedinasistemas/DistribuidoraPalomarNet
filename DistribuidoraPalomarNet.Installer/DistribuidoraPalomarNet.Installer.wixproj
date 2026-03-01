@@ -1,0 +1,19 @@
+<Project Sdk="WixToolset.Sdk/7.0.0-rc.1">
+
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+    <PlatformTarget>x86</PlatformTarget>
+    <AcceptEula>wix7</AcceptEula>
+
+    <SolutionDir>..\</SolutionDir>
+    <AppProjectDir>..\DistribuidoraPalomarNet\</AppProjectDir>
+    <AppOutputDir>..\DistribuidoraPalomarNet\bin\$(Configuration)\net8.0-windows\win-x86\</AppOutputDir>
+
+    <DefineConstants>AppOutputDir=$(MSBuildThisFileDirectory)$(AppOutputDir);ImagesDir=$(MSBuildThisFileDirectory)$(AppProjectDir)imagenes\;DownloadsDir=$(MSBuildThisFileDirectory)$(AppProjectDir)Descargas\;RootDir=$(MSBuildThisFileDirectory)$(SolutionDir)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WixToolset.UI.wixext" Version="7.0.0-rc.1" />
+  </ItemGroup>
+
+</Project>

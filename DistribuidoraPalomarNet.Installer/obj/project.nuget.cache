@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "H0W4L4gT2po=",
+  "success": true,
+  "projectFilePath": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet.Installer\\DistribuidoraPalomarNet.Installer.wixproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\gmam_\\.nuget\\packages\\wixtoolset.ui.wixext\\7.0.0-rc.1\\wixtoolset.ui.wixext.7.0.0-rc.1.nupkg.sha512"
+  ],
+  "logs": []
+}

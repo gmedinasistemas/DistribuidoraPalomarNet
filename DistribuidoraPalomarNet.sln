@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistribuidoraPalomarNet", "DistribuidoraPalomarNet\DistribuidoraPalomarNet.csproj", "{A2B89AE3-37F2-4559-AC81-8F0A8552E805}"
 EndProject
+Project("{930C7802-8A8C-48F9-8165-68863BCCD9DD}") = "DistribuidoraPalomarNet.Installer", "DistribuidoraPalomarNet.Installer\DistribuidoraPalomarNet.Installer.wixproj", "{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,18 @@ Global
 		{A2B89AE3-37F2-4559-AC81-8F0A8552E805}.Release|x64.Build.0 = Release|Any CPU
 		{A2B89AE3-37F2-4559-AC81-8F0A8552E805}.Release|x86.ActiveCfg = Release|Any CPU
 		{A2B89AE3-37F2-4559-AC81-8F0A8552E805}.Release|x86.Build.0 = Release|Any CPU
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Debug|Any CPU.Build.0 = Debug|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Debug|x64.ActiveCfg = Debug|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Debug|x64.Build.0 = Debug|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Debug|x86.ActiveCfg = Debug|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Debug|x86.Build.0 = Debug|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Release|Any CPU.ActiveCfg = Release|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Release|Any CPU.Build.0 = Release|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Release|x64.ActiveCfg = Release|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Release|x64.Build.0 = Release|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Release|x86.ActiveCfg = Release|x86
+		{A6C9F6B5-AC75-4F20-8B11-C775C6C5D83B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
