@@ -3,24 +3,44 @@
   "WorkspaceRootPath": "C:\\DistribuidoraPalomarNet\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|c:\\distribuidorapalomarnet\\distribuidorapalomarnet\\forms\\frmconffamilia.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\forms\\frmconffamilia.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|c:\\distribuidorapalomarnet\\distribuidorapalomarnet\\forms\\frmconffamilia.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\forms\\frmconffamilia.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|c:\\distribuidorapalomarnet\\distribuidorapalomarnet\\module.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\module.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|c:\\distribuidorapalomarnet\\distribuidorapalomarnet\\forms\\frmprincipal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\forms\\frmprincipal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet.Installer\\DistribuidoraPalomarNet.Installer.wixproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DistribuidoraPalomarNet.Installer\\DistribuidoraPalomarNet.Installer.wixproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|C:\\DistribuidoraPalomarNet\\distribuidorapalomarnet\\forms\\frmprincipal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
       "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\forms\\frmprincipal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|c:\\distribuidorapalomarnet\\distribuidorapalomarnet\\forms\\frmconffamilia.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\forms\\frmconffamilia.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|c:\\distribuidorapalomarnet\\distribuidorapalomarnet\\forms\\frmdatosusuario.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\forms\\frmdatosusuario.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|C:\\DistribuidoraPalomarNet\\distribuidorapalomarnet\\forms\\frmdatosusuario.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\forms\\frmdatosusuario.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|C:\\DistribuidoraPalomarNet\\distribuidorapalomarnet\\forms\\frmconffamilia.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\forms\\frmconffamilia.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|c:\\distribuidorapalomarnet\\distribuidorapalomarnet\\forms\\frmdescmarcas.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\forms\\frmdescmarcas.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|c:\\distribuidorapalomarnet\\distribuidorapalomarnet\\forms\\frmprincipal.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2B89AE3-37F2-4559-AC81-8F0A8552E805}|DistribuidoraPalomarNet\\DistribuidoraPalomarNet.csproj|solutionrelative:distribuidorapalomarnet\\forms\\frmprincipal.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet.Installer\\DistribuidoraPalomarNet.Installer.wixproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:DistribuidoraPalomarNet.Installer\\DistribuidoraPalomarNet.Installer.wixproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
     }
   ],
   "DocumentGroupContainers": [
@@ -30,7 +50,7 @@
       "DocumentGroups": [
         {
           "DockedHeight": 248,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 8,
           "Children": [
             {
               "$type": "Bookmark",
@@ -50,32 +70,92 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "frmDatosUsuario.cs",
+              "DocumentMoniker": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmDatosUsuario.cs",
+              "RelativeDocumentMoniker": "DistribuidoraPalomarNet\\Forms\\frmDatosUsuario.cs",
+              "ToolTip": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmDatosUsuario.cs",
+              "RelativeToolTip": "DistribuidoraPalomarNet\\Forms\\frmDatosUsuario.cs",
+              "ViewState": "AgIAACgBAAAAAAAAAAAAADIBAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T00:54:06.983Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "frmDatosUsuario.cs [Design]",
+              "DocumentMoniker": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmDatosUsuario.cs",
+              "RelativeDocumentMoniker": "DistribuidoraPalomarNet\\Forms\\frmDatosUsuario.cs",
+              "ToolTip": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmDatosUsuario.cs [Design]",
+              "RelativeToolTip": "DistribuidoraPalomarNet\\Forms\\frmDatosUsuario.cs [Design]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-10T00:48:03.843Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "frmPrincipal.Designer.cs",
+              "DocumentMoniker": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmPrincipal.Designer.cs",
+              "RelativeDocumentMoniker": "DistribuidoraPalomarNet\\Forms\\frmPrincipal.Designer.cs",
+              "ToolTip": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmPrincipal.Designer.cs",
+              "RelativeToolTip": "DistribuidoraPalomarNet\\Forms\\frmPrincipal.Designer.cs",
+              "ViewState": "AgIAABcCAAAAAAAAAAAEwCECAABJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-09T20:19:42.881Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "frmDescMarcas.cs",
+              "DocumentMoniker": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmDescMarcas.cs",
+              "RelativeDocumentMoniker": "DistribuidoraPalomarNet\\Forms\\frmDescMarcas.cs",
+              "ToolTip": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmDescMarcas.cs",
+              "RelativeToolTip": "DistribuidoraPalomarNet\\Forms\\frmDescMarcas.cs",
+              "ViewState": "AgIAAGoBAAAAAAAAAAAAAG4BAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-09T20:11:03.082Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "Module.cs",
+              "DocumentMoniker": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Module.cs",
+              "RelativeDocumentMoniker": "DistribuidoraPalomarNet\\Module.cs",
+              "ToolTip": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Module.cs",
+              "RelativeToolTip": "DistribuidoraPalomarNet\\Module.cs",
+              "ViewState": "AgIAAGUDAAAAAAAAAAAUwBQDAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-03T14:43:54.298Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
               "Title": "frmConfFamilia.cs",
               "DocumentMoniker": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmConfFamilia.cs",
               "RelativeDocumentMoniker": "DistribuidoraPalomarNet\\Forms\\frmConfFamilia.cs",
               "ToolTip": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmConfFamilia.cs",
               "RelativeToolTip": "DistribuidoraPalomarNet\\Forms\\frmConfFamilia.cs",
-              "ViewState": "AgIAANwAAAAAAAAAAAAowOwAAAAnAAAAAAAAAA==",
+              "ViewState": "AgIAAFUBAAAAAAAAAAAqwF0BAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-24T16:17:01.602Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 6,
               "Title": "frmConfFamilia.cs [Design]",
               "DocumentMoniker": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmConfFamilia.cs",
               "RelativeDocumentMoniker": "DistribuidoraPalomarNet\\Forms\\frmConfFamilia.cs",
               "ToolTip": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmConfFamilia.cs [Design]",
               "RelativeToolTip": "DistribuidoraPalomarNet\\Forms\\frmConfFamilia.cs [Design]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T16:53:22.487Z",
-              "EditorCaption": " [Design]"
+              "WhenOpened": "2026-02-24T16:53:22.487Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 9,
               "Title": "DistribuidoraPalomarNet.Installer.wixproj",
               "DocumentMoniker": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet.Installer\\DistribuidoraPalomarNet.Installer.wixproj",
               "RelativeDocumentMoniker": "DistribuidoraPalomarNet.Installer\\DistribuidoraPalomarNet.Installer.wixproj",
@@ -83,25 +163,24 @@
               "RelativeToolTip": "DistribuidoraPalomarNet.Installer\\DistribuidoraPalomarNet.Installer.wixproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-02-21T20:34:29.107Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-21T20:34:29.107Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "frmPrincipal.cs",
               "DocumentMoniker": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmPrincipal.cs",
               "RelativeDocumentMoniker": "DistribuidoraPalomarNet\\Forms\\frmPrincipal.cs",
               "ToolTip": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmPrincipal.cs",
               "RelativeToolTip": "DistribuidoraPalomarNet\\Forms\\frmPrincipal.cs",
-              "ViewState": "AgIAADoDAAAAAAAAAAAgwEoDAAAeAAAAAAAAAA==",
+              "ViewState": "AgIAANEBAAAAAAAAAAArwNYBAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-20T22:17:43.84Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "frmPrincipal.cs [Design]",
               "DocumentMoniker": "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Forms\\frmPrincipal.cs",
               "RelativeDocumentMoniker": "DistribuidoraPalomarNet\\Forms\\frmPrincipal.cs",

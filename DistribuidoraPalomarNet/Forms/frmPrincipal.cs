@@ -41,7 +41,7 @@ namespace DistribuidoraPalomarNet
             if (txtCodigo != null) txtCodigo.Enabled = autorizado;
             if (txtDescripcion != null) txtDescripcion.Enabled = autorizado;
             if (txtModelo != null) txtModelo.Enabled = autorizado;
-            if (cmbRubros != null) cmbRubros.Enabled = autorizado;
+            if (cmbArmadora != null) cmbArmadora.Enabled = autorizado;
             if (cmbLineas != null) cmbLineas.Enabled = autorizado;
             if (btnLimpiar != null) btnLimpiar.Enabled = autorizado;
             if (ckbOfertas != null) ckbOfertas.Enabled = autorizado;
@@ -278,9 +278,9 @@ namespace DistribuidoraPalomarNet
             btnLimpiar.Click += BtnLimpiar_Click;
             btnnovedades.Click += Btnnovedades_Click;
             cmbLineas.KeyPress += Combo_KeyPress;
-            cmbRubros.KeyPress += Combo_KeyPress;
+            cmbArmadora.KeyPress += Combo_KeyPress;
             cmbLineas.KeyDown += Combo_KeyDown;
-            cmbRubros.KeyDown += Combo_KeyDown;
+            cmbArmadora.KeyDown += Combo_KeyDown;
 
 
             InitializeWebView2Async();
@@ -467,6 +467,7 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
+                Module.FechaActualizacion();
                 Module.ActualizacionXFTP();
             }
             catch (Exception ex)
@@ -537,12 +538,13 @@ namespace DistribuidoraPalomarNet
                     Application.DoEvents();
 
                     string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-                    "p.prrazo as Marca," +
+                    "p.PRMARC as Marca," + /*DEJO DE MOSTRA prrazo Y PASO A MOSTRAR PRMARC*/
                     //"l.lidesc as Linea," +
                     "a.armode as Linea," +
                     " a.arinte as Posición," +
                     //" a.ARMARC as Marca2," + 
-                    "a.arpre2 as Preciopublico, " +//"IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
+                    //"a.arpre2 as Preciopublico, " +//"IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
+                    "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
                     "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
                     " from (listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) ";
@@ -564,6 +566,7 @@ namespace DistribuidoraPalomarNet
                     Application.DoEvents();
                     DataGridView2.DataSource = ds.Tables[0];
                     DataGridView2.Refresh();
+                    DataGridView2.ClearSelection();
 
                     DataGridView2.Columns["aroo"].Visible = false;
                     DataGridView2.Columns["artt"].Visible = false;
@@ -656,8 +659,11 @@ namespace DistribuidoraPalomarNet
                 //txtDescuento1.Text = string.Empty;
                 //txtDescuento2.Text = string.Empty;
                 //txtDescuento3.Text = string.Empty;
-                if (cmbRubros.Items.Count > 0) cmbRubros.SelectedIndex = -1;
+                if (cmbArmadora.Items.Count > 0) cmbArmadora.SelectedIndex = -1;
                 if (cmbLineas.Items.Count > 0) cmbLineas.SelectedIndex = -1;
+
+                if (cmbRubros.Items.Count > 0) cmbRubros.SelectedIndex = -1;
+                if (cmbMarcas.Items.Count > 0) cmbMarcas.SelectedIndex = -1;
 
                 // Dejar la grilla vacía preservando configuración y encabezados
                 if (DataGridView1.DataSource is System.Data.DataTable dt)
@@ -840,7 +846,7 @@ namespace DistribuidoraPalomarNet
                     Module.ini_ruta_gral + "\\DistribuidoraPalomarNet\\Imagenes\\BannerPalomar.gif",
                     Module.ini_usu_ftp, Module.ini_pass_ftp, Module.ini_ruta_ftp);
                 CargarBanner();
-                Module.Inicializacion();
+                Module.FechaActualizacion();
                 //Module.BuscarActualizacionDisponible();
                 if (Module.BuscarActualizacionDisponible())
                 {
@@ -855,8 +861,13 @@ namespace DistribuidoraPalomarNet
                         //bandUpdatexActualizacion = true;
                         //// llamo al formulario.
                         //// frmDatosUsuario.ShowDialog()
+                        ///
+                        //Module.Inicializacion();
                     }
                 }
+                Module.SincronizarDescuentosCliente();
+                Module.Cargar_Usuario();
+                Module.Inicializacion();
                 ApplyEstadoClienteToUI();
             }
             catch (Exception ex)
@@ -1079,77 +1090,106 @@ namespace DistribuidoraPalomarNet
         {
             if (e.KeyChar == (char)Keys.Enter)
             {
-                try
-                {
-                    if (!string.IsNullOrEmpty(txtCodigo.Text))
-                    {
-                        string queryRel = ckbOfertas.Checked
-                            ? "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-                                "p.PRMARC as Marca," +
-                                //"a.armarc as Marca," 
-                                //"l.lidesc as Linea," +
-                                "a.armode as Linea," +
-                                " a.arinte as Posición," +
-                              //" a.ARMARC as Marca2," + 
-                              "a.arpre5 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
-                              ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from listas as a " +
-                                "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
-                              //" left join lineas as l on a.arcuar=l.licodi= " +
-                              "where a.ARTT<>0 AND a.arprim+a.arterc like '%" + txtCodigo.Text +
-                              "%' order by a.arcodi"
-                            : "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-                                "p.PRMARC as Marca," +
-                                //"a.armarc as Marca," 
-                                //"l.lidesc as Linea," +
-                                "a.armode as Linea," +
-                                " a.arinte as Posición," +
-                              //" a.ARMARC as Marca2," + 
-                              "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
-                              ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from listas as a " +
-                                "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
-                              //" left join lineas as l on a.arcuar=l.licodi= " +
-                              "where a.arprim+a.arterc like '%" + txtCodigo.Text +
-                              "%' order by a.arcodi";
+                FiltrarPorCodigo();
+            }
+        }
 
-                        using (var da = new OleDbDataAdapter())
-                        using (var ds = new DataSet())
+        private void FiltrarPorCodigo()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(txtCodigo.Text))
+                {
+                    string queryRel = ckbOfertas.Checked
+                        ? "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
+                            "p.PRMARC as Marca," +
+                            //"a.armarc as Marca," 
+                            //"l.lidesc as Linea," +
+                            "a.armode as Linea," +
+                            " a.arinte as Posición," +
+                          //" a.ARMARC as Marca2," + 
+                          "a.arpre5 as Preciopublico, " +
+                          "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
+                          ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from listas as a " +
+                            "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                          //" left join lineas as l on a.arcuar=l.licodi= " +
+                          "where a.ARTT<>0 AND a.arprim+a.arterc like '%" + txtCodigo.Text +
+                          "%' order by a.arcodi"
+                        : "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
+                            "p.PRMARC as Marca," +
+                            //"a.armarc as Marca," 
+                            //"l.lidesc as Linea," +
+                            "a.armode as Linea," +
+                            " a.arinte as Posición," +
+                            //" a.ARMARC as Marca2," + 
+                            //"a.arpre2 as Preciopublico, " +//"IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
+                            "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, " +
+                          " IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
+                          ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from listas as a " +
+                            "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                          //" left join lineas as l on a.arcuar=l.licodi= " +
+                          "where a.arprim+a.arterc like '%" + txtCodigo.Text +
+                          "%' order by a.arcodi";
+
+                    using (var da = new OleDbDataAdapter())
+                    using (var ds = new DataSet())
+                    {
+                        Module.ConectarDBArti();
+                        da.SelectCommand = new OleDbCommand(queryRel, Module.cnn);
+                        da.Fill(ds);
+                        if (ds.Tables.Count > 0)
                         {
-                            Module.ConectarDBArti();
-
-                            da.SelectCommand = new OleDbCommand(queryRel, Module.cnn);
-                            da.Fill(ds);
-
-                            if (ds.Tables.Count > 0)
-                            {
-                                DataGridView1.DataSource = ds.Tables[0];
-                                DataGridView1.Refresh();
-                            }
-
-                            if (DataGridView1.RowCount > 0)
-                            {
-                                Module.SeleccionarGrilla();
-                            }
-
-                            if (Module.cnn.State == ConnectionState.Open)
-                            {
-                                Module.cnn.Close();
-                            }
+                            DataGridView1.DataSource = ds.Tables[0];
+                            DataGridView1.Refresh();
                         }
+                        if (DataGridView1.RowCount > 0)
+                            Module.SeleccionarGrilla();
+                        if (Module.cnn.State == ConnectionState.Open)
+                            Module.cnn.Close();
                     }
                 }
-                catch (Exception ex)
-                {
-                    if (Module.cnn.State == ConnectionState.Open)
-                    {
-                        Module.cnn.Close();
-                    }
-                    Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Código': {ex.Message}");
-                }
-                finally
-                {
-                    //If TimerVerOfertas.Enabled = False Then TimerVerOfertas.Enabled = True
-                    if (TimerVerOfertas.Enabled == false) TimerVerOfertas.Enabled = true;
-                }
+            }
+            catch (Exception ex)
+            {
+                if (Module.cnn.State == ConnectionState.Open)
+                    Module.cnn.Close();
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Código': {ex.Message}");
+            }
+            finally
+            {
+                if (TimerVerOfertas.Enabled == false) TimerVerOfertas.Enabled = true;
+            }
+        }
+
+        public void RefrescarSegunFiltros()
+        {
+            bool hayFiltroLinea = cmbLineas.SelectedValue is int lineaVal && lineaVal != 0;
+            bool hayFiltroCodigo = !string.IsNullOrWhiteSpace(txtCodigo.Text);
+            bool hayFiltroDescModelo = !string.IsNullOrWhiteSpace(txtDescripcion.Text) || !string.IsNullOrWhiteSpace(txtModelo.Text);
+            bool hayFiltroCombo =
+                (!string.IsNullOrWhiteSpace(cmbArmadora.Text) && cmbArmadora.Text.Trim() != "TODOS") ||
+                (!string.IsNullOrWhiteSpace(cmbRubros.Text)   && cmbRubros.Text.Trim()   != "TODOS") ||
+                (!string.IsNullOrWhiteSpace(cmbMarcas.Text)   && cmbMarcas.Text.Trim()   != "TODOS");
+
+            if (hayFiltroLinea)
+            {
+                Filtrar_x_linea(cmbLineas.Text);
+            }
+            else if (hayFiltroCodigo)
+            {
+                FiltrarPorCodigo();
+            }
+            else if (ckbOfertas.Checked)
+            {
+                Module.consultas_Ofertas();
+            }
+            else if (hayFiltroDescModelo || hayFiltroCombo)
+            {
+                Module.consultas_Relacionales();
+            }
+            else
+            {
+                Module.funcion_inicial(1);
             }
         }
 
@@ -1181,31 +1221,68 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void cmbRubros_SelectedIndexChanged(object sender, EventArgs e)
+        private void cmbArmadora_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
-                if (!string.IsNullOrEmpty(cmbRubros.Text) && cmbRubros.Text != "System.Data.DataRowView")
+                if (!string.IsNullOrEmpty(cmbArmadora.Text) && cmbArmadora.Text != "System.Data.DataRowView")
                 {
                     Module.campo = string.Empty;
                     Module.valor = string.Empty;
                     //Module.LimpiarCampos(1);
 
-                    if (cmbRubros.Text == " TODOS" || cmbRubros.Text == "TODOS")
+                    if (cmbArmadora.Text == " TODOS" || cmbArmadora.Text == "TODOS")
                     {
-                        cmbRubros.Text = string.Empty;
+                        cmbArmadora.Text = string.Empty;
                         Module.funcion_inicial(0);
                     }
                     else
                     {
-                        Module.CargarComboLineas(cmbRubros.Text);
+                        Module.CargarComboLineas(cmbArmadora.Text);
                         Module.consultas_Relacionales();
                     }
                 }
             }
             catch (Exception ex)
             {
-                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Rubros': {ex.Message}");
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Armadora': {ex.Message}");
+            }
+        }
+
+        private void cmbMarcas_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (cmbMarcas.SelectedValue is int marcaVal && marcaVal != 0)
+                {
+                    if (ckbOfertas.Checked)
+                        Module.consultas_Ofertas();
+                    else
+                        Module.consultas_Relacionales();
+                }
+            }
+            catch (Exception ex)
+            {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Marca': {ex.Message}");
+            }
+        }
+
+        private void cmbRubros_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                string rubrosSel = cmbRubros.Text?.Trim() ?? string.Empty;
+                if (!string.IsNullOrEmpty(rubrosSel) && rubrosSel != "TODOS")
+                {
+                    if (ckbOfertas.Checked)
+                        Module.consultas_Ofertas();
+                    else
+                        Module.consultas_Relacionales();
+                }
+            }
+            catch (Exception ex)
+            {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Rubro': {ex.Message}");
             }
         }
 
@@ -1305,7 +1382,7 @@ namespace DistribuidoraPalomarNet
             catch (Exception ex)
             {
                 //cmbLineas.Visible = false;
-                MessageBox.Show("Error dentro de Filtro por Montadora: " + ex.Message, "Alerta", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Error dentro de Filtro por Lineas: " + ex.Message, "Alerta", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             //try
@@ -1345,7 +1422,9 @@ namespace DistribuidoraPalomarNet
                     "a.armode as Linea," +
                     " a.arinte as Posición," +
                     //" a.ARMARC as Marca2," + 
-                    "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
+                    //"a.arpre2 as Preciopublico, " +//"IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
+                    "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, " +
+                    "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
                     " from listas as a ";
 
@@ -1899,9 +1978,6 @@ namespace DistribuidoraPalomarNet
             {
                 if (DataGridView2.CurrentRow != null)
                 {
-                    Module.AccionGrilla(DataGridView2);
-                    //CargarEquivalencias();
-
                     int numFila = DataGridView2.CurrentCell.RowIndex;
                     string StringSelect = "SELECT TOP 1 IIF(R.RBDESC IS NULL, '', R.RBDESC) AS RBDESC, IIF(A.ARORIG IS NULL, '', A.ARORIG) AS ARORIG" +
                         ", IIF(A.AROBSE IS NULL, '', A.AROBSE) AS AROBSE " +
@@ -1929,26 +2005,7 @@ namespace DistribuidoraPalomarNet
                     return;
                 }
 
-                if (this.DataGridView2.RowCount > 0)
-                {
-                    Module.AccionGrilla(DataGridView2);
-                }
-                else
-                {
-                    // Borrar txt precios
-                    //lblCodigoSelec.Text = "";
-                    lblTotalRegistros.Text = "";
-                    txtPreciolista.Text = "";
-                    txtDescuento1.Text = "";
-                    txtDescuento2.Text = "";
-                    txtDescuento3.Text = "";
-                    txtPreciopublico.Text = "";
-                    txtBeneficio.Text = "";
-                    txtSugerido.Text = "";
-                    ptbImagen.Image = System.Drawing.Image.FromFile(@"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\imagenes\SINFOTO.png");
-                }
-
-                if (!string.IsNullOrEmpty(this.txtPreciopublico.Text))
+                if (this.DataGridView2.RowCount > 0 && this.DataGridView2.CurrentRow != null)
                 {
                     int NumFila = this.DataGridView2.CurrentCell.RowIndex;
                     string Cantidad = Microsoft.VisualBasic.Interaction.InputBox("Ingrese la cantidad Solicitada",

@@ -19,26 +19,59 @@ using ITextImage = iTextSharp.text.Image;
 
 namespace DistribuidoraPalomarNet
 {
+    /// <summary>
+    /// Módulo estático central de la aplicación. Coordina todas las áreas funcionales:
+    /// base de datos, configuración, cálculo de precios, búsquedas, carrito, FTP, PDF y correo.
+    /// </summary>
+    /// <remarks>
+    /// <b>Bases de datos:</b>
+    /// <list type="bullet">
+    /// <item><c>cnn</c>: base del distribuidor (artículos, clientes, familias) → ruta <c>ini_ruta_base</c>.</item>
+    /// <item><c>cnnU</c>: base local del usuario (<c>cliente.dat</c>) → descuentos, PREPARAC, configuración.</item>
+    /// <item><c>cnnO</c>: base de origen temporal para el proceso de actualización FTP.</item>
+    /// </list>
+    /// <b>Cadena de precios en tabla LISTAS:</b>
+    /// <list type="bullet">
+    /// <item><c>aroo</c> = precio base de lista | <c>artt</c> = precio de oferta.</item>
+    /// <item><c>arpre0</c> = aroo − desc1 &nbsp;|&nbsp; <c>arpre1</c> = arpre0 − desc2 − descFamilia + IVA (precio de costo).</item>
+    /// <item><c>arpre2</c> = arpre1 + beneficio familiar = precio sugerido de venta al público.</item>
+    /// <item><c>arpre3/arpre4/arpre5</c>: equivalentes para artículos en oferta (<c>artt</c>).</item>
+    /// </list>
+    /// <b>Flujo de inicio:</b> <see cref="Inicializacion"/> → <see cref="LeerConfig"/>
+    /// → <see cref="Cargar_Usuario"/> → <see cref="funcion_inicial"/> → <see cref="aplicar_desc_Cliente"/>.<br/>
+    /// <b>Actualización FTP:</b> <see cref="ActualizacionXFTP"/> descarga archivo, migra base y recalcula precios.<br/>
+    /// <b>Pedido:</b> <see cref="ModuloPreparac"/> gestiona PREPARAC; <see cref="ProcesoCorreo"/> genera PDF y envía por email.
+    /// </remarks>
     public static class Module
     {
         #region Variables Globales
-        // Referencias a formularios
+        // --- Referencias a formularios (inyectadas por Set*Form; uso interno) ---
+        // _frmPrincipal:    ventana principal de la app (grilla, precios, filtros).
+        // _frmCarroCompras: formulario del carrito de compras (gridPedidos).
+        // _frmDatosUsuario: formulario de datos del cliente (código, CUIT, descuentos).
+        // _carroComprasForm/_datosUsuarioForm: instancias singleton lazy (ver Get*Form).
         private static frmPrincipal _frmPrincipal;
         private static frmCarroCompras _frmCarroCompras;
         private static frmDatosUsuario _frmDatosUsuario;
         private static frmCarroCompras _carroComprasForm;
         private static frmDatosUsuario _datosUsuarioForm;
 
+        /// <summary>Registra la referencia al formulario principal. Debe llamarse en el constructor de <c>frmPrincipal</c>.</summary>
+        /// <param name="form">Instancia de <c>frmPrincipal</c>; no puede ser null.</param>
         public static void SetMainForm(frmPrincipal form)
         {
             _frmPrincipal = form ?? throw new ArgumentNullException(nameof(form));
         }
 
+        /// <summary>Registra la referencia al formulario del carrito. Debe llamarse al abrir <c>frmCarroCompras</c>.</summary>
+        /// <param name="form">Instancia de <c>frmCarroCompras</c>; no puede ser null.</param>
         public static void SetCarroComprasForm(frmCarroCompras form)
         {
             _frmCarroCompras = form ?? throw new ArgumentNullException(nameof(form));
         }
 
+        /// <summary>Registra la referencia al formulario de datos de usuario y propaga la referencia a <see cref="ModuloUsuario"/>.</summary>
+        /// <param name="form">Instancia de <c>frmDatosUsuario</c>; no puede ser null.</param>
         public static void SetDatosUsuarioForm(frmDatosUsuario form)
         {
             if (form == null) throw new ArgumentNullException(nameof(form));
@@ -46,6 +79,10 @@ namespace DistribuidoraPalomarNet
             ModuloUsuario.SetDatosUsuarioForm(form); // Actualizar también la referencia en ModuloUsuario
         }
 
+        /// <summary>
+        /// Retorna la instancia singleton de <c>frmCarroCompras</c>, creándola si no existe o fue cerrada.
+        /// </summary>
+        /// <returns>Instancia activa (no dispuesta) de <c>frmCarroCompras</c>.</returns>
         public static frmCarroCompras GetCarroComprasForm()
         {
             if (_carroComprasForm == null || _carroComprasForm.IsDisposed)
@@ -55,6 +92,10 @@ namespace DistribuidoraPalomarNet
             return _carroComprasForm;
         }
 
+        /// <summary>
+        /// Carga en la grilla los artículos marcados como novedades (<c>ARFECASIG &lt;&gt; 0</c>),
+        /// es decir, aquellos con una fecha de asignación reciente en la base del distribuidor.
+        /// </summary>
         public static void Funcion_Novedades()
         {
             using var da = new OleDbDataAdapter();
@@ -102,6 +143,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Retorna la instancia singleton de <c>frmDatosUsuario</c>, creándola si no existe o fue cerrada.
+        /// </summary>
+        /// <returns>Instancia activa (no dispuesta) de <c>frmDatosUsuario</c>.</returns>
         public static frmDatosUsuario GetDatosUsuarioForm()
         {
             if (_datosUsuarioForm == null || _datosUsuarioForm.IsDisposed)
@@ -111,11 +156,18 @@ namespace DistribuidoraPalomarNet
             return _datosUsuarioForm;
         }
 
-        // Variables de configuración
+        // --- Configuración de sesión ---
+        // ini_usuario: nombre/código del usuario que inició sesión.
+        // ini_fecha:   fecha de inicio de sesión.
         public static string ini_usuario { get; set; }
         public static string ini_fecha { get; set; }
 
-        // Conexiones a base de datos
+        // --- Conexiones a bases de datos ---
+        // cnn:   base del distribuidor (artículos, clientes, familias) → ini_ruta_base.
+        // cnnU:  base local del usuario (cliente.dat) → ini_ruta_usu.
+        // cnnO:  base de origen temporal durante el proceso de actualización FTP.
+        // cm/dr/ds/dt: objetos ADO.NET reutilizados en métodos que no usan using (uso con cuidado).
+        // campo/valor: variables auxiliares para construcción dinámica de WHERE en búsquedas.
         public static OleDbConnection cnn = new OleDbConnection();
         public static OleDbConnection cnnU = new OleDbConnection();
         public static OleDbConnection cnnO = new OleDbConnection();
@@ -126,11 +178,26 @@ namespace DistribuidoraPalomarNet
         public static string campo = "";
         public static string valor = "";
         
-        // Variables globales de configuración
+        // --- Rutas de bases de datos ---
+        // ini_ruta_arti: no usado actualmente (reemplazado por ini_ruta_base).
+        // ini_ruta_usu:  ruta completa a cliente.dat (base local del usuario).
         public static string ini_ruta_arti { get; set; }
         public static string ini_ruta_usu { get; set; }
 
-        // Variables globales de precios
+        // --- Cadena de cálculo de precios (actualizados en Calculadora() por cada selección de artículo) ---
+        // precio_lista:         aroo del artículo seleccionado (precio base sin descuentos).
+        // precio_desc1:         precio_lista − descuento1 (%).
+        // precio_desc2:         precio_desc1 − descuento2 (%).
+        // precio_desc1_desc2:   alias de precio_desc2 (no usado actualmente).
+        // precio_costo_sin_iva: precio_desc2 − descuento familia = precio de costo sin IVA (base para PREPARAC).
+        // precio_final:         precio_costo_sin_iva + IVA familia = precio final al cliente con IVA.
+        // PRECIO_DESC3:         monto del tercer descuento (­optional) sobre precio_final.
+        // precio_final_desc3:   precio_final − desc3 = precio publicado si hay desc3 activo.
+        // preciofinalxx:        copia de precio_final antes de aplicar desc3 (intermedio).
+        // precio_con_desc3:     alias de precio_final_desc3.
+        // precio_sin_desc3:     alias de precio_final cuando desc3 = 0.
+        // precio_beneficio:     monto del beneficio familiar sobre el precio (no usado en flujo actual).
+        // precio_final_beneficio: precio_final + beneficio familiar (no usado en flujo actual).
         public static decimal precio_final_desc3;
         public static decimal precio_beneficio;
         public static decimal precio_final_beneficio;
@@ -144,12 +211,32 @@ namespace DistribuidoraPalomarNet
         public static decimal precio_desc2;
         public static decimal precio_final;
         public static decimal precio_costo_sin_iva;
+        // AccionDatosUsu: indica la acción a realizar en frmDatosUsuario (1=alta, 2=edición).
+        // NumEqui:        código de equivalencia del artículo seleccionado (AROBSE); vacío si no tiene.
+        // vectornomfoto:  array de nombres de archivo de fotos (no usado actualmente).
+        // prcodi:         código de proveedor del artículo seleccionado para filtros.
         public static int AccionDatosUsu;
         public static string NumEqui = string.Empty;
         public static string[] vectornomfoto;
         public static string prcodi = "";
 
-        // Variables de configuración FTP y Email
+        // --- Configuración de Email (leídas de Config.ini) ---
+        // ini_emisor_email:  dirección del remitente SMTP.
+        // ini_pass_email:    contraseña del remitente.
+        // ini_host_email:    servidor SMTP (ej: smtp.gmail.com).
+        // ini_port_email:    puerto SMTP como string.
+        // ini_enable_ssl:    indica si el SMTP requiere SSL.
+        // ini_receptor_email: destinatario por defecto (distribuidora).
+        // --- Configuración FTP (leídas de Config.ini) ---
+        // ini_ruta_ftp:      URL del servidor FTP (ej: ftp://servidor.com).
+        // ini_usu_ftp:       usuario FTP.
+        // ini_pass_ftp:      contraseña FTP.
+        // ini_arch_ftp:      nombre del archivo de actualización en el FTP.
+        // ini_ruta_base:     ruta local a la base de artículos del distribuidor.
+        // ini_ruta_base_descarga: ruta temporal donde se descarga la base actualizada.
+        // ini_ruta_banner:   URL para el texto del banner superior de la app.
+        // ini_ruta_gral:     ruta general de la instalación local.
+        // ini_apli_ftp:      ruta del ejecutable instalador descargado del FTP.
         public static string ini_emisor_email;
         public static string ini_pass_email;
         public static string ini_host_email;
@@ -169,17 +256,28 @@ namespace DistribuidoraPalomarNet
         public static string _textoBanner;
 
 
-        //'para el semaforo de Stock.
+        // --- Semáforo de stock (leídos de Config.ini, usados en ColorearStock()) ---
+        // ini_cond_rojo:     umbral máximo de stock para color ROJO (crítico).
+        // ini_cond_amarillo: umbral para color AMARILLO (precaución).
+        // ini_cond_verde:    umbral mínimo para color VERDE (stock suficiente).
         public static int ini_cond_rojo;
         public static int ini_cond_amarillo;
         public static int ini_cond_verde;
 
-        // Variable fecha base
+        // fecha:  almacena la fecha de última actualización de la base (leída de LISTAS.arpp).
+        // Migra:  flag temporal que indica si la migración de base estuvo activa (usado en ActualizacionXFTP).
         public static string fecha = "";
 
         public static bool Migra = false;
 
-        // Configuración Usuario
+        // --- Datos del cliente/usuario activo (cargados en Cargar_Usuario y ValidarCuitCliente) ---
+        // US_CODI:   código de cliente en la base del distribuidor.
+        // US_CLRAZO: razón social del cliente.
+        // US_CUIT:   CUIT del cliente (usado para validación cruzada).
+        // US_EMAIL:  dirección de email del cliente (se agrega como destinatario del pedido).
+        // US_CLCIVA: condición de IVA del cliente (CLIENTES.CLCIVA).
+        // US_CLVEND: código del vendedor asignado (CLIENTES.CLVEND).
+        // US_CLCPAG: condición de pago del cliente (CLIENTES.CLCPAG).
         public static string US_CODI = "0";
         public static string US_CLRAZO = "0";
         public static string US_CUIT = "0";
@@ -189,11 +287,23 @@ namespace DistribuidoraPalomarNet
         public static int US_CLVEND = 0;
         public static int US_CLCPAG = 0;
 
-        // Variables globales de artículo
+        public static int US_DESCUENTO1 = 0;
+        public static int US_DESCUENTO2 = 0;
+
+        // --- Estado del artículo actualmente seleccionado en la grilla ---
+        // _ARTI_ARFLIA: código de familia del artículo (LISTAS.ARFLIA); usado en Calculadora, aplicar_beneficio.
         private static int _ARTI_ARFLIA;
 
+        // accionDatosUsu: duplicado de AccionDatosUsu (mantener consistencia al escribir).
         public static int accionDatosUsu;
 
+        // --- Estado de autorización del cliente (actualizado en ValidarCuitCliente) ---
+        // ExisteCodi_Cliente:     true si el código existe en CLIENTES de la base del distribuidor.
+        // ExisteCuit_Cliente:     true si la combinación código + CUIT es válida.
+        // ClienteAutorizado:      true cuando CLDES1 o CLDES2 > 0 (tiene descuentos aplicados).
+        // ClienteRestringido:     true cuando ambos descuentos son 0 (sin habilitación del distribuidor).
+        // ClienteDescuento1/2:    descuentos de la tabla CLIENTES (CLDES1/CLDES2), cargados en la validación.
+        // ClienteMensajeValidacion: mensaje informativo de estado para mostrar al usuario.
         public static bool ExisteCodi_Cliente = false;
         public static bool ExisteCuit_Cliente = false;
 
@@ -203,8 +313,16 @@ namespace DistribuidoraPalomarNet
         public static decimal ClienteDescuento2 = 0;
         public static string ClienteMensajeValidacion = string.Empty;
 
+        // _descargarFichero: flag para controlar si se debe descargar el fichero FTP (uso interno).
+        // _textoBanner:      contenido del banner descargado desde la URL configurada en Config.ini.
         public static bool _descargarFichero;
 
+        /// <summary>
+        /// Ejecuta un SELECT sobre la base del distribuidor y retorna los campos
+        /// <c>ARFLIA</c> (familia) y <c>ARPROV</c> (proveedor) del artículo.
+        /// </summary>
+        /// <param name="stringSelect">Sentencia SELECT completa con WHERE.</param>
+        /// <returns>Array de dos elementos: [0]=ARFLIA, [1]=ARPROV; o <c>["0"]</c> si no hay datos.</returns>
         public static string[] TraerCamposArticulo(string stringSelect)
         {
             using var cm = new OleDbCommand();
@@ -239,16 +357,22 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>Establece la cláusula WHERE dinámica de búsqueda para el próximo artículo a agregar al carrito.</summary>
+        /// <param name="value">Cláusula WHERE completa (ej: <c>" WHERE A.ARCODI='X'..."</c>).</param>
         public static void SetWherePreparac(string value)
         {
             ModuloPreparac.WHERE_PREPARAC = value;
         }
 
+        /// <summary>Retorna la cláusula WHERE actualmente configurada en <see cref="ModuloPreparac"/>.</summary>
         public static string GetWherePreparac()
         {
             return ModuloPreparac.WHERE_PREPARAC;
         }
 
+        /// <summary>Establece la cantidad para la próxima operación de carrito, parseando el string como decimal.</summary>
+        /// <param name="value">Cantidad como cadena; se normaliza el separador decimal antes de parsear.</param>
+        /// <exception cref="ArgumentException">Si el valor no puede convertirse a decimal.</exception>
         public static void SetCantPreparac(string value)
         {
             if (decimal.TryParse(value.Replace(".", ","), out decimal result))
@@ -261,12 +385,16 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>Retorna la cantidad actualmente configurada en <see cref="ModuloPreparac"/>.</summary>
         public static decimal GetCantPreparac()
         {
             return ModuloPreparac.CANT_PREPARAC;
         }
 
         #region Variables Preparac
+        // ini_codcli: código del cliente para el proceso de preparación (no usado en flujo principal actual).
+        // ini_barr:   código de barrio del cliente (no usado en flujo principal actual).
+        // ini_razon:  razón social del cliente para preparación (no usado en flujo principal actual).
         public static string ini_codcli = "";
         public static string ini_barr = "";
         public static string ini_razon = "";
@@ -275,6 +403,10 @@ namespace DistribuidoraPalomarNet
         #endregion
 
         #region Métodos TXT
+        /// <summary>
+        /// Inicia el proceso de exportación del catálogo a Excel (.xlsx) mostrando la barra de progreso.
+        /// Actualmente llama a <see cref="PasarArti_a_xls"/> en lugar de <see cref="PasarArti_a_TXT"/>.
+        /// </summary>
         public static void Iniciar_Proceso_TXT()
         {
             try
@@ -295,6 +427,12 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Exporta todos los artículos de LISTAS a un archivo de texto plano posicional
+        /// (<c>lista_txt.txt</c>) y lo abre con la aplicación predeterminada del sistema.
+        /// </summary>
+        /// <remarks>Campos exportados con padding fijo: arterc(10), arcuar(4), precio(10), marc(15), ardesc(80), arobse(80).
+        /// Actualmente no se llama (reemplazado por <see cref="PasarArti_a_xls"/>).</remarks>
         public static void PasarArti_a_TXT()
         {
             OleDbDataAdapter da = new OleDbDataAdapter();
@@ -349,6 +487,12 @@ namespace DistribuidoraPalomarNet
 
         #endregion
         #region Métodos XLSX
+        /// <summary>
+        /// Exporta todos los artículos de LISTAS a un archivo Excel formateado
+        /// (<c>lista_excel.xlsx</c>) usando la librería ClosedXML y lo abre con Excel.
+        /// </summary>
+        /// <remarks>Incluye encabezados en negrita con fondo gris, formato moneda en la columna de precio
+        /// (<c>$#,##0.00</c>) y ajuste automático del ancho de columnas.</remarks>
         public static void PasarArti_a_xls()
         {
             OleDbDataAdapter da = new OleDbDataAdapter();
@@ -429,6 +573,10 @@ namespace DistribuidoraPalomarNet
         }
         #endregion
         #region Métodos Principales
+        /// <summary>
+        /// Carga la tabla <c>listass</c> completa en el DataGridView1 ordenada por <c>codigo</c>.
+        /// Actualiza el contador de registros totales.
+        /// </summary>
         public static void ActualizarListado()
         {
             try
@@ -453,6 +601,9 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Carga la tabla <c>listass</c> con filtros opcionales en el DataGridView1.
+        /// </summary>
         public static void CargarListado()
         {
             try
@@ -464,8 +615,8 @@ namespace DistribuidoraPalomarNet
                     sql += $" WHERE codigo LIKE '%{_frmPrincipal.txtCodigo.Text}%'";
                 else if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text))
                     sql += $" WHERE descripcion LIKE '%{_frmPrincipal.txtDescripcion.Text}%'";
-                else if (_frmPrincipal.cmbRubros.SelectedIndex > -1)
-                    sql += $" WHERE rubro = '{_frmPrincipal.cmbRubros.Text}'";
+                else if (_frmPrincipal.cmbArmadora.SelectedIndex > -1)
+                    sql += $" WHERE rubro = '{_frmPrincipal.cmbArmadora.Text}'";
 
                 sql += " ORDER BY codigo";
 
@@ -524,6 +675,10 @@ namespace DistribuidoraPalomarNet
         #endregion
 
         #region Conexiones
+        /// <summary>
+        /// Abre la conexión <c>cnnO</c> a una base de datos Access de origen (usada durante el proceso de actualización FTP).
+        /// </summary>
+        /// <param name="dbOrigen">Ruta completa al archivo .mdb/.accdb de origen.</param>
         public static void Conectar_Origen_Actualizar(string dbOrigen)
         {
             try
@@ -541,6 +696,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Abre la conexión <c>cnn</c> a la base de datos del distribuidor (artículos, clientes, familias).
+        /// Si la conexión ya estaba abierta, la cierra primero para reutilizarla.
+        /// </summary>
+        /// <remarks>Ruta: <c>ini_ruta_base</c> (leída desde Config.ini).</remarks>
         public static void ConectarDBArti()
         {
             try
@@ -556,6 +716,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Abre la conexión <c>cnnU</c> a la base de datos local del usuario (<c>cliente.dat</c>).
+        /// Si la conexión ya estaba abierta, la cierra primero para reutilizarla.
+        /// </summary>
+        /// <remarks>Ruta: <c>ini_ruta_usu</c> = <c>C:\DistribuidoraPalomarNet\cliente.dat</c>.</remarks>
         public static void ConectarDBUsuario()
         {
             try
@@ -572,6 +737,20 @@ namespace DistribuidoraPalomarNet
         }
         #endregion
 
+        /// <summary>
+        /// Punto de entrada de la inicialización completa de la aplicación.
+        /// Se llama al cargar <c>frmPrincipal</c>.
+        /// </summary>
+        /// <remarks>
+        /// Secuencia:
+        /// <list type="number">
+        /// <item><see cref="LeerConfig"/>: carga Config.ini en variables <c>ini_*</c>.</item>
+        /// <item><see cref="Cargar_Usuario"/>: carga datos del cliente desde <c>cnnU</c>.</item>
+        /// <item><see cref="funcion_inicial"/>(0): inicializa combos y estructura de la grilla (vacía).</item>
+        /// <item><see cref="aplicar_desc_Cliente"/>: carga descuentos 1 y 2 en los campos de la UI.</item>
+        /// <item>Muestra la fecha de última actualización de la base.</item>
+        /// </list>
+        /// </remarks>
         public static void Inicializacion()
         {
             try
@@ -593,6 +772,20 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Carga inicial de la grilla de artículos.
+        /// </summary>
+        /// <remarks>
+        /// Comportamiento según <paramref name="opc"/>:
+        /// <list type="bullet">
+        /// <item><b>0</b>: solo inicialización visual — carga los combos (armadora, líneas, rubros, marcas)
+        /// y crea una tabla vacía con las columnas correctas. No consulta artículos.
+        /// Usado en la primera carga para mostrar la UI rápidamente.</item>
+        /// <item><b>1</b>: ejecuta SELECT completo sobre LISTAS con JOIN a proveedo y carga todos
+        /// los artículos en DataGridView1. Activa el timer de ofertas y simula clic en la primera fila.</item>
+        /// </list>
+        /// </remarks>
+        /// <param name="opc">0 = inicialización visual; 1 = carga completa de artículos.</param>
         public static void funcion_inicial(int opc)
         {
             using var da = new OleDbDataAdapter();
@@ -603,8 +796,11 @@ namespace DistribuidoraPalomarNet
                 if (opc == 0)
                 {
                     // Solo inicialización visual: combos + estructura de columnas vacía
-                    CargarComboRubros();
+                    CargarComboArmadora();
                     CargarComboLineas("0");
+
+                    CargarComboRubros();
+                    CargarComboMarcas();
 
                     // Crear una tabla vacía con las columnas que se usan en la grilla
                     var tablaVacia = new DataTable();
@@ -712,6 +908,14 @@ namespace DistribuidoraPalomarNet
         //    _frmPrincipal.DataGridView1.Columns["arubic1"].Visible = false;
         //    _frmPrincipal.DataGridView1.Columns["arobse"].Visible = false;
         //}
+        /// <summary>
+        /// Configura el estilo visual, ancho proporcional (FillWeight) y visibilidad de las columnas
+        /// de <c>DataGridView1</c> en <c>frmPrincipal</c>.
+        /// </summary>
+        /// <remarks>
+        /// Columnas ocultas: <c>aroo</c>, <c>artt</c>, <c>arubic1</c>, <c>arobse</c>, <c>Posición</c>.
+        /// Pesos proporcionales: Codigo=7, Marca=7, Descripcion=30, Linea=30, Preciopublico=15.
+        /// </remarks>
         public static void Definir_Grilla()
         {
             var miEstilo = new DataGridViewCellStyle(_frmPrincipal.DataGridView1.Columns["Preciopublico"].DefaultCellStyle)
@@ -755,6 +959,10 @@ namespace DistribuidoraPalomarNet
             _frmPrincipal.DataGridView1.Columns["Preciopublico"].FillWeight = 15;
         }
 
+        /// <summary>
+        /// Actualiza el contador de artículos en el label y selecciona el primer registro de la grilla,
+        /// disparando así el pipeline de cálculo de precios vía <see cref="AccionGrilla"/>.
+        /// </summary>
         public static void SeleccionarGrilla()
         {
             try
@@ -772,6 +980,22 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Pipeline de procesamiento al seleccionar una fila en la grilla de artículos.
+        /// </summary>
+        /// <remarks>
+        /// Secuencia de acciones:
+        /// <list type="number">
+        /// <item><see cref="Cargar_Imagen"/>: carga la foto del artículo o la imagen por defecto.</item>
+        /// <item><see cref="ValidarEquivalencias"/>: habilita/deshabilita el botón de equivalencias.</item>
+        /// <item><see cref="TraerDatosExtras"/>: carga ubicación, observación, stock y familia del artículo.</item>
+        /// <item><see cref="ColorearStock"/>: colorea el campo de stock según semáforo.</item>
+        /// <item><see cref="Calculadora"/>: calcula la cadena de precios (desc1 → desc2 → descFam → IVA → precio_final).</item>
+        /// <item><see cref="aplicar_beneficio"/>: calcula el precio sugerido de venta.</item>
+        /// <item>Muestra el descuento de familia e IVA de familia en la UI.</item>
+        /// </list>
+        /// </remarks>
+        /// <param name="dataGrid">DataGridView que disparó el evento de selección.</param>
         public static void AccionGrilla(DataGridView dataGrid)
         {
             try
@@ -821,6 +1045,12 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Carga los datos complementarios del artículo seleccionado en la grilla:
+        /// ubicación (<c>arubic1</c>), observación (<c>arobse</c>), stock (<c>arff</c>)
+        /// y código de familia (<c>arflia</c>) en la variable interna <c>_ARTI_ARFLIA</c>.
+        /// </summary>
+        /// <param name="numFila">Índice de la fila actualmente seleccionada en DataGridView1.</param>
         public static void TraerDatosExtras(int numFila)
         {
             using var cm = new OleDbCommand();
@@ -873,6 +1103,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Carga la imagen del artículo actualmente seleccionado en el PictureBox de la UI.
+        /// Busca el archivo en la carpeta <c>FOTOS</c> con el nombre del código del artículo.
+        /// Si no existe la imagen del artículo, muestra la imagen por defecto <c>SINFOTO.png</c>.
+        /// </summary>
         public static void Cargar_Imagen()
         {
             try
@@ -894,6 +1129,14 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Colorea el campo de stock (<c>txtStock</c>) en la UI según un semáforo de tres niveles:
+        /// Rojo (&lt;= 1), Amarillo (= 2) o Verde (&gt;= 3).
+        /// </summary>
+        /// <remarks>
+        /// Los umbrales están hardcodeados actualmente en el código.
+        /// Las variables <c>ini_cond_rojo/amarillo/verde</c> están disponibles pero no se usan aquí.
+        /// </remarks>
         public static void ColorearStock()
         {
             try
@@ -934,6 +1177,19 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Calcula y muestra el precio sugerido de venta al público aplicando el beneficio
+        /// familiar (<c>FABEN1</c>) del artículo seleccionado.
+        /// </summary>
+        /// <remarks>
+        /// Flujo:
+        /// <list type="number">
+        /// <item>Obtiene el descriptor de familia (<c>FADESC</c>) de la tabla <c>familias</c> en <c>cnn</c>.</item>
+        /// <item>Con ese descriptor, busca <c>FABEN1</c> en la tabla <c>FAMILIAS</c> de <c>cnnU</c> (base local).</item>
+        /// <item>Si hay beneficio: <c>precioSugerido = baseSugerido + (baseSugerido × FABEN1 / 100)</c>.</item>
+        /// </list>
+        /// La base del sugerido es <c>precio_final_desc3</c> si hay desc3 activo; sino <c>precio_final</c>.
+        /// </remarks>
         public static void aplicar_beneficio()
         {
             try
@@ -1001,6 +1257,14 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Aplica el tercer descuento opcional (<c>txtDescuento3</c>) sobre <c>precio_final</c>.
+        /// Actualiza <c>txtPreciopublico</c> con el resultado.
+        /// </summary>
+        /// <remarks>
+        /// Solo se ejecuta si hay valor en <c>txtDescuento1</c> y <c>txtDescuento3</c>.
+        /// Si desc3 = 0, muestra <c>precio_final</c> directamente.
+        /// </remarks>
         public static void aplicar_descuento3()
         {
             try
@@ -1036,6 +1300,22 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Núcleo del cálculo de precios. Se ejecuta cada vez que se selecciona un artículo en la grilla.
+        /// Calcula la cadena completa de precios y actualiza las variables globales y la UI.
+        /// </summary>
+        /// <remarks>
+        /// Cadena cuando <c>Descuento1 &gt; 0</c>:
+        /// <code>
+        /// precio_desc1         = precio_lista − (precio_lista × desc1 / 100)
+        /// precio_desc2         = precio_desc1 − (precio_desc1 × desc2 / 100)
+        /// precio_desc2        -= precio_desc2 × descFamilia / 100   [si FADES1 != 0]
+        /// precio_costo_sin_iva = precio_desc2
+        /// precio_final         = precio_desc2 + (precio_desc2 × IVA familia / 100)
+        /// </code>
+        /// Cadena cuando <c>Descuento1 = 0</c>: se usa <c>precio_lista</c> como base y aplica solo IVA de familia.
+        /// Los valores de IVA y descuento de familia se consultan en <c>cnnU</c> (tabla FAMILIAS local).
+        /// </remarks>
         public static void Calculadora()
         {
             try
@@ -1174,6 +1454,14 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Retorna el porcentaje de descuento de familia (<c>FADES1</c>) del artículo actualmente seleccionado.
+        /// </summary>
+        /// <remarks>
+        /// Consulta la tabla <c>FAMILIAS</c> en <c>cnnU</c> filtrando por <c>_ARTI_ARFLIA</c>.
+        /// Si no hay familia o la consulta falla, retorna 0.
+        /// </remarks>
+        /// <returns>Porcentaje de descuento familiar (ej: 5.0 para el 5%), o 0 si no aplica.</returns>
         public static decimal aplicar_desc_Familia()
         {
             try
@@ -1199,6 +1487,14 @@ namespace DistribuidoraPalomarNet
                     cnnU.Close();
             }
         }
+        /// <summary>
+        /// Retorna el porcentaje de IVA de familia (<c>FAIVA</c>) del artículo actualmente seleccionado.
+        /// </summary>
+        /// <remarks>
+        /// Consulta la tabla <c>FAMILIAS</c> en <c>cnnU</c> filtrando por <c>_ARTI_ARFLIA</c>.
+        /// Si no hay familia o la consulta falla, retorna 0.
+        /// </remarks>
+        /// <returns>Porcentaje de IVA familiar (ej: 21.0 para el 21%), o 0 si no aplica.</returns>
         public static decimal aplicar_iva_Familia()
         {
             try
@@ -1224,6 +1520,16 @@ namespace DistribuidoraPalomarNet
                     cnnU.Close();
             }
         }
+        /// <summary>
+        /// Carga o actualiza la grilla del carrito (<c>gridPedidos</c>) con todos los ítems
+        /// de la vista <c>PedidosRealizados</c> y calcula el total sin IVA.
+        /// </summary>
+        /// <remarks>
+        /// Se llama automáticamente después de cada operación sobre PREPARAC
+        /// (agregar, actualizar cantidad, eliminar) para mantener la UI sincronizada.
+        /// Lee de <c>cnnU</c> usando una vista o consulta que expone:
+        /// número, código, marca, descripción, código origen, precio sin IVA, cantidad y subtotal.
+        /// </remarks>
         public static void funcion_inicial_carrito()
         {
             // carga inicial de la grilla de pedidos
@@ -1452,6 +1758,22 @@ namespace DistribuidoraPalomarNet
         //    }
         //}
 
+        /// <summary>
+        /// Ejecuta la búsqueda dinámica de artículos en la base del distribuidor
+        /// aplicando todos los filtros activos simultáneamente.
+        /// </summary>
+        /// <remarks>
+        /// Filtros disponibles (se combinan con AND):
+        /// <list type="bullet">
+        /// <item><c>txtDescripcion</c>: búsqueda multipalabra sobre <c>ARDESC</c>.</item>
+        /// <item><c>txtModelo</c>: búsqueda multipalabra sobre <c>AROBSE</c>.</item>
+        /// <item><c>cmbArmadora</c>: filtro por RUBROS (JOIN con LISTAS.ARRUB2).</item>
+        /// <item><c>cmbMarcas</c>: filtro por proveedor (<c>ARPROV = prcodi</c>).</item>
+        /// <item><c>cmbRubros</c>: filtro por modelo/línea (<c>ARMODE = rubro</c>).</item>
+        /// </list>
+        /// La condición multipalabra es generada por <see cref="GenerarCondicionMultipalabra"/>.
+        /// Límite de resultados: 10 000 filas. Límite de longitud de query: 4 000 caracteres.
+        /// </remarks>
         public static void consultas_Relacionales()
         {
             // Declarar variables necesarias
@@ -1486,245 +1808,38 @@ namespace DistribuidoraPalomarNet
                 if (_frmPrincipal.txtModelo?.Text != null && _frmPrincipal.txtModelo.Text.Length > 50)
                     throw new ArgumentException("El modelo no puede exceder 50 caracteres");
 
-                if (_frmPrincipal.cmbRubros.Text == "TODOS" || _frmPrincipal.cmbRubros.Text == " TODOS")
-                    _frmPrincipal.cmbRubros.Text = string.Empty;
+                if (_frmPrincipal.cmbArmadora.Text == "TODOS" || _frmPrincipal.cmbArmadora.Text == " TODOS")
+                    _frmPrincipal.cmbArmadora.Text = string.Empty;
 
-                if (string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // por default
-                    WhereQuery = " where a.arprim<>'000' ";
-                }
-                else if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo por descripcion
-                    campo = "a.ARDESC";
-                    valor = _frmPrincipal.txtDescripcion.Text;
-                    string[] arraydesc = _frmPrincipal.txtDescripcion.Text.Split(' ');
-                    if (arraydesc.Length > 1)
-                    {
-                        for (int r = 0; r < arraydesc.Length; r++)
-                        {
-                            if (r == 0 && !string.IsNullOrEmpty(arraydesc[r]))
-                            {
-                                valor = $" where ({campo} like  '%{arraydesc[r]}%'";
-                            }
-                            else if (!string.IsNullOrEmpty(arraydesc[r]))
-                            {
-                                valor = $"{valor} AND {campo} like  '%{arraydesc[r]}%'";
-                            }
-                        }
-                        WhereQuery = $"{valor}) and a.arprim<>'000' ";
-                    }
-                    else // filtro simple
-                    {
-                        valor = _frmPrincipal.txtDescripcion.Text;
-                        WhereQuery = $" where {campo} like  '%{valor}%' and a.arprim<>'000' ";
-                    }
-                }
-                // INICIO: todo por RUBROS
-                else if (string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo rubro
-                    WhereQuery = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI  where r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
-                }
-                else if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo rubro y descripcion
-                    campo = "a.ARDESC";
-                    valor = _frmPrincipal.txtDescripcion.Text;
-                    string[] arraydesc = _frmPrincipal.txtDescripcion.Text.Split(' ');
-                    if (arraydesc.Length > 1)
-                    {
-                        for (int r = 0; r < arraydesc.Length; r++)
-                        {
-                            if (r == 0 && !string.IsNullOrEmpty(arraydesc[r]))
-                            {
-                                valor = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI  where ({campo} like  '%{arraydesc[r]}%'";
-                            }
-                            else if (!string.IsNullOrEmpty(arraydesc[r]))
-                            {
-                                valor = $"{valor} AND {campo} like  '%{arraydesc[r]}%'";
-                            }
-                        }
-                        WhereQuery = $"{valor}) and r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
-                    }
-                    else // filtro simple
-                    {
-                        valor = _frmPrincipal.txtDescripcion.Text;
-                        WhereQuery = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI  where {campo} like  '%{valor}%' " +
-                                     $"and r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
-                    }
-                }
-                else if (string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && !string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo por modelo
-                    campo = "a.AROBSE";
-                    valor = _frmPrincipal.txtModelo.Text;
-                    string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
-                    if (arraymode.Length > 1)
-                    {
-                        for (int r = 0; r < arraymode.Length; r++)
-                        {
-                            if (r == 0 && !string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                valor = $" where ({campo} like  '%{arraymode[r]}%'";
-                            }
-                            else if (!string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                valor = $"{valor} AND {campo} like  '%{arraymode[r]}%'";
-                            }
-                        }
-                        WhereQuery = $"{valor}) and a.arprim<>'000' ";
-                    }
-                    else // filtro simple
-                    {
-                        valor = _frmPrincipal.txtModelo.Text;
-                        WhereQuery = $" where {campo} like  '%{valor}%' and a.arprim<>'000' ";
-                    }
-                }
-                // INICIO: todo por RUBROS
-                else if (string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo rubro
-                    WhereQuery = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI  where r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
-                }
-                else if (string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && !string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo rubro y modelo
-                    campo = "a.AROBSE";
-                    valor = _frmPrincipal.txtModelo.Text;
-                    string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
-                    if (arraymode.Length > 1)
-                    {
-                        for (int r = 0; r < arraymode.Length; r++)
-                        {
-                            if (r == 0 && !string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                valor = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI  where ({campo} like  '%{arraymode[r]}%'";
-                            }
-                            else if (!string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                valor = $"{valor} AND {campo} like  '%{arraymode[r]}%'";
-                            }
-                        }
-                        WhereQuery = $"{valor}) and r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
-                    }
-                    else // filtro simple
-                    {
-                        valor = _frmPrincipal.txtModelo.Text;
-                        WhereQuery = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI  where {campo} like  '%{valor}%' " +
-                                     $"and r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
-                    }
-                }
-                // NUEVO: Validación para descripción + modelo (sin rubro)
-                else if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && !string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // descripcion y modelo sin rubro
-                    string[] arraydesc = _frmPrincipal.txtDescripcion.Text.Split(' ');
-                    string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
+                string rubrosSel = _frmPrincipal.cmbRubros.Text?.Trim() ?? string.Empty;
+                if (rubrosSel == "TODOS") rubrosSel = string.Empty;
 
-                    string condicionDesc = string.Empty;
-                    string condicionModelo = string.Empty;
+                bool hayMarca = _frmPrincipal.cmbMarcas.SelectedValue is int marcaVal && marcaVal != 0;
+                int marcaProvCodi = hayMarca ? (int)_frmPrincipal.cmbMarcas.SelectedValue : 0;
 
-                    // Construir condición para descripción
-                    if (arraydesc.Length > 1)
-                    {
-                        for (int r = 0; r < arraydesc.Length; r++)
-                        {
-                            if (r == 0 && !string.IsNullOrEmpty(arraydesc[r]))
-                            {
-                                condicionDesc = $"(a.ARDESC like '%{arraydesc[r]}%'";
-                            }
-                            else if (!string.IsNullOrEmpty(arraydesc[r]))
-                            {
-                                condicionDesc = $"{condicionDesc} AND a.ARDESC like '%{arraydesc[r]}%'";
-                            }
-                        }
-                        condicionDesc = $"{condicionDesc})";
-                    }
-                    else
-                    {
-                        condicionDesc = $"a.ARDESC like '%{_frmPrincipal.txtDescripcion.Text}%'";
-                    }
+                bool needsRubrosJoin = !string.IsNullOrEmpty(_frmPrincipal.cmbArmadora.Text);
+                var conditions = new System.Collections.Generic.List<string>();
+                conditions.Add("a.arprim<>'000'");
 
-                    // Construir condición para modelo
-                    if (arraymode.Length > 1)
-                    {
-                        for (int r = 0; r < arraymode.Length; r++)
-                        {
-                            if (r == 0 && !string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                condicionModelo = $"(a.AROBSE like '%{arraymode[r]}%'";
-                            }
-                            else if (!string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                condicionModelo = $"{condicionModelo} AND a.AROBSE like '%{arraymode[r]}%'";
-                            }
-                        }
-                        condicionModelo = $"{condicionModelo})";
-                    }
-                    else
-                    {
-                        condicionModelo = $"a.AROBSE like '%{_frmPrincipal.txtModelo.Text}%'";
-                    }
+                string condDesc = GenerarCondicionMultipalabra("a.ARDESC", _frmPrincipal.txtDescripcion.Text);
+                if (!string.IsNullOrEmpty(condDesc))
+                    conditions.Add(condDesc);
 
-                    WhereQuery = $" where {condicionDesc} AND {condicionModelo} and a.arprim<>'000' ";
-                }
-                // NUEVO: Validación para descripción + modelo + rubro (combinación completa)
-                else if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && !string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // descripcion, modelo y rubro
-                    string[] arraydesc = _frmPrincipal.txtDescripcion.Text.Split(' ');
-                    string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
+                string condModelo = GenerarCondicionMultipalabra("a.AROBSE", _frmPrincipal.txtModelo.Text);
+                if (!string.IsNullOrEmpty(condModelo))
+                    conditions.Add(condModelo);
 
-                    string condicionDesc = string.Empty;
-                    string condicionModelo = string.Empty;
+                if (needsRubrosJoin)
+                    conditions.Add($"r.rbdesc = '{_frmPrincipal.cmbArmadora.Text}'");
 
-                    // Construir condición para descripción
-                    if (arraydesc.Length > 1)
-                    {
-                        for (int r = 0; r < arraydesc.Length; r++)
-                        {
-                            if (r == 0 && !string.IsNullOrEmpty(arraydesc[r]))
-                            {
-                                condicionDesc = $"(a.ARDESC like '%{arraydesc[r]}%'";
-                            }
-                            else if (!string.IsNullOrEmpty(arraydesc[r]))
-                            {
-                                condicionDesc = $"{condicionDesc} AND a.ARDESC like '%{arraydesc[r]}%'";
-                            }
-                        }
-                        condicionDesc = $"{condicionDesc})";
-                    }
-                    else
-                    {
-                        condicionDesc = $"a.ARDESC like '%{_frmPrincipal.txtDescripcion.Text}%'";
-                    }
+                if (hayMarca)
+                    conditions.Add($"a.arprov = {marcaProvCodi}");
 
-                    // Construir condición para modelo
-                    if (arraymode.Length > 1)
-                    {
-                        for (int r = 0; r < arraymode.Length; r++)
-                        {
-                            if (r == 0 && !string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                condicionModelo = $"(a.AROBSE like '%{arraymode[r]}%'";
-                            }
-                            else if (!string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                condicionModelo = $"{condicionModelo} AND a.AROBSE like '%{arraymode[r]}%'";
-                            }
-                        }
-                        condicionModelo = $"{condicionModelo})";
-                    }
-                    else
-                    {
-                        condicionModelo = $"a.AROBSE like '%{_frmPrincipal.txtModelo.Text}%'";
-                    }
+                if (!string.IsNullOrEmpty(rubrosSel))
+                    conditions.Add($"a.armode = '{rubrosSel}'");
 
-                    WhereQuery = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI where {condicionDesc} AND {condicionModelo} and r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
-                }
-                // Fin: todo por RUBROS
+                string joinRubros = needsRubrosJoin ? " INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI " : string.Empty;
+                WhereQuery = joinRubros + " where " + string.Join(" AND ", conditions);
 
                 QueryFinal = SelectQuery + WhereQuery + " order by a.arterc";
                 if (!string.IsNullOrEmpty(QueryFinal))
@@ -1793,6 +1908,14 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Igual a <see cref="consultas_Relacionales"/> pero sobre artículos en oferta (<c>ARTT &lt;&gt; 0</c>).
+        /// Muestra el precio de oferta (<c>arpre5</c>) en lugar del precio de lista.
+        /// </summary>
+        /// <remarks>
+        /// Aplica los mismos filtros combinados que <see cref="consultas_Relacionales"/>.
+        /// La condición adicional <c>a.ARTT &lt;&gt; 0</c> garantiza que solo se muestren artículos con precio de oferta.
+        /// </remarks>
         public static void consultas_Ofertas()
         {
             using var da = new OleDbDataAdapter();
@@ -1813,96 +1936,39 @@ namespace DistribuidoraPalomarNet
 
                 string WhereQuery = string.Empty;
 
-                if (string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    WhereQuery = " WHERE a.ARTT <> 0 and a.arprim<>'000'";
-                }
-                else if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    campo = "a.ARDESC";
-                    valor = _frmPrincipal.txtDescripcion.Text;
-                    WhereQuery = $" where a.ARTT<>0 AND {campo} like  '%{valor}%' and a.arprim<>'000'";
-                }
-                // INICIO: todo por RUBROS
-                else if (string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo rubro
-                    WhereQuery = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI where a.ARTT<>0 AND r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' " +
-                                 "and a.arprim<>'000'";
-                }
-                else if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo rubro y descripcion
-                    WhereQuery = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI where a.ARTT<>0 AND r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' " +
-                                 $"and a.ardesc like '%{_frmPrincipal.txtDescripcion.Text}%' and a.arprim<>'000'";
-                }
-                else if (string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // por default
-                    WhereQuery = " where a.arprim<>'000' ";
-                }
-                else if (!string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo por descripcion
-                    campo = "a.AROBSE";
-                    valor = _frmPrincipal.txtModelo.Text;
-                    string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
-                    if (arraymode.Length > 1)
-                    {
-                        for (int r = 0; r < arraymode.Length; r++)
-                        {
-                            if (r == 0 && !string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                valor = $" where ({campo} like  '%{arraymode[r]}%'";
-                            }
-                            else if (!string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                valor = $"{valor} AND {campo} like  '%{arraymode[r]}%'";
-                            }
-                        }
-                        WhereQuery = $"{valor}) and a.arprim<>'000' ";
-                    }
-                    else // filtro simple
-                    {
-                        valor = _frmPrincipal.txtModelo.Text;
-                        WhereQuery = $" where {campo} like  '%{valor}%' and a.arprim<>'000' ";
-                    }
-                }
-                // INICIO: todo por RUBROS
-                else if (string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo rubro
-                    WhereQuery = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI  where r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
-                }
-                else if (!string.IsNullOrEmpty(_frmPrincipal.txtModelo.Text) && !string.IsNullOrEmpty(_frmPrincipal.cmbRubros.Text))
-                {
-                    // solo rubro y descripcion
-                    campo = "a.AROBSE";
-                    valor = _frmPrincipal.txtModelo.Text;
-                    string[] arraymode = _frmPrincipal.txtModelo.Text.Split(' ');
-                    if (arraymode.Length > 1)
-                    {
-                        for (int r = 0; r < arraymode.Length; r++)
-                        {
-                            if (r == 0 && !string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                valor = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI  where ({campo} like  '%{arraymode[r]}%'";
-                            }
-                            else if (!string.IsNullOrEmpty(arraymode[r]))
-                            {
-                                valor = $"{valor} AND {campo} like  '%{arraymode[r]}%'";
-                            }
-                        }
-                        WhereQuery = $"{valor}) and r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
-                    }
-                    else // filtro simple
-                    {
-                        valor = _frmPrincipal.txtModelo.Text;
-                        WhereQuery = $" INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI  where {campo} like  '%{valor}%' " +
-                                     $"and r.rbdesc = '{_frmPrincipal.cmbRubros.Text}' and a.arprim<>'000' ";
-                    }
-                }
-                // Fin: todo por RUBROS
+                if (_frmPrincipal.cmbArmadora.Text == "TODOS" || _frmPrincipal.cmbArmadora.Text == " TODOS")
+                    _frmPrincipal.cmbArmadora.Text = string.Empty;
+
+                string rubrosSel = _frmPrincipal.cmbRubros.Text?.Trim() ?? string.Empty;
+                if (rubrosSel == "TODOS") rubrosSel = string.Empty;
+
+                bool hayMarca = _frmPrincipal.cmbMarcas.SelectedValue is int marcaVal && marcaVal != 0;
+                int marcaProvCodi = hayMarca ? (int)_frmPrincipal.cmbMarcas.SelectedValue : 0;
+
+                bool needsRubrosJoin = !string.IsNullOrEmpty(_frmPrincipal.cmbArmadora.Text);
+                var conditions = new System.Collections.Generic.List<string>();
+                conditions.Add("a.ARTT<>0");
+                conditions.Add("a.arprim<>'000'");
+
+                string condDesc = GenerarCondicionMultipalabra("a.ARDESC", _frmPrincipal.txtDescripcion.Text);
+                if (!string.IsNullOrEmpty(condDesc))
+                    conditions.Add(condDesc);
+
+                string condModelo = GenerarCondicionMultipalabra("a.AROBSE", _frmPrincipal.txtModelo.Text);
+                if (!string.IsNullOrEmpty(condModelo))
+                    conditions.Add(condModelo);
+
+                if (needsRubrosJoin)
+                    conditions.Add($"r.rbdesc = '{_frmPrincipal.cmbArmadora.Text}'");
+
+                if (hayMarca)
+                    conditions.Add($"a.arprov = {marcaProvCodi}");
+
+                if (!string.IsNullOrEmpty(rubrosSel))
+                    conditions.Add($"a.armode = '{rubrosSel}'");
+
+                string joinRubros = needsRubrosJoin ? " INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI " : string.Empty;
+                WhereQuery = joinRubros + " WHERE " + string.Join(" AND ", conditions);
 
                 QueryFinal = SelectQuery + WhereQuery + " order by a.arterc";
                 if (!string.IsNullOrEmpty(QueryFinal))
@@ -1957,6 +2023,15 @@ namespace DistribuidoraPalomarNet
         }
 
 
+        /// <summary>
+        /// Genera una condición SQL LIKE multipalabra para el campo especificado.
+        /// Cada palabra del texto se convierte en una condición <c>LIKE '%palabra%'</c> unidas por AND.
+        /// </summary>
+        /// <param name="campo">Nombre del campo SQL (ej: <c>"a.ARDESC"</c>).</param>
+        /// <param name="texto">Texto de búsqueda; si está vacío retorna cadena vacía.</param>
+        /// <returns>Condición SQL entre paréntesis, o cadena vacía si no hay palabras.</returns>
+        /// <example>GenerarCondicionMultipalabra("a.ARDESC", "filtro aceite") →
+        /// <c>(a.ARDESC like '%filtro%' AND a.ARDESC like '%aceite%')</c></example>
         public static string GenerarCondicionMultipalabra(string campo, string texto)
         {
             if (string.IsNullOrWhiteSpace(texto))
@@ -1972,6 +2047,18 @@ namespace DistribuidoraPalomarNet
             var condiciones = palabras.Select(p => $"{campo} like '%{p.Trim()}%'");
             return "(" + string.Join(" AND ", condiciones) + ")";
         }
+        /// <summary>
+        /// Lee el archivo <c>C:\DistribuidoraPalomarNet\Config.ini</c> línea a línea
+        /// y carga todas las variables <c>ini_*</c> del módulo.
+        /// </summary>
+        /// <remarks>
+        /// El archivo INI tiene un formato posicional (sin secciones); cada línea comienza con
+        /// una clave prefija (ej: <c>"Emisor "</c>, <c>"RutaFTP "</c>) seguida del valor.
+        /// El orden de las líneas es fijo y debe coincidir con el esperado por este método.
+        /// Si el archivo no existe, muestra un aviso y retorna sin cargar nada.
+        /// <b>Nota:</b> <c>ini_ruta_usu</c> siempre se inicializa a
+        /// <c>C:\DistribuidoraPalomarNet\cliente.dat</c> independientemente del INI.
+        /// </remarks>
         public static void LeerConfig()
         {
             try
@@ -2147,6 +2234,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Descarga asincrónicamente el texto del banner desde la URL configurada
+        /// y lo aplica al formulario principal mediante <c>ActualizarTexto</c>.
+        /// </summary>
+        /// <param name="ini_ruta_banner">URL del recurso de texto (puede ser un archivo de texto plano en un servidor web).</param>
         public static async void LeerRutaBanner(string ini_ruta_banner)
         {
             try
@@ -2171,6 +2263,10 @@ namespace DistribuidoraPalomarNet
                 Console.WriteLine($"Ocurrió un error: {ex.Message}");
             }
         }
+        /// <summary>Realiza una petición HTTP GET y retorna el contenido de la respuesta como string.</summary>
+        /// <param name="url">URL del recurso a descargar.</param>
+        /// <returns>Contenido del recurso como texto plano.</returns>
+        /// <exception cref="HttpRequestException">Si el servidor retorna un código de error HTTP.</exception>
         public static async Task<string> ObtenerTextoDesdeUrl(string url)
         {
             using (HttpClient cliente = new HttpClient())
@@ -2181,6 +2277,11 @@ namespace DistribuidoraPalomarNet
                 return await respuesta.Content.ReadAsStringAsync();
             }
         }
+        /// <summary>
+        /// Retorna la fecha de la última actualización de la base de artículos,
+        /// leyendo el campo <c>arpp</c> de la tabla LISTAS.
+        /// </summary>
+        /// <returns>Fecha formateada como <c>"dd/MM/yyyy"</c>, o cadena vacía si no se encuentra.</returns>
         public static string FechaActualizacion()
         {
             var cmaccess = new OleDbCommand();
@@ -2211,6 +2312,15 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Obtiene la fecha de última modificación de un archivo en el servidor FTP.
+        /// </summary>
+        /// <param name="Filename">Nombre del archivo en el servidor FTP.</param>
+        /// <param name="NewFileName">Ruta local (no usado en este método, solo por firma).</param>
+        /// <param name="UserNameFtp">Usuario FTP.</param>
+        /// <param name="PassFTP">Contraseña FTP.</param>
+        /// <param name="URI">URL base del servidor FTP (ej: <c>ftp://servidor.com</c>).</param>
+        /// <returns>Fecha formateada como <c>"dd/MM/yyyy"</c>, o <c>"01/01/1900"</c> si hay error.</returns>
         public static string FechaArchivoFTP(string Filename, string NewFileName, string UserNameFtp, string PassFTP, string URI)
         {
             FtpWebRequest Ftpconection = (FtpWebRequest)FtpWebRequest.Create(URI + "/" + Filename);
@@ -2233,6 +2343,14 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Actualiza la cantidad, precio unitario y precio total de un artículo en la tabla <c>PEDIDOS</c>
+        /// de la base local del usuario (tabla diferente de PREPARAC).
+        /// </summary>
+        /// <param name="cod">Código del artículo en PEDIDOS.</param>
+        /// <param name="pun">Nuevo precio unitario.</param>
+        /// <param name="Cantidad">Nueva cantidad como cadena.</param>
+        /// <param name="pt">Nuevo precio total.</param>
         public static void articulo_a_Pedido_Update(string cod, decimal pun, string Cantidad, decimal pt)
         {
             try
@@ -2259,12 +2377,29 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Proceso completo de actualización de la base de artículos vía FTP.
+        /// </summary>
+        /// <remarks>
+        /// Muestra <see cref="frmProcesoActualizacion"/> (WebView2 con HTML moderno de 7 pasos)
+        /// durante todo el proceso. Cada paso se marca como activo/completado/error en tiempo real.
+        /// <list type="number">
+        /// <item><b>Paso 0</b> — Descarga el archivo de actualización del FTP con <see cref="DescargaArchivo"/>.</item>
+        /// <item><b>Paso 1</b> — Ejecuta el instalador/extractor descargado (<c>Process.Start</c>).</item>
+        /// <item><b>Paso 2</b> — Verifica que el archivo de base exista en <c>ini_ruta_base_descarga</c>.</item>
+        /// <item><b>Paso 3</b> — Migra la base con <see cref="UpdateBase"/> (copia origen → destino).</item>
+        /// <item><b>Paso 4</b> — <see cref="SincronizarDescuentosCliente"/>: actualiza <c>USUARIO.US_DESCUENTO1/2</c>
+        ///              con los valores frescos de <c>CLIENTES.CLDES1/2</c>, luego llama <see cref="Cargar_Usuario"/>.</item>
+        /// <item><b>Paso 5</b> — Si el cliente está autorizado: <see cref="Update_Precios_Gral"/> →
+        ///              <see cref="aplicar_desc_Cliente"/> → <see cref="funcion_inicial"/>(1).</item>
+        /// <item><b>Paso 6</b> — Finalización: actualiza fecha y oculta alerta de update disponible.</item>
+        /// </list>
+        /// En cualquier error, el paso correspondiente se marca en rojo y se muestra el mensaje en la barra inferior.
+        /// </remarks>
         public static void ActualizacionXFTP()
         {
             bool ret;
-            Form frmProgreso = null;
-            Label lblProgreso = null;
-            ProgressBar pbProgreso = null;
+            frmProcesoActualizacion frmProceso = null;
 
             try
             {
@@ -2272,38 +2407,15 @@ namespace DistribuidoraPalomarNet
                 _frmPrincipal.toolStripProgressBar1.Visible = true;
                 Application.DoEvents();
 
-                frmProgreso = new Form();
-                frmProgreso.StartPosition = FormStartPosition.CenterScreen;
-                frmProgreso.FormBorderStyle = FormBorderStyle.FixedDialog;
-                frmProgreso.ControlBox = false;
-                frmProgreso.MinimizeBox = false;
-                frmProgreso.MaximizeBox = false;
-                frmProgreso.ShowInTaskbar = false;
-                frmProgreso.TopMost = true;
-                frmProgreso.Width = 520;
-                frmProgreso.Height = 150;
-                frmProgreso.Text = "Actualizacion Masiva";
-
-                lblProgreso = new Label();
-                lblProgreso.AutoSize = false;
-                lblProgreso.Left = 16;
-                lblProgreso.Top = 16;
-                lblProgreso.Width = frmProgreso.ClientSize.Width - 32;
-                lblProgreso.Height = 40;
-                lblProgreso.Text = "Preparando actualizacion...";
-
-                pbProgreso = new ProgressBar();
-                pbProgreso.Left = 16;
-                pbProgreso.Top = 70;
-                pbProgreso.Width = frmProgreso.ClientSize.Width - 32;
-                pbProgreso.Height = 22;
-                pbProgreso.Style = ProgressBarStyle.Marquee;
-                pbProgreso.MarqueeAnimationSpeed = 30;
-
-                frmProgreso.Controls.Add(lblProgreso);
-                frmProgreso.Controls.Add(pbProgreso);
-                frmProgreso.Show();
+                // Mostrar el formulario de progreso HTML/WebView2
+                frmProceso = new frmProcesoActualizacion();
+                frmProceso.Show();
                 Application.DoEvents();
+                frmProceso.WaitReady(); // espera hasta que WebView2 termine de cargar el HTML
+
+                // ── Paso 0: Descargar del servidor FTP ────────────────────────────
+                frmProceso.SetStep(0, "active");
+                frmProceso.SetMensaje("Conectando y descargando desde el servidor FTP...");
 
                 ret = DescargaArchivo(ini_arch_ftp,
                                     @"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Descargas\" + ini_arch_ftp,
@@ -2313,84 +2425,115 @@ namespace DistribuidoraPalomarNet
 
                 if (ret)
                 {
-                    if (lblProgreso != null)
-                    {
-                        lblProgreso.Text = "Iniciando actualizacion...";
-                        Application.DoEvents();
-                    }
+                    frmProceso.SetStep(0, "done");
+
+                    // ── Paso 1: Extraer archivos del paquete ──────────────────────
+                    frmProceso.SetStep(1, "active");
+                    frmProceso.SetMensaje("Extrayendo archivos del paquete descargado...");
 
                     System.Diagnostics.Process.Start(@"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Descargas\" + ini_arch_ftp, "Update");
-
                     Application.DoEvents();
 
                     if (File.Exists(ini_ruta_base_descarga))
                     {
-                        if (lblProgreso != null)
-                        {
-                            lblProgreso.Text = "Actualizando base de datos...";
-                            Application.DoEvents();
-                        }
+                        frmProceso.SetStep(1, "done");
+
+                        // ── Paso 2: Verificar archivos descargados ────────────────
+                        frmProceso.SetStep(2, "active");
+                        frmProceso.SetMensaje("Verificando integridad de los archivos...");
+                        Application.DoEvents();
+                        frmProceso.SetStep(2, "done");
+
+                        // ── Paso 3: Migrar / actualizar la base de datos ──────────
+                        frmProceso.SetStep(3, "active");
+                        frmProceso.SetMensaje("Actualizando base de datos local...");
 
                         Migra = UpdateBase(ini_ruta_base_descarga, ini_ruta_base);
 
                         if (Migra)
                         {
-                            if (lblProgreso != null)
-                            {
-                                lblProgreso.Text = "Finalizando actualizacion...";
-                                Application.DoEvents();
-                            }
+                            frmProceso.SetStep(3, "done");
 
-                            Application.DoEvents();
+                            // ── Paso 4: Sincronizar descuentos del cliente ────────
+                            frmProceso.SetStep(4, "active");
+                            frmProceso.SetMensaje("Sincronizando descuentos desde la base del distribuidor...");
+
                             Update_FechaDB();
+                            Application.DoEvents();
+                            // Lee CLDES1/CLDES2 desde la nueva CLIENTES y los persiste en USUARIO (cliente.dat)
+                            SincronizarDescuentosCliente();
+                            Application.DoEvents();
                             Cargar_Usuario();
                             _frmPrincipal.ApplyEstadoClienteToUI();
 
+                            frmProceso.SetStep(4, "done");
+
                             if (!ClienteAutorizado)
                             {
+                                // El cliente no tiene descuentos habilitados: finalizar sin recalcular
                                 _frmPrincipal.ckbOfertas.Checked = false;
                                 _frmPrincipal.lblFechaAct.Text = "Actualizado al  " + FechaActualizacion();
                                 BuscarActualizacionDisponible();
-                                _frmPrincipal.cmbRubros.DropDownWidth = 280;
+                                _frmPrincipal.cmbArmadora.DropDownWidth = 280;
                                 _frmPrincipal.lblAlertaUpdate.Visible = false;
+                                frmProceso.SetStep(6, "done");
+                                frmProceso.SetFinalizado();
+                                frmProceso.SetMensaje("Base actualizada (cliente sin descuentos habilitados).");
+                                System.Threading.Thread.Sleep(1800);
+                                Application.DoEvents();
                                 Migra = false;
                                 return;
                             }
 
-                            if (lblProgreso != null)
-                            {
-                                lblProgreso.Text = "Recalculando precios...";
-                                Application.DoEvents();
-                            }
+                            // ── Paso 5: Recalcular precios ────────────────────────
+                            frmProceso.SetStep(5, "active");
+                            frmProceso.SetMensaje("Recalculando precios con los nuevos descuentos...");
 
                             Update_Precios_Gral(); //recalculo los precios
+                            aplicar_desc_Cliente(); //Cargo Descuentos 1 y 2 (antes de recargar grilla)
                             _frmPrincipal.ckbOfertas.Checked = false;
-                            funcion_inicial(1);
+                            //funcion_inicial(1);
                             //funcion_inicial_carrito();
-                            aplicar_desc_Cliente(); //Cargo Descuentos 1 y 2
                             _frmPrincipal.lblFechaAct.Text = "Actualizado al  " + FechaActualizacion();
                             BuscarActualizacionDisponible();
-                            _frmPrincipal.cmbRubros.DropDownWidth = 280;
-                            if (lblProgreso != null)
-                            {
-                                lblProgreso.Text = "Actualizacion realizada con exito.";
-                                Application.DoEvents();
-                            }
+                            _frmPrincipal.cmbArmadora.DropDownWidth = 280;
+
+                            frmProceso.SetStep(5, "done");
+
+                            // ── Paso 6: Proceso completado ────────────────────────
+                            frmProceso.SetStep(6, "done");
+                            frmProceso.SetFinalizado();
+                            frmProceso.SetMensaje("¡Actualización completada con éxito!");
+                            System.Threading.Thread.Sleep(1800);
+                            Application.DoEvents();
+
                             _frmPrincipal.lblAlertaUpdate.Visible = false;
                             Migra = false;
                         }
                         else
                         {
+                            frmProceso.SetStep(3, "error");
+                            frmProceso.SetError("No se pudo terminar la actualización entre bases.");
+                            System.Threading.Thread.Sleep(2000);
+                            Application.DoEvents();
                             MessageBox.Show("No Se pudo Terminar la Actualizacion entre Bases");
                         }
                     }
                     else
                     {
+                        frmProceso.SetStep(1, "error");
+                        frmProceso.SetError("No se encontró el archivo a actualizar.");
+                        System.Threading.Thread.Sleep(2000);
+                        Application.DoEvents();
                         MessageBox.Show("No se encontro en Archivo a actualizar");
                     }
                 }
                 else
                 {
+                    frmProceso.SetStep(0, "error");
+                    frmProceso.SetError("No se pudo descargar el archivo de actualización del FTP.");
+                    System.Threading.Thread.Sleep(2000);
+                    Application.DoEvents();
                     MessageBox.Show("No se Pudo descargar el archivo de Actualizacion");
                 }
 
@@ -2400,6 +2543,12 @@ namespace DistribuidoraPalomarNet
             }
             catch (Exception ex)
             {
+                if (frmProceso != null)
+                {
+                    frmProceso.SetError("Error: " + ex.Message);
+                    System.Threading.Thread.Sleep(1500);
+                    Application.DoEvents();
+                }
                 _frmPrincipal.toolStripProgressBar1.Visible = false;
                 _frmPrincipal.Timer1.Stop();
                 MessageBox.Show("Error dentro de Menu:Archivo-->Actualizar Base" + ex.Message,
@@ -2409,19 +2558,24 @@ namespace DistribuidoraPalomarNet
             }
             finally
             {
-                if (frmProgreso != null)
+                if (frmProceso != null)
                 {
                     try
                     {
-                        frmProgreso.Close();
-                        frmProgreso.Dispose();
+                        frmProceso.Close();
+                        frmProceso.Dispose();
                     }
-                    catch
-                    {
-                    }
+                    catch { }
                 }
             }
         }
+        /// <summary>
+        /// Reemplaza la base de datos de destino con la base de origen descargada del FTP.
+        /// Elimina el archivo de destino si existe antes de copiar.
+        /// </summary>
+        /// <param name="Origen">Ruta del archivo fuente (base descargada, <c>ini_ruta_base_descarga</c>).</param>
+        /// <param name="Destino">Ruta del archivo destino (base activa, <c>ini_ruta_base</c>).</param>
+        /// <returns><c>true</c> si la copia fue exitosa; <c>false</c> ante cualquier error.</returns>
         public static bool UpdateBase(string Origen, string Destino)
         {
             try
@@ -2442,6 +2596,11 @@ namespace DistribuidoraPalomarNet
                 return false;
             }
         }
+        /// <summary>
+        /// Escribe la fecha del archivo FTP en el campo <c>arpp</c> de todos los registros de LISTAS.
+        /// Esto permite que <see cref="FechaActualizacion"/> y <see cref="BuscarActualizacionDisponible"/>
+        /// muestren la fecha correcta de la última actualización.
+        /// </summary>
         public static void Update_FechaDB()
         {
             using (OleDbCommand cmaccessUpdate = new OleDbCommand())
@@ -2477,6 +2636,15 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Compara la fecha del archivo de actualización en el FTP con la fecha de la base local.
+        /// Si hay una versión más nueva, muestra la alerta en la UI.
+        /// </summary>
+        /// <returns><c>true</c> si hay actualización disponible; <c>false</c> si la base está al día.</returns>
+        /// <remarks>
+        /// <b>Advertencia:</b> el bloque <c>catch</c> contiene código inalcanzable (<c>ret=false</c>
+        /// después del <c>throw</c>). En caso de error, la función siempre relanza la excepción.
+        /// </remarks>
         public static bool BuscarActualizacionDisponible()
         {
             bool ret=false;
@@ -2515,6 +2683,19 @@ namespace DistribuidoraPalomarNet
 
         }
 
+        /// <summary>
+        /// Genera el PDF del pedido actual y lo envía por correo electrónico
+        /// a la distribuidora y, opcionalmente, al cliente (si tiene email válido).
+        /// </summary>
+        /// <remarks>
+        /// Flujo:
+        /// <list type="number">
+        /// <item>Genera el PDF en <c>C:\...\pedidos\Remito {US_CODI} {timestamp}.pdf</c>.</item>
+        /// <item>Si <c>cboxNoEnviar</c> no está marcado, envía el PDF por SMTP.</item>
+        /// <item>El asunto incluye la nota del pedido si <c>txtNotaPedido</c> tiene texto.</item>
+        /// <item>Si el email del cliente es válido (<see cref="ValidaEMail"/>), se agrega como CC.</item>
+        /// </list>
+        /// </remarks>
         public static void ProcesoCorreo()
         {
             try
@@ -2574,6 +2755,11 @@ namespace DistribuidoraPalomarNet
                 return;
             }
         }
+        /// <summary>
+        /// Valida el formato de una dirección de email usando reglas básicas.
+        /// </summary>
+        /// <param name="EMail">Dirección de email a validar.</param>
+        /// <returns><c>true</c> si contiene exactamente un <c>@</c> y el dominio tiene al menos un punto.</returns>
         public static bool ValidaEMail(string EMail)
         {
             // Como primera regla un correo electronico debe contener la @
@@ -2642,6 +2828,15 @@ namespace DistribuidoraPalomarNet
         //        throw new Exception($"Error en ExportarDatosPDF: {ex.Message}");
         //    }
         //}
+        /// <summary>
+        /// Construye y agrega al documento iTextSharp el contenido del pedido:
+        /// logo, encabezado, fecha y tabla de artículos desde <c>gridPedidos</c>.
+        /// </summary>
+        /// <remarks>
+        /// Excluye las columnas 0 (número interno) y 4 (precio) de la tabla PDF.
+        /// Los anchos de columna son fijos (ver <see cref="GetColumnasSize"/>).
+        /// </remarks>
+        /// <param name="document">Documento iTextSharp ya abierto donde se agregan los elementos.</param>
         public static void ExportarDatosPDF(Document document)
         {
             try
@@ -2708,6 +2903,13 @@ namespace DistribuidoraPalomarNet
                 throw new Exception(", dentro de la acción 'ExportarDatosPDF': " + ex.Message.ToString());
             }
         }
+        /// <summary>
+        /// Retorna un array de anchos de columna fijos para la tabla PDF del pedido.
+        /// </summary>
+        /// <remarks>Los valores están hardcodeados: {105, 95, 420, 215, 125, 175}.
+        /// El loop dinámico basado en el DataGridView está comentado.</remarks>
+        /// <param name="dg">DataGridView de referencia (solo se usa para determinar el tamaño del array).</param>
+        /// <returns>Array float[] con anchos de columna en puntos para la tabla PDF.</returns>
         public static float[] GetColumnasSize(DataGridView dg)
         {
             // funcion para obtener el tamaño de la columnas del datagridview
@@ -2729,6 +2931,12 @@ namespace DistribuidoraPalomarNet
 
             return values;
         }
+        /// <summary>
+        /// Orquesta el recálculo completo de precios tras una actualización de la base.
+        /// Deshabilita la grilla durante el proceso para evitar interacciones.
+        /// </summary>
+        /// <remarks>Llama a <see cref="Cargar_Usuario"/>, <see cref="Update_Precios"/>,
+        /// <see cref="Update_Precios_Ofertas"/> y <see cref="funcion_inicial"/>(0) en ese orden.</remarks>
         public static void Update_Precios_Gral()
         {
             try
@@ -2751,6 +2959,9 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>Recalcula los precios de lista para todos los artículos normales.
+        /// Llama a <see cref="Update_PrecioCosto"/> (cadena desc1→desc2→IVA) y <see cref="Update_PrecioSug"/> (precio sugerido).
+        /// </summary>
         public static void Update_Precios()
         {
             try
@@ -2764,6 +2975,9 @@ namespace DistribuidoraPalomarNet
                 throw new Exception($"Error en Update_Precios: {ex.InnerException} - {ex.Message}");
             }
         }
+        /// <summary>Recalcula los precios para los artículos en oferta.
+        /// Llama a <see cref="Update_PrecioCosto_Ofertas"/> y <see cref="Update_PrecioSug_Ofertas"/>.
+        /// </summary>
         public static void Update_Precios_Ofertas()
         {
             string Desc_Calc_PList = "0";
@@ -2779,6 +2993,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>Colorea de amarillo las filas de la grilla cuyos artículos tienen precio de oferta (<c>aroo = "1"</c>).</summary>
         public static void Pintar_Ofertas()
         {
             if (_frmPrincipal.DataGridView1.RowCount > 0)
@@ -2794,6 +3009,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>Restaura el color de fondo blanco en todas las filas de la grilla de artículos y oculta la columna 5.</summary>
         public static void Despintar_Ofertas()
         {
             if (_frmPrincipal.DataGridView1.RowCount > 0)
@@ -2805,6 +3021,9 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>Agrega un mensaje de error al archivo <c>error.log</c> en el directorio actual de la aplicación.
+        /// Silencia los errores de escritura para no interrumpir el flujo principal.</summary>
+        /// <param name="mensaje">Texto del error a registrar.</param>
         public static void GrabarError(string mensaje)
         {
             try
@@ -2817,6 +3036,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Ejecuta una sentencia SQL de modificación sobre la base del <b>distribuidor</b> (<c>cnn</c>) de forma asíncrona.
+        /// </summary>
+        /// <remarks><b>Nota:</b> a pesar del nombre "DBLocal", opera sobre <c>cnn</c> (base del distribuidor), no sobre <c>cnnU</c>.</remarks>
+        /// <param name="query">Sentencia SQL a ejecutar (UPDATE, INSERT, DELETE).</param>
         public static async Task UpdateValorDBLocalAsync(string query)
         {
             try
@@ -2836,6 +3060,13 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Ejecuta una sentencia SQL de modificación sobre la base local del usuario (<c>cnnU</c>).
+        /// </summary>
+        /// <remarks>
+        /// <b>Bug conocido:</b> en el bloque finally cierra <c>cnn</c> en lugar de <c>cnnU</c>.
+        /// </remarks>
+        /// <param name="query">Sentencia SQL a ejecutar (UPDATE, INSERT, DELETE).</param>
         public static void UpdateValorDBLocal(string query)
         {
             try
@@ -2855,21 +3086,147 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        public static void CargarComboRubros()
+        /// <summary>
+        /// Carga en <c>cmbArmadora</c> los rubros principales (código &gt; 100) que tienen
+        /// artículos asociados en LISTAS, ordenados alfabéticamente.
+        /// Agrega «TODOS» como primera opción.
+        /// </summary>
+        public static void CargarComboArmadora()
         {
             Application.DoEvents();
             ConectarDBArti();
-            string sql = "SELECT DISTINCT R.rbcodi, R.rbdesc FROM rubros AS R INNER JOIN [listas] AS LT ON R.RBCODI = LT.ARRUB2 WHERE R.RBCODI > 100 ORDER BY R.rbdesc";
+            string sql = "SELECT DISTINCT R.rbcodi, R.rbdesc "+ 
+                "FROM rubros AS R " + 
+                "INNER JOIN [listas] AS LT ON R.RBCODI = LT.ARRUB2 " + 
+                "WHERE R.RBCODI > 100 ORDER BY R.rbdesc";
             var da = new OleDbDataAdapter(sql, cnn);
             try
             {
                 if (_frmPrincipal == null) throw new InvalidOperationException("Formulario principal no inicializado");
                 
-                _frmPrincipal.cmbRubros.Items.Clear();
+                _frmPrincipal.cmbArmadora.Items.Clear();
                 var ds = new DataSet();
                 Application.DoEvents();
                 da.Fill(ds, "rubros");
                 
+                foreach (DataRow fila in ds.Tables["rubros"].Rows)
+                {
+                    Application.DoEvents();
+                    _frmPrincipal.cmbArmadora.Items.Add(fila["rbdesc"]);
+                }
+                _frmPrincipal.cmbArmadora.Items.Insert(0, "TODOS");
+                ds.Dispose();
+                if (cnn.State == ConnectionState.Open) cnn.Close();
+            }
+            catch (Exception ex)
+            {
+                if (cnn.State == ConnectionState.Open) cnn.Close();
+                throw new Exception(", dentro de 'CargarComboArmadora': {ex}");
+            }
+            finally
+            {
+                da.Dispose();
+            }
+        }
+        /// <summary>
+        /// Carga en <c>cmbLineas</c> las líneas (<c>lineas.lidesc</c>) disponibles,
+        /// opcionalmente filtradas por una armadora/rubro específico.
+        /// </summary>
+        /// <param name="_Armadora">Nombre del rubro para filtrar (ej: valor de <c>cmbArmadora</c>)
+        /// o <c>"0"</c> para cargar todas las líneas sin filtro.</param>
+        public static void CargarComboLineas(string _Armadora)
+        {
+            OleDbDataAdapter da = new OleDbDataAdapter();
+            try
+            {
+                if (_frmPrincipal == null) throw new InvalidOperationException("Formulario principal no inicializado");
+
+                Application.DoEvents();
+                DataTable Dt_lineas = new DataTable();
+                Dt_lineas.Columns.Add("licodi", typeof(string));
+                Dt_lineas.Columns.Add("lidesc", typeof(string));
+
+                // Agregar TODOS como primera opción
+                Dt_lineas.Rows.Add("0", "TODOS");
+
+                // Construir SQL base y agregar filtro opcional por armadora
+                bool filtrarPorArmadora = !string.IsNullOrEmpty(_Armadora) && _Armadora != "0";
+
+                string sql =
+                    "SELECT DISTINCT LI.licodi, LI.lidesc " +
+                    // En Jet/Access, al encadenar INNER JOIN conviene usar paréntesis
+                    "FROM (lineas AS LI INNER JOIN listas AS LT ON LI.lidesc = LT.ARMODE) ";
+
+                if (filtrarPorArmadora)
+                {
+                    sql +=
+                        "INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI " +
+                        "WHERE r.RBDESC = ? ";
+                }
+
+                sql += "ORDER BY LI.lidesc";
+
+                da = new OleDbDataAdapter(sql, cnn);
+
+                if (filtrarPorArmadora)
+                {
+                    da.SelectCommand.Parameters.AddWithValue("@Rubro", _Armadora);
+                }
+
+                DataTable Dt_temp = new DataTable();
+                da.Fill(Dt_temp);
+
+                // Copiar los datos de la consulta
+                foreach (DataRow row in Dt_temp.Rows)
+                {
+                    Dt_lineas.Rows.Add(row["licodi"], row["lidesc"]);
+                }
+
+                _frmPrincipal.cmbLineas.DataSource = null;
+                _frmPrincipal.cmbLineas.DataSource = Dt_lineas;
+                _frmPrincipal.cmbLineas.DisplayMember = "lidesc";
+                _frmPrincipal.cmbLineas.ValueMember = "licodi";
+
+                if (cnn.State == ConnectionState.Open)
+                    cnn.Close();
+            }
+            catch (Exception ex)
+            {
+                if (_frmPrincipal != null)
+                {
+                    //_frmPrincipal.cmbRubros.Visible = false;
+                    //_frmPrincipal.cmbLineas.Visible = false;
+                }
+
+                if (cnn.State == ConnectionState.Open)
+                    cnn.Close();
+
+                throw new Exception($", dentro de 'CargarComboLineas': {ex}");
+            }
+            finally
+            {
+                da.Dispose();
+                _frmPrincipal.cmbLineas.SelectedIndex = -1;
+            }
+        }
+        private static void CargarComboRubros()
+        {
+            Application.DoEvents();
+            ConectarDBArti();
+            string sql = "SELECT DISTINCT R.rbcodi, R.rbdesc " +
+                "FROM rubros AS R " +
+                "INNER JOIN [listas] AS LT ON R.RBCODI = LT.ARRUB2 " +
+                "WHERE R.RBCODI < 100 ORDER BY R.rbdesc";
+            var da = new OleDbDataAdapter(sql, cnn);
+            try
+            {
+                if (_frmPrincipal == null) throw new InvalidOperationException("Formulario principal no inicializado");
+
+                _frmPrincipal.cmbRubros.Items.Clear();
+                var ds = new DataSet();
+                Application.DoEvents();
+                da.Fill(ds, "rubros");
+
                 foreach (DataRow fila in ds.Tables["rubros"].Rows)
                 {
                     Application.DoEvents();
@@ -2889,7 +3246,81 @@ namespace DistribuidoraPalomarNet
                 da.Dispose();
             }
         }
+        private static void CargarComboMarcas()
+        {
+            // Consulta: trae código (prcodi) y nombre de marca (prmarc) de la tabla proveedo.
+            // Solo incluye proveedores que sean "Repuestos" (prcrub = 'R'), ordenados alfabéticamente.
+            // prcodi  → se usará como VALUE del combo (lo que se lee al seleccionar)
+            // prmarc  → se usará como DISPLAY del combo (lo que ve el usuario)
+            Application.DoEvents();
+            ConectarDBArti();
+            string sql = "SELECT DISTINCT prcodi, prmarc FROM proveedo WHERE prcrub = 'R' ORDER BY prmarc";
+            var da = new OleDbDataAdapter(sql, cnn);
+            try
+            {
+                if (_frmPrincipal == null) throw new InvalidOperationException("Formulario principal no inicializado");
 
+                // Crear DataTable local para poder agregar la fila "TODOS" antes de bindear
+                var Dt_marcas = new DataTable();
+                Dt_marcas.Columns.Add("prcodi", typeof(int));    // valor interno (clave)
+                Dt_marcas.Columns.Add("prmarc", typeof(string)); // texto visible en el combo
+
+                // Fila especial "TODOS": prcodi = 0 indica sin filtro activo
+                Dt_marcas.Rows.Add(0, "TODOS");
+
+                Application.DoEvents();
+
+                // Llenar con datos reales de la base
+                var ds = new DataSet();
+                da.Fill(ds, "marcas"); // nombre de tabla interno del DataSet
+                Application.DoEvents();
+
+                foreach (DataRow fila in ds.Tables["marcas"].Rows)
+                {
+                    // Agregar cada marca: prcodi como valor, prmarc como texto
+                    Dt_marcas.Rows.Add(
+                        fila["prcodi"],  // valor que se leerá con cmbMarcas.SelectedValue
+                        fila["prmarc"]   // texto que verá el usuario en la lista
+                    );
+                    Application.DoEvents();
+                }
+
+                // Bindear al combo usando DisplayMember y ValueMember
+                // - DisplayMember: columna que se muestra en la lista desplegable
+                // - ValueMember:   columna que se retorna con .SelectedValue (prcodi)
+                _frmPrincipal.cmbMarcas.DataSource = Dt_marcas;
+                _frmPrincipal.cmbMarcas.DisplayMember = "prmarc";
+                _frmPrincipal.cmbMarcas.ValueMember = "prcodi";
+
+                // Dejar sin selección al inicializar (ninguna marca activa por defecto)
+                _frmPrincipal.cmbMarcas.SelectedIndex = -1;
+
+                ds.Dispose();
+                if (cnn.State == ConnectionState.Open) cnn.Close();
+            }
+            catch (Exception ex)
+            {
+                if (cnn.State == ConnectionState.Open) cnn.Close();
+                throw new Exception($"Error dentro de 'CargarComboMarcas': {ex.Message}");
+            }
+            finally
+            {
+                da.Dispose();
+            }
+        }
+        /// <summary>
+        /// Lee los datos del usuario/cliente desde la tabla <c>USUARIO</c> de la base local
+        /// y los carga en las variables globales <c>US_*</c>.
+        /// </summary>
+        /// <remarks>
+        /// Si no se encuentran datos (tabla vacía), limpia las variables <c>US_*</c> y,
+        /// si <paramref name="promptIfMissing"/> es <c>true</c>, abre <c>frmDatosUsuario</c> para que
+        /// el usuario complete su configuración.
+        /// Además llama a <see cref="ValidarCuitCliente"/> para verificar el cliente contra
+        /// la base del distribuidor y cargar los descuentos.
+        /// </remarks>
+        /// <param name="promptIfMissing">Si <c>true</c> (por defecto), abre <c>frmDatosUsuario</c>
+        /// cuando no hay datos configurados.</param>
         public static void Cargar_Usuario(bool promptIfMissing = true)
         {
             OleDbCommand cmUsu = new OleDbCommand();
@@ -2901,7 +3332,7 @@ namespace DistribuidoraPalomarNet
                 ConectarDBUsuario();
                 cmUsu.Connection = cnnU;
                 cmUsu.CommandType = CommandType.Text;
-                cmUsu.CommandText = "SELECT US_CODI, US_CLRAZO, US_CUIT, US_MAIL, US_CLCIVA, US_CLVEND, US_CLCPAG from USUARIO";
+                cmUsu.CommandText = "SELECT US_CODI, US_CLRAZO, US_CUIT, US_MAIL, US_CLCIVA, US_CLVEND, US_CLCPAG, US_DESCUENTO1, US_DESCUENTO2 from USUARIO";
                 drUsu = cmUsu.ExecuteReader();
                 if (drUsu.Read())
                 {
@@ -2913,6 +3344,8 @@ namespace DistribuidoraPalomarNet
                     US_CLVEND = Convert.ToInt32(drUsu["US_CLVEND"]);
                     US_CLRAZO = drUsu["US_CLRAZO"].ToString();
                     US_CLCPAG = Convert.ToInt32(drUsu["US_CLCPAG"]);
+                    US_DESCUENTO1 = Convert.ToInt32(drUsu["US_DESCUENTO1"]);
+                    US_DESCUENTO2 = Convert.ToInt32(drUsu["US_DESCUENTO2"]);
 
                     ValidarCuitCliente(US_CODI, US_CUIT);
                     drUsu.Close();
@@ -2929,6 +3362,8 @@ namespace DistribuidoraPalomarNet
                     US_CLVEND = 0;
                     US_CLRAZO = "";
                     US_CLCPAG = 0;
+                    US_DESCUENTO1 = 0;
+                    US_DESCUENTO2 = 0;
                     // Solo abrir el formulario si corresponde y no hay una instancia abierta
                     if (promptIfMissing && !Application.OpenForms.OfType<frmDatosUsuario>().Any())
                     {
@@ -2948,11 +3383,19 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>Verifica que un string sea no nulo, no vacío y parseble como número flotante.</summary>
+        /// <param name="valor">Cadena a validar.</param>
+        /// <returns><c>true</c> si el valor es numérico; <c>false</c> si es nulo, vacío o no numérico.</returns>
         public static bool ValidarCampoNumerico(string valor)
         {
             return !string.IsNullOrWhiteSpace(valor) && float.TryParse(valor.Trim(), out _);
         }
 
+        /// <summary>
+        /// Valida que todos los campos requeridos en <c>frmDatosUsuario</c> estén completos
+        /// y sean válidos antes de grabar el usuario.
+        /// </summary>
+        /// <returns><c>true</c> si los campos código cliente, CUIT, desc1, desc2 y beneficio son válidos.</returns>
         public static bool ValidarCampos()
         {
             try
@@ -2982,6 +3425,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Lee los datos del usuario desde la tabla <c>USUARIO</c> de <c>cnnU</c>
+        /// y los carga en los controles de <c>frmDatosUsuario</c>.
+        /// </summary>
         public static void CargarDatos()
         {
             try
@@ -3013,6 +3460,13 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Valida que el código de cliente exista en la tabla <c>CLIENTES</c> de la base del distribuidor.
+        /// Si existe, carga en las variables <c>US_*</c> los datos del cliente.
+        /// </summary>
+        /// <param name="codi">Código numérico del cliente a validar.</param>
+        /// <returns><c>true</c> si el código existe; <c>false</c> si no existe o hay error.</returns>
+        /// <remarks>Actualiza <see cref="ExisteCodi_Cliente"/> como efecto secundario.</remarks>
         public static bool ValidarCodiCliente(string codi)
         {
             OleDbCommand cmaccess = new OleDbCommand();
@@ -3072,6 +3526,20 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Valida la combinación código + CUIT contra la tabla <c>CLIENTES</c> de la base del distribuidor.
+        /// Carga los descuentos, la condición de IVA y determina si el cliente está autorizado.
+        /// </summary>
+        /// <remarks>
+        /// Efecto secundario clave: establece
+        /// <see cref="ClienteAutorizado"/>, <see cref="ClienteRestringido"/>,
+        /// <see cref="ClienteDescuento1"/> y <see cref="ClienteDescuento2"/>.
+        /// Un cliente está <b>restringido</b> cuando CLDES1 = CLDES2 = 0
+        /// (sin descuentos cargados por la distribuidora).
+        /// </remarks>
+        /// <param name="codi">Código del cliente.</param>
+        /// <param name="cuit">CUIT del cliente (se parsea a double para la comparación).</param>
+        /// <returns><c>true</c> si la combinación es válida; <c>false</c> si no existe o hay error.</returns>
         public static bool ValidarCuitCliente(string codi, string cuit)
         {
             OleDbCommand cmaccess = new OleDbCommand();
@@ -3151,6 +3619,15 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Sincroniza la tabla <c>FAMILIAS</c> de la base local del usuario (<c>cnnU</c>)
+        /// con los datos de familias de la base del distribuidor (<c>cnn</c>).
+        /// </summary>
+        /// <remarks>
+        /// Proceso: borra todos los registros de FAMILIAS en <c>cnnU</c> y los re-inserta
+        /// desde la tabla FAMILIAS de <c>cnn</c>, copiando FACODI, FADESC y FAMIVA.
+        /// Este método actualmente está comentado en <see cref="Inicializacion"/>.
+        /// </remarks>
         public static void ActualizarFAMIVA()
         {
             var cmFamilias = new OleDbCommand();
@@ -3184,6 +3661,80 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Sincroniza los descuentos del cliente desde la base del distribuidor hacia la base local.
+        /// Lee <c>CLDES1</c> y <c>CLDES2</c> de la tabla <c>CLIENTES</c> (base del distribuidor, <c>cnn</c>)
+        /// para el cliente identificado por <see cref="US_CODI"/> y los persiste en
+        /// <c>US_DESCUENTO1</c> / <c>US_DESCUENTO2</c> de la tabla <c>USUARIO</c> en <c>cliente.dat</c>.
+        /// </summary>
+        /// <remarks>
+        /// Debe llamarse después de migrar la base del distribuidor (<see cref="UpdateBase"/>)
+        /// y <b>antes</b> de <see cref="Cargar_Usuario"/>, para que el recálculo de precios
+        /// utilice los descuentos más recientes publicados por la distribuidora.
+        /// Si el cliente no se encuentra o hay un error, se registra en el log y se continúa
+        /// sin modificar los descuentos existentes.
+        /// </remarks>
+        public static void SincronizarDescuentosCliente()
+        {
+            try
+            {
+                // Leer CLDES1 y CLDES2 desde la base del distribuidor (recién actualizada por FTP)
+                decimal cldes1 = 0;
+                decimal cldes2 = 0;
+                bool encontrado = false;
+
+                ConectarDBArti();
+                using (var cmdLeer = new OleDbCommand(
+                    "SELECT CLDES1, CLDES2 FROM CLIENTES WHERE CLCODI = ?", cnn))
+                {
+                    cmdLeer.Parameters.AddWithValue("@codi", US_CODI);
+                    using (var dr = cmdLeer.ExecuteReader())
+                    {
+                        if (dr.Read())
+                        {
+                            cldes1 = dr["CLDES1"] != DBNull.Value ? Convert.ToDecimal(dr["CLDES1"]) : 0;
+                            cldes2 = dr["CLDES2"] != DBNull.Value ? Convert.ToDecimal(dr["CLDES2"]) : 0;
+                            encontrado = true;
+                        }
+                    }
+                }
+                if (cnn.State == ConnectionState.Open) cnn.Close();
+
+                if (!encontrado)
+                {
+                    GrabarError($" - {DateTime.Now:dd/MM/yyyy HH:mm:ss} 'SincronizarDescuentosCliente': cliente '{US_CODI}' no encontrado en CLIENTES.");
+                    return;
+                }
+
+                // Actualizar US_DESCUENTO1 / US_DESCUENTO2 en la base local del usuario
+                ConectarDBUsuario();
+                using (var cmdUpd = new OleDbCommand(
+                    "UPDATE USUARIO SET US_DESCUENTO1 = ?, US_DESCUENTO2 = ?", cnnU))
+                {
+                    cmdUpd.Parameters.AddWithValue("@desc1", cldes1);
+                    cmdUpd.Parameters.AddWithValue("@desc2", cldes2);
+                    cmdUpd.ExecuteNonQuery();
+                }
+                if (cnnU.State == ConnectionState.Open) cnnU.Close();
+            }
+            catch (Exception ex)
+            {
+                if (cnn.State == ConnectionState.Open) cnn.Close();
+                if (cnnU.State == ConnectionState.Open) cnnU.Close();
+                GrabarError($" - {DateTime.Now:dd/MM/yyyy HH:mm:ss} 'SincronizarDescuentosCliente': {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Carga los descuentos del cliente (<c>US_DESCUENTO1</c>, <c>US_DESCUENTO2</c>)
+        /// desde la tabla <c>USUARIO</c> de la base local y los muestra en <c>txtDescuento1</c>
+        /// y <c>txtDescuento2</c> del formulario principal.
+        /// </summary>
+        /// <remarks>
+        /// Se llama en <see cref="Inicializacion"/> y en <see cref="ActualizacionXFTP"/> (antes de
+        /// recargar la grilla) para garantizar que los cálculos de precios usen los descuentos actualizados.
+        /// Usa una conexión local independiente (<c>cnnLocal</c>) para evitar conflictos de estado.
+        /// </remarks>
         public static void aplicar_desc_Cliente()
         {
             var cm = new OleDbCommand();
@@ -3225,6 +3776,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Carga en la grilla todos los artículos que tienen precio de oferta (<c>ARTT &lt;&gt; 0</c>),
+        /// mostrando el precio de oferta calculado (<c>arpre5</c>).
+        /// </summary>
         public static void Funcion_Ofertas()
         {
             var da = new OleDbDataAdapter();
@@ -3257,6 +3812,12 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Limpia todos los campos de búsqueda del formulario principal y, si no es modo interno,
+        /// relanza la consulta base y restaura el estado visual de la grilla.
+        /// </summary>
+        /// <param name="p1">Si es 1, no limpia los combos <c>cmbArmadora</c> / <c>cmbLineas</c>
+        /// ni relanza <see cref="consultas_Relacionales"/>. Usar 0 para limpiar todo.</param>
         public static void LimpiarCampos(int p1)
         {
             try
@@ -3270,7 +3831,7 @@ namespace DistribuidoraPalomarNet
                 _frmPrincipal.txtModelo.Text = string.Empty;
                 _frmPrincipal.txtEquivalencia.Text = string.Empty;
                 _frmPrincipal.txtCodigo.Text = string.Empty;
-                if (p1 != 1) _frmPrincipal.cmbRubros.SelectedIndex = -1;
+                if (p1 != 1) _frmPrincipal.cmbArmadora.SelectedIndex = -1;
                 if (p1 != 1) _frmPrincipal.cmbLineas.SelectedIndex = -1;
                 // lblCodigoSelec.Text = string.Empty;
                 if (p1 != 1)
@@ -3283,82 +3844,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        public static void CargarComboLineas(string _Armadora)
-        {
-            OleDbDataAdapter da = new OleDbDataAdapter();
-            try
-            {
-                if (_frmPrincipal == null) throw new InvalidOperationException("Formulario principal no inicializado");
-
-                Application.DoEvents();
-                DataTable Dt_lineas = new DataTable();
-                Dt_lineas.Columns.Add("licodi", typeof(string));
-                Dt_lineas.Columns.Add("lidesc", typeof(string));
-
-                // Agregar TODOS como primera opción
-                Dt_lineas.Rows.Add("0", "TODOS");
-
-                // Construir SQL base y agregar filtro opcional por armadora
-                bool filtrarPorArmadora = !string.IsNullOrEmpty(_Armadora) && _Armadora != "0";
-
-                string sql =
-                    "SELECT DISTINCT LI.licodi, LI.lidesc " +
-                    // En Jet/Access, al encadenar INNER JOIN conviene usar paréntesis
-                    "FROM (lineas AS LI INNER JOIN listas AS LT ON LI.lidesc = LT.ARMODE) ";
-
-                if (filtrarPorArmadora)
-                {
-                    sql +=
-                        "INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI " +
-                        "WHERE r.RBDESC = ? ";
-                }
-
-                sql += "ORDER BY LI.lidesc";
-
-                da = new OleDbDataAdapter(sql, cnn);
-
-                if (filtrarPorArmadora)
-                {
-                    da.SelectCommand.Parameters.AddWithValue("@Rubro", _Armadora);
-                }
-
-                DataTable Dt_temp = new DataTable();
-                da.Fill(Dt_temp);
-
-                // Copiar los datos de la consulta
-                foreach (DataRow row in Dt_temp.Rows)
-                {
-                    Dt_lineas.Rows.Add(row["licodi"], row["lidesc"]);
-                }
-
-                _frmPrincipal.cmbLineas.DataSource = null;
-                _frmPrincipal.cmbLineas.DataSource = Dt_lineas;
-                _frmPrincipal.cmbLineas.DisplayMember = "lidesc";
-                _frmPrincipal.cmbLineas.ValueMember = "licodi";
-
-                if (cnn.State == ConnectionState.Open)
-                    cnn.Close();
-            }
-            catch (Exception ex)
-            {
-                if (_frmPrincipal != null)
-                {
-                    //_frmPrincipal.cmbRubros.Visible = false;
-                    //_frmPrincipal.cmbLineas.Visible = false;
-                }
-
-                if (cnn.State == ConnectionState.Open)
-                    cnn.Close();
-
-                throw new Exception($", dentro de 'CargarComboLineas': {ex}");
-            }
-            finally
-            {
-                da.Dispose();
-                _frmPrincipal.cmbLineas.SelectedIndex = -1;
-            }
-        }
-
+        /// <summary>
+        /// [<b>Obsoleto</b> — usa <c>cnn</c> en lugar de <c>cnnU</c>] Elimina un ítem del carrito por su número de ítem.
+        /// Para el flujo actual usar <see cref="ModuloPreparac.EliminarItemCarro"/>.
+        /// </summary>
         public static void EliminarItemCarro(int item)
         {
             try
@@ -3385,6 +3874,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// [<b>Obsoleto</b> — usa <c>cnn</c> en lugar de <c>cnnU</c>] Elimina todos los ítems del carrito del usuario actual.
+        /// Para el flujo actual usar <see cref="ModuloPreparac.EliminarItemsCarro"/>.
+        /// </summary>
         public static bool EliminarTodosItemsCarro()
         {
             try
@@ -3410,6 +3903,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// [<b>Obsoleto</b> — usa <c>cnn</c> en lugar de <c>cnnU</c>] Verifica si un artículo ya existe en PREPARAC.
+        /// Para el flujo actual usar <see cref="ModuloPreparac.ExisteARTICULOPedido"/>.
+        /// </summary>
         public static bool ExisteArticuloEnPedido(string ppacod3, string ppaflia, string ppaprov)
         {
             using var cmUsu = new OleDbCommand();
@@ -3436,6 +3933,11 @@ namespace DistribuidoraPalomarNet
             return existe;
         }
 
+        /// <summary>
+        /// Wrapper asíncrono que delega en <see cref="ModuloPreparac.GrabarArticuloaPreparacAsync"/>
+        /// usando el WHERE configurado en <see cref="ModuloPreparac.WHERE_PREPARAC"/>.
+        /// </summary>
+        /// <param name="accion">"INSERT" o "UPDATE".</param>
         public static async Task PrepararArticulo(string accion)
         {
             try
@@ -3464,6 +3966,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Configura <c>WHERE_PREPARAC</c> y <c>CANT_PREPARAC</c> en <see cref="ModuloPreparac"/>
+        /// para una operación posterior de agregar al carrito.
+        /// </summary>
         public static void PrepararArticulo(string codigo, string familia, string proveedor, decimal cantidad)
         {
             try
@@ -3477,6 +3983,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// [<b>Obsoleto</b> — usa SQL dinámico concatenado, sin parámetros]
+        /// Ejecuta un INSERT o UPDATE directo sobre PREPARAC usando las variables de <see cref="ModuloPreparac"/>.
+        /// Para el flujo actual usar <see cref="ModuloPreparac.GrabarArticuloaPreparacAsync"/>.
+        /// </summary>
         public static void BuscarArticuloParaPreparac(string accion)
         {
             try
@@ -3532,6 +4043,16 @@ namespace DistribuidoraPalomarNet
         //        return false;
         //    }
         //}
+        /// <summary>
+        /// Descarga un archivo del servidor FTP y lo guarda en la ruta local especificada.
+        /// Lee el stream por bloques de 3071 bytes.
+        /// </summary>
+        /// <param name="Filename">Nombre del archivo en el servidor FTP.</param>
+        /// <param name="NewFileName">Ruta local completa donde guardar el archivo descargado.</param>
+        /// <param name="UserNameFtp">Usuario FTP.</param>
+        /// <param name="PassFTP">Contraseña FTP.</param>
+        /// <param name="URI">URL base del servidor FTP.</param>
+        /// <returns><c>true</c> si la descarga fue exitosa; <c>false</c> si hubo error.</returns>
         public static bool DescargaArchivo(string Filename, string NewFileName, string UserNameFtp, string PassFTP, string URI)
         {
             Application.DoEvents();
@@ -3570,6 +4091,11 @@ namespace DistribuidoraPalomarNet
                 return false;
             }
         }
+        /// <summary>
+        /// Retorna la fecha máxima de la tabla <c>ACTUALIZACIONES</c> de la base del distribuidor.
+        /// Si no hay registros, retorna la fecha actual como fallback.
+        /// </summary>
+        /// <returns>Fecha de actualización formateada como <c>"dd/MM/yyyy"</c>.</returns>
         public static string TraerFechaActualizacion()
         {
             try
@@ -3587,6 +4113,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Verifica si el artículo seleccionado en la grilla tiene equivalencias disponibles
+        /// (campo <c>AROBSE</c> no vacío) y habilita/deshabilita el botón de equivalencias.
+        /// Almacena el valor en <see cref="NumEqui"/> para uso posterior.
+        /// </summary>
         public static void ValidarEquivalencias()
         {
             try
@@ -3616,6 +4147,19 @@ namespace DistribuidoraPalomarNet
         }
 
 
+        /// <summary>
+        /// Recalcula masivamente los precios de costo (<c>arpre0</c>, <c>arpre1</c>) en la tabla LISTAS
+        /// aplicando la cadena completa: desc1 → desc2 → descuento de familia (<c>FADES1</c>) → IVA de familia (<c>FAIVA</c>).
+        /// </summary>
+        /// <remarks>
+        /// Algoritmo por familia (itera todas las FAMILIAS con artículos en LISTAS):
+        /// <list type="bullet">
+        /// <item>Si desc2 &gt; 0: <c>arpre1 = arpre1 − FADES1 + FAIVA</c>.</item>
+        /// <item>Si solo desc1 &gt; 0: <c>arpre0 = arpre0 − FADES1 + FAIVA</c>; luego <c>arpre1 = arpre0</c>.</item>
+        /// <item>Sin descuentos: <c>arpre1 = arpre1 − FADES1 + FAIVA</c> directo.</item>
+        /// </list>
+        /// Los valores de FADES1 y FAIVA se leen de la tabla <c>FAMILIAS</c> en <c>cnnU</c>.
+        /// </remarks>
         public static void Update_PrecioCosto()
         {
             using (OleDbCommand cmaccessUpdate = new OleDbCommand())
@@ -3629,6 +4173,9 @@ namespace DistribuidoraPalomarNet
                     cmaccessUpdate.CommandText = "update listas set arpre1=aroo";
                     Application.DoEvents();
                     cmaccessUpdate.ExecuteNonQuery();
+
+                    _frmPrincipal.txtDescuento1.Text = US_DESCUENTO1.ToString();
+                    _frmPrincipal.txtDescuento2.Text = US_DESCUENTO2.ToString();
 
                     // Aplico los descuentos
                     if (decimal.TryParse(_frmPrincipal.txtDescuento1.Text, out decimal descuento1) && descuento1 != 0)
@@ -3771,6 +4318,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Equivalente a <see cref="Update_PrecioCosto"/> pero para los precios de oferta:
+        /// recalcula <c>arpre3</c> y <c>arpre4</c> a partir de <c>artt</c> (precio de oferta base).
+        /// </summary>
         public static void Update_PrecioCosto_Ofertas()
         {
             using (OleDbCommand cmaccessUpdate = new OleDbCommand())
@@ -3919,6 +4470,14 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Calcula el precio sugerido de venta al público (<c>arpre2</c>) para todos los artículos
+        /// aplicando el beneficio familiar (<c>FABEN1</c>) sobre el precio de costo calculado (<c>arpre1</c>).
+        /// </summary>
+        /// <remarks>
+        /// Fórmula: <c>arpre2 = arpre1 + (arpre1 × FABEN1 / 100)</c>.
+        /// Si la familia no tiene <c>FABEN1</c>, copia <c>arpre1</c> a <c>arpre2</c> directamente.
+        /// </remarks>
         public static void Update_PrecioSug()
         {
             using (OleDbCommand cmaccess = new OleDbCommand())
@@ -3988,6 +4547,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Equivalente a <see cref="Update_PrecioSug"/> para ofertas: calcula <c>arpre5</c>
+        /// aplicando <c>FABEN1</c> sobre <c>arpre4</c>.
+        /// </summary>
         public static void Update_PrecioSug_Ofertas()
         {
             using (OleDbCommand cmaccess = new OleDbCommand())
@@ -4056,6 +4619,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Ejecuta una consulta SELECT sobre la base del distribuidor y muestra el rubro,
+        /// origen y observación del artículo en las etiquetas del formulario principal.
+        /// </summary>
+        /// <param name="StringSelect">SELECT que retorna RBDESC, ARORIG, ARUBIC1 y AROBSE.</param>
         public static void CargarDatosExtras(string StringSelect)
         {
             try

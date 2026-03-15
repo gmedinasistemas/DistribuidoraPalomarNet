@@ -1,3 +1,2 @@
-2026/02/24-13:50:15.962 5ba0 Reusing MANIFEST C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\shared_proto_db/MANIFEST-000001
-2026/02/24-13:50:15.963 5ba0 Recovering log #3
-2026/02/24-13:50:15.963 5ba0 Reusing old log C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\shared_proto_db/000003.log 
+2026/03/13-11:48:04.135 6438 Creating DB C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\shared_proto_db since it was missing.
+2026/03/13-11:48:04.141 6438 Reusing MANIFEST C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\shared_proto_db/MANIFEST-000001

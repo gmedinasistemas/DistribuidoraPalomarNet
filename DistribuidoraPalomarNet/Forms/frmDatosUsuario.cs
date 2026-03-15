@@ -8,12 +8,17 @@ namespace DistribuidoraPalomarNet
 {
     public partial class frmDatosUsuario : Form
     {
+        // Inicializa los controles del formulario y registra esta instancia en Module
+        // para que otros módulos puedan referenciarla (ej: CargarDatos, aplicar_desc_Cliente).
         public frmDatosUsuario()
         {
             InitializeComponent();
             Module.SetDatosUsuarioForm(this);
         }
 
+        // Actualiza los indicadores visuales de estado del cliente en frmPrincipal
+        // (ej: mensaje de cliente restringido, habilitación de secciones).
+        // Se llama tras validar o modificar datos del cliente.
         private void RefreshEstadoEnPrincipal()
         {
             try
@@ -30,6 +35,9 @@ namespace DistribuidoraPalomarNet
         }
 
         #region Metodos
+        // Al abrir el formulario: los campos de descuento quedan en solo lectura (se cargan desde la base del distribuidor).
+        // Si ya existe un usuario registrado, carga sus datos y valida los descuentos asignados.
+        // Según si existe (accionDatosUsu=1) o no (0), btnGrabar actuará como UPDATE o INSERT.
         private void frmDatosUsuario_Load(object sender, EventArgs e)
         {
             try
@@ -62,6 +70,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Controla la entrada en el campo Código de Cliente:
+        // - Solo acepta dígitos (bloquea letras y caracteres especiales).
+        // - Al presionar Enter o Tab valida el código contra la base del distribuidor:
+        //   válido → habilita txtCuitCliente y pasa el foco; inválido → fondo rojo y bloquea el CUIT.
         private void txtCodCliente_KeyPress(object sender, KeyPressEventArgs e)
         {
             try
@@ -72,12 +84,14 @@ namespace DistribuidoraPalomarNet
                     {
                         if (!Module.ValidarCodiCliente(txtCodCliente.Text))
                         {
+                            // Código no encontrado en la base del distribuidor
                             txtCodCliente.BackColor = Color.DarkRed;
                             txtCodCliente.Focus();
                             txtCuitCliente.Enabled = false;
                         }
                         else
                         {
+                            // Código válido: habilitar siguiente campo
                             txtCodCliente.BackColor = Color.White;
                             txtCuitCliente.Enabled = true;
                             txtCuitCliente.Focus();
@@ -96,7 +110,7 @@ namespace DistribuidoraPalomarNet
                     }
                     else
                     {
-                        e.Handled = true;
+                        e.Handled = true; // bloquea caracteres no numéricos
                     }
                 }
             }
@@ -106,6 +120,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Controla la entrada en el campo CUIT del cliente:
+        // - Solo acepta dígitos.
+        // - Al presionar Enter o Tab cruza el par Código+CUIT contra la base del distribuidor:
+        //   válido → carga descuentos asignados, habilita email y btnGrabar;
+        //   inválido → fondo rojo, bloquea email y btnGrabar.
         private void txtCuitCliente_KeyPress(object sender, KeyPressEventArgs e)
         {
             try
@@ -118,6 +137,7 @@ namespace DistribuidoraPalomarNet
                     {
                         if (!Module.ValidarCuitCliente(txtCodCliente.Text.Trim(), txtCuitCliente.Text.Trim()))
                         {
+                            // CUIT no coincide con el código en la base del distribuidor
                             txtCuitCliente.BackColor = Color.DarkRed;
                             txtCuitCliente.Focus();
                             txtEmail.Enabled = false;
@@ -125,11 +145,13 @@ namespace DistribuidoraPalomarNet
                         }
                         else
                         {
+                            // Par código+CUIT válido: cargar descuentos y habilitar formulario
                             txtCuitCliente.BackColor = Color.White;
                             btnGrabar.Enabled = true;
                             txtEmail.Enabled = true;
                             txtEmail.Focus();
 
+                            // Descuentos asignados al cliente en la base del distribuidor (solo lectura)
                             txtDesc1.Text = Module.ClienteDescuento1.ToString();
                             txtDesc2.Text = Module.ClienteDescuento2.ToString();
 
@@ -165,6 +187,9 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Graba o actualiza los datos del usuario tras validar todos los campos.
+        // Valida de forma anidada: código → CUIT → Desc1 → Desc2 → Beneficio.
+        // Tras guardar: recarga el usuario en Module, aplica descuentos y recalcula precios en frmPrincipal.
         private void btnGrabar_Click(object sender, EventArgs e)
         {
             try
@@ -197,6 +222,7 @@ namespace DistribuidoraPalomarNet
                                             if (decimal.TryParse(txtBene.Text.Trim(), out _))
                                             {
                                                 // Grabo todos los datos los paso como variables a la funcion
+                                                // accionDatosUsu: 1 = UPDATE (usuario ya registrado), 0 = INSERT (primera vez)
                                                 if (Module.accionDatosUsu == 1)
                                                 {
                                                     // Para Actualizar
@@ -281,6 +307,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Cierra el formulario. Si hubo un guardado exitoso (ptbImgSi visible):
+        // 1. Recarga los descuentos del cliente.
+        // 2. Recalcula los precios generales y de ofertas.
+        // 3. Reaplica el filtro activo en frmPrincipal (preserva la búsqueda que el usuario tenía).
         private void btnSalir_Click(object sender, EventArgs e)
         {
             if (ptbImgSi.Visible)
@@ -304,7 +334,7 @@ namespace DistribuidoraPalomarNet
 
                     if (hayFilasConDatos)
                     {
-                        Module.funcion_inicial(1);
+                        fp.RefrescarSegunFiltros();
                     }
                 }
             }

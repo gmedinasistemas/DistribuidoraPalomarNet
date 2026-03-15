@@ -7,16 +7,46 @@ using System.Windows.Forms;
 
 namespace DistribuidoraPalomarNet
 {
+    /// <summary>
+    /// Módulo estático que gestiona el carrito de compras (tabla <c>PREPARAC</c>) en la base local del usuario.
+    /// </summary>
+    /// <remarks>
+    /// Centraliza las variables del registro PREPARAC y todas las operaciones sobre él:
+    /// <para><b>Agregar/Actualizar artículos:</b> <see cref="BuscarArticuloParaPreparacAsync"/> →
+    /// <see cref="GrabarArticuloaPreparacAsync"/> construyen y persisten el registro.</para>
+    /// <para><b>Modificar cantidad:</b> <see cref="Update_item"/> recalcula precios y actualiza el ítem.</para>
+    /// <para><b>Eliminar ítems:</b> <see cref="EliminarItemCarro"/> (uno) / <see cref="EliminarItemsCarro"/> (todos).</para>
+    /// <para><b>Envío al distribuidor:</b> <see cref="ProcesoWS"/> obtiene número de pedido del WS
+    /// y llama a <see cref="InsertWSPreparac"/> para enviar cada fila al web service WSPalomar.</para>
+    /// <para>Opera sobre <b>Module.cnnU</b> (base local), excepto <see cref="BuscarArticuloParaPreparacAsync"/>
+    /// que lee de <b>Module.cnn</b> (base del distribuidor).</para>
+    /// </remarks>
     public static class ModuloPreparac
     {
         #region Variables Preparac
+        // --- Temporales de operación ---
+        // Codi: código compuesto para display ("PRIMERA - TERCERA"), no se graba en PREPARAC.
+        // Precio: precio de costo sin IVA del artículo en procesamiento (Module.precio_costo_sin_iva).
+        // Cant: cantidad seleccionada; CantExistente: cantidad ya en PREPARAC si el artículo existe.
+        // SUBT, Iva: valores intermedios de cálculo durante la grabación.
         public static string Codi = "";
         public static decimal Precio = 0;
         public static decimal Cant; // As Integer en VB
         public static decimal CantExistente=0;
         public static decimal SUBT, Iva;
+        // --- Descripción y observaciones del artículo ---
+        // _PPADESC (máx. 40 car.): descripción del artículo → columna PPADESC.
+        // _PPAOBSE (máx. 255 car.): observaciones (campo AROBSE de LISTAS) → columna PPAOBSE.
         public static string _PPADESC = ""; // 40
         public static string _PPAOBSE = ""; // 255
+        // --- Precios del artículo ---
+        // _PPAORIG:        precio original con IVA (AROO + IVA de familia), formato 'Currency' de Access.
+        // _PPAPREC:        precio de lista base (AROO sin IVA); también asignado a _PPABASE.
+        // _PPABASE:        igual a _PPAPREC; base para cálculos posteriores en el WS.
+        // _PPACIVA:        precio_final × cantidad (monto total IVA incluido por la línea).
+        // _PPAPRECUNITARIO:precio unitario final con descuentos y beneficio aplicados (Module.precio_final).
+        // _PPAPRECCOSTO:   precio de costo sin IVA redondeado (Module.precio_costo_sin_iva).
+        // _FAMIVA:         porcentaje de IVA de la familia del artículo (leído de FAMILIAS.FAIVA).
         public static decimal _PPAORIG = 0;
         public static decimal _PPAPREC = 0;
         public static decimal _PPABASE = 0;
@@ -25,16 +55,30 @@ namespace DistribuidoraPalomarNet
         public static decimal _PPAPRECCOSTO = 0;
         public static decimal _FAMIVA = 0;
 
-        // PARA PRECIO SUBTOTAL Y TOTAL SIN IVA
+        // --- Subtotales sin IVA ---
+        // _SUBTSIVA: subtotal sin IVA = precio_costo_sin_iva × cantidad → columna SUBTSIVA.
+        // _TOTALSIVA: total acumulado sin IVA (no utilizado en el flujo principal actual).
         public static decimal _SUBTSIVA = 0;
         public static decimal _TOTALSIVA = 0;
 
+        // --- Identificadores y códigos del artículo ---
+        // _PPABARR:  código de barras del artículo (LISTAS.ARBARR).
+        // _PPACODx:  partes del código compuesto: COD1(3)=ARPRIM, COD2(4)=ARSEGU, COD3(10)=ARTERC, COD4(4)=ARCUAR.
+        //            _PPACOD3 es el identificador principal usado como clave en UPDATE/EXISTS.
+        // _PPACODI (3): código interno del artículo (LISTAS.ARCODI).
         public static decimal _PPABARR = 0;
         public static string _PPACOD1 = ""; // 3
         public static string _PPACOD2 = ""; // 4
         public static string _PPACOD3 = ""; // 10
         public static string _PPACOD4 = ""; // 4
         public static string _PPACODI = ""; // 3
+        // --- Encabezado del pedido (datos del cliente y condiciones) ---
+        // _PPANUME: número de pedido; inicia en 0 y es asignado por el WS en ProcesoWS → TraerNPedido().
+        // _PPATPRE (1): tipo de precio. _PPAFECH: fecha del pedido (inicializada a la fecha actual).
+        // _PPARAZO (30): razón social del cliente (Module.US_CLRAZO).
+        // _PPASITI: condición IVA del cliente (Module.US_CLCIVA).
+        // _PPAQOT (1): flag de cotización. _PPAPPA: pago a cuenta. _PPADESK: descuento aplicado.
+        // _PPATARJ (25): tarjeta. _PPACUOT: cuotas. _PPAVEND: código vendedor. _PPAFLIA: familia del artículo.
         public static decimal _PPANUME = 0;
         public static string _PPATPRE = ""; // 1
         public static string _PPAFECH = DateTime.Now.ToShortDateString();
@@ -47,11 +91,20 @@ namespace DistribuidoraPalomarNet
         public static decimal _PPACUOT = 0;
         public static decimal _PPAVEND = 0;
         public static decimal _PPAFLIA = 0;
+        // --- Proveedor, origen e IVA ---
+        // _PPAIMPO (1): indicador de origen/importación (LISTAS.ARORIG).
+        // _PPAPROV: código de proveedor (LISTAS.ARPROV). _PPAAUTO: autonumérico; por defecto 1 (Access asigna PPAAUTN).
+        // _PPAARFF (10): campo auxiliar vacío en el flujo actual.
+        // _PPAFIVA: porcentaje de IVA a aplicar; si la familia retorna 0 se asume 21% (estándar Argentina).
         public static string _PPAIMPO = ""; // 1
         public static decimal _PPAPROV = 0;
         public static decimal _PPAAUTO = 1;
         public static string _PPAARFF = ""; // 10
         public static decimal _PPAFIVA = 0;
+        // --- Operador, empresa y logística de despacho ---
+        // _PPAUSER: código de usuario interno. _PPACOMP (30): nombre de empresa/compañía.
+        // _PPABULT: bultos. _PPAKILO: peso en kilos. _PPASEGU: seguro de envío.
+        // _PPAREMF: flete del remito. _PPAREMN: número de remito. _PPAPIEZ: piezas por unidad (por defecto 1).
         public static decimal _PPAUSER = 0;
         public static string _PPACOMP = ""; // 30
         public static decimal _PPABULT = 0;
@@ -60,8 +113,15 @@ namespace DistribuidoraPalomarNet
         public static decimal _PPAREMF = 0;
         public static decimal _PPAREMN = 0;
         public static decimal _PPAPIEZ = 1;
+        // _PPAMARC (15): código de marca del artículo (proveedo.PRMARC, columna PPAMARC).
+        // _PRMARC: descripción de marca para el PDF; campo de "fantasía", no tiene columna propia en PREPARAC.
         public static string _PPAMARC = ""; // 15
         public static string _PRMARC = ""; // Campo de fantasía, solo para mostrar en el pdf
+        // --- Porcentajes adicionales, fechas y unidades de entrega ---
+        // _PPAPOR1, _PPAPOR2: porcentajes adicionales de ajuste.
+        // _PPACONT: contador de ítems. _PPAFAPL: fecha de aplicación de precio. _PPAFORI: fecha de origen.
+        // _PPAUNID: unidades (por defecto 1). _PPADEPO: depósito de origen. _PPADIRE: código de dirección.
+        // _PPACPAG: condición de pago del cliente (Module.US_CLCPAG).
         public static decimal _PPAPOR1 = 0;
         public static decimal _PPAPOR2 = 0;
         public static decimal _PPACONT = 0;
@@ -72,11 +132,32 @@ namespace DistribuidoraPalomarNet
         public static decimal _PPADIRE = 0;
         public static decimal _PPACPAG = 0;
 
-        // Variable where articulo para preparac
+        // --- Variables de control de operación ---
+        // WHERE_PREPARAC: cláusula WHERE dinámica construida externamente antes de llamar a BuscarArticuloParaPreparacAsync.
+        //                 Ejemplo: " WHERE A.ARCODI='123' AND A.ARFLIA=5 AND A.ARPROV=2"
+        // CANT_PREPARAC:  cantidad a insertar/actualizar; también se asigna externamente antes de la operación.
         public static string WHERE_PREPARAC = "";
         public static decimal CANT_PREPARAC = 0;
         #endregion
 
+        /// <summary>
+        /// Procesa las filas del <c>DataSet</c> recibido y graba o actualiza el artículo en la tabla
+        /// <c>PREPARAC</c> de la base local, según la acción indicada.
+        /// </summary>
+        /// <remarks>
+        /// Flujo interno:
+        /// <list type="number">
+        /// <item>Extrae el precio de costo sin IVA desde <c>Module.precio_costo_sin_iva</c>.</item>
+        /// <item>Parsea los campos de precio del DataSet (formato 'Currency' de Access: <c>"$1.234"</c>)
+        /// eliminando <c>$</c> y <c>.</c> (separador de miles) antes de convertir a decimal.</item>
+        /// <item>Consulta el IVA de la familia del artículo (<see cref="TraerFAMIVAAsync"/>);
+        /// si retorna 0 asume 21% estándar.</item>
+        /// <item>Construye y ejecuta INSERT (nuevo artículo) o UPDATE (artículo ya existente) sobre PREPARAC.</item>
+        /// <item>Refresca el carrito llamando a <c>Module.funcion_inicial_carrito()</c>.</item>
+        /// </list>
+        /// </remarks>
+        /// <param name="DTS">DataSet con una tabla que contiene los campos del artículo seleccionado.</param>
+        /// <param name="Accion">"INSERT" para nuevo artículo; cualquier otro valor ejecuta UPDATE.</param>
         public static async Task GrabarArticuloaPreparacAsync(DataSet DTS, string Accion)
         {
             string strQuery = "";
@@ -85,6 +166,7 @@ namespace DistribuidoraPalomarNet
                 foreach (DataRow fila in DTS.Tables[0].Rows)
                 {
                     string Codi = $"{fila["PRIMERA"].ToString().Trim()} - {fila["TERCERA"].ToString().Trim()}";
+                    // Precio de costo sin IVA: viene de Module.precio_costo_sin_iva (calculado en AccionGrilla/Calculadora)
                     decimal Precio = Math.Round(Module.precio_costo_sin_iva, 2, MidpointRounding.ToEven);
                     _PPAPRECCOSTO = Math.Round(Module.precio_costo_sin_iva, 2, MidpointRounding.ToEven);
 
@@ -95,6 +177,7 @@ namespace DistribuidoraPalomarNet
 
                         if (Cant != "0")
                         {
+                            // Calcular subtotal base: precio_costo × cantidad
                             if (decimal.TryParse(Cant, out decimal cantidadDecimal))
                             {
                                 SUBT = Math.Round(Precio * cantidadDecimal, 2, MidpointRounding.ToEven);
@@ -143,18 +226,21 @@ namespace DistribuidoraPalomarNet
                             _PPACOD2 = !string.IsNullOrEmpty(fila["SEGUNDA"].ToString()) ? fila["SEGUNDA"].ToString() : "";
                             _PPACOD3 = !string.IsNullOrEmpty(fila["TERCERA"].ToString()) ? fila["TERCERA"].ToString() : "";
                             _PPACOD4 = !string.IsNullOrEmpty(fila["CUARTA"].ToString()) ? fila["CUARTA"].ToString() : "";
+                            // Datos del cliente tomados de las variables globales de Module (cargadas en ValidarCodiCliente)
                             _PPARAZO = Module.US_CLRAZO;
                             _PPASITI = Module.US_CLCIVA;
                             _PPAVEND = Module.US_CLVEND;
 
                             string SelectFAMIVA = $"SELECT familias.FAIVA FROM familias INNER JOIN PREPARAC ON familias.FACODI = PREPARAC.PPAFLIA WHERE PREPARAC.PPACODI='{_PPACODI}'";
+                            // IVA de la familia: si no está configurado en FAMILIAS se asume 21% (alícuota general Argentina)
                             _PPAFIVA = await TraerFAMIVAAsync(SelectFAMIVA);
                             if (_PPAFIVA == 0) _PPAFIVA = 21;
 
                             _SUBTSIVA = Math.Round(Module.precio_costo_sin_iva * cantidadDecimal, 2, MidpointRounding.ToEven);
                             _PPACPAG = Module.US_CLCPAG;
-                            _PPANUME = 0;
+                            _PPANUME = 0; // Se asigna el número real de pedido luego en ProcesoWS → TraerNPedido()
 
+                            // Construir la sentencia SQL según si el artículo es nuevo en el carrito o ya existe
                             if (Accion == "INSERT")
                             {
                                 strQuery = $"INSERT INTO PREPARAC(" +
@@ -191,6 +277,7 @@ namespace DistribuidoraPalomarNet
                     }
                 }
 
+                // Eliminar el espacio posterior al símbolo $ que puede quedar de Format('Currency') antes de ejecutar
                 if (!string.IsNullOrEmpty(strQuery))
                 {
                     EjecutarQueryBDUsu(strQuery.Replace("$ ", ""));
@@ -204,6 +291,12 @@ namespace DistribuidoraPalomarNet
                 throw new Exception($", dentro de 'GrabarArticuloaPreparac': {ex.Message}");
             }
         }
+        /// <summary>
+        /// Ejecutor genérico de sentencias SQL sobre la base local del usuario (<c>Module.cnnU</c>).
+        /// Abre la conexión, ejecuta el query y la cierra. No retorna resultados.
+        /// </summary>
+        /// <param name="query">Sentencia SQL a ejecutar (INSERT, UPDATE, DELETE).</param>
+        /// <exception cref="Exception">Relanza con prefijo <c>'EjecutarQueryBDUsu'</c> ante cualquier error.</exception>
         public static void EjecutarQueryBDUsu(string query)
         {
             using (var accesscm = new OleDbCommand())
@@ -230,6 +323,21 @@ namespace DistribuidoraPalomarNet
                 }
             }
         }
+        /// <summary>
+        /// Busca el artículo especificado en la base del distribuidor y llama a
+        /// <see cref="GrabarArticuloaPreparacAsync"/> para grabarlo en PREPARAC.
+        /// </summary>
+        /// <remarks>
+        /// <b>Prerrequisitos:</b> antes de llamar a este método se deben asignar externamente:
+        /// <list type="bullet">
+        /// <item><c>WHERE_PREPARAC</c>: cláusula WHERE del artículo a buscar (ej: <c>" WHERE A.ARCODI='X'..."</c>).</item>
+        /// <item><c>CANT_PREPARAC</c>: cantidad a insertar/actualizar.</item>
+        /// </list>
+        /// La consulta une las tablas <c>LISTAS</c>, <c>FAMILIAS</c> y <c>proveedo</c> de la base del distribuidor
+        /// y usa <c>SELECT TOP 1</c> para obtener el primer artículo coincidente con el filtro.
+        /// Los precios se calculan inline con la función <c>Format(..., 'Currency')</c> de Access.
+        /// </remarks>
+        /// <param name="accion">Se pasa a <see cref="GrabarArticuloaPreparacAsync"/>: "INSERT" o "UPDATE".</param>
         public static async Task BuscarArticuloParaPreparacAsync(string accion)
         {
             using var da = new OleDbDataAdapter();
@@ -272,6 +380,20 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Orquesta el envío del pedido completo al web service WSPalomar.
+        /// </summary>
+        /// <remarks>
+        /// Flujo:
+        /// <list type="number">
+        /// <item>Llama a <c>wsPreparac.TraerNPedido()</c> para obtener el próximo número de pedido.</item>
+        /// <item>Si el número es válido (&gt; 0), actualiza <c>PPANUME</c> en todos los registros PREPARAC.</item>
+        /// <item>Llama a <see cref="InsertWSPreparac"/> para enviar cada ítem al WS.</item>
+        /// <item>Informa el resultado mediante <c>MessageBox</c>.</item>
+        /// </list>
+        /// <b>Nota:</b> originalmente era async; las llamadas async están comentadas y reemplazadas
+        /// por versiones síncronas.
+        /// </remarks>
         public static void ProcesoWS()//async Task ProcesoWSAsync()
         {
             try
@@ -303,6 +425,21 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Lee todos los registros de la tabla <c>PREPARAC</c> y los envía uno a uno
+        /// al web service WSPalomar mediante <c>wsPreparac.InsertPreparac()</c>.
+        /// </summary>
+        /// <remarks>
+        /// Valores fijos que el WS requiere y no están en PREPARAC:
+        /// <list type="bullet">
+        /// <item><c>_PPACATA = "6"</c>: código del catálogo (hardcoded).</item>
+        /// <item><c>_PPAESTADO = "1"</c>: estado inicial del pedido (hardcoded).</item>
+        /// <item><c>_PPAHORA</c>: hora de envío generada en tiempo real.</item>
+        /// </list>
+        /// <b>Advertencia:</b> el bloque <c>catch</c> tiene un <c>return resultado</c> antes del <c>throw</c>,
+        /// lo que hace que la excepción sea inalcanzable. El código retorna 0 ante cualquier error.
+        /// </remarks>
+        /// <returns>Resultado de la última llamada al WS: 1 = éxito, 0 = error o sin registros.</returns>
         public static int InsertWSPreparac()// async Task<int> InsertWSPreparacAsync()
         {
             int resultado = 0;
@@ -400,6 +537,21 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Actualiza la cantidad de un ítem del carrito y recalcula automáticamente
+        /// el precio total con IVA (<c>PPACIVA</c>) y el subtotal sin IVA (<c>SUBTSIVA</c>).
+        /// </summary>
+        /// <remarks>
+        /// Flujo:
+        /// <list type="number">
+        /// <item>Llama a <see cref="TraerExtrasPreparac"/> para cargar el precio unitario y costo del ítem en los campos estáticos.</item>
+        /// <item>Construye un UPDATE usando la función <c>Format(..., 'Currency')</c> de Access para calcular
+        /// los nuevos valores de <c>PPACIVA</c> y <c>SUBTSIVA</c> directamente en SQL.</item>
+        /// <item>Refresca el carrito llamando a <c>Module.funcion_inicial_carrito()</c>.</item>
+        /// </list>
+        /// </remarks>
+        /// <param name="_item">Autonúmero del registro a modificar (columna <c>PPAAUTN</c>).</param>
+        /// <param name="_cant">Nueva cantidad como cadena (se embebe directamente en el SQL).</param>
         public static void Update_item(long _item, string _cant)
         {
             using (OleDbCommand cmUsu = new OleDbCommand())
@@ -410,6 +562,7 @@ namespace DistribuidoraPalomarNet
                                                 "FROM familias INNER JOIN PREPARAC ON familias.FACODI = PREPARAC.PPAFLIA " +
                                                 "WHERE PREPARAC.PPAAUTN=" + _item.ToString();
 
+                    // Paso 1: obtener precio unitario y costo actuales del ítem para recalcular con la nueva cantidad
                     TraerExtrasPreparac(SelectPreparacExtras); // Asume versión async
 
                     string Query = "UPDATE PREPARAC SET PPACANT='" + _cant.ToString() +
@@ -439,6 +592,16 @@ namespace DistribuidoraPalomarNet
                 }
             }
         }
+        /// <summary>
+        /// Helper privado: ejecuta una consulta SELECT y carga en los campos estáticos
+        /// <c>_FAMIVA</c>, <c>_PPAPRECUNITARIO</c> y <c>_PPAPRECCOSTO</c> del ítem indicado.
+        /// </summary>
+        /// <remarks>
+        /// Se usa como paso previo en <see cref="Update_item"/> para obtener los precios actuales
+        /// antes de recalcular con la nueva cantidad.
+        /// En caso de error o sin resultados, los tres campos se ponen en 0.
+        /// </remarks>
+        /// <param name="querySelect">Sentencia SELECT que retorna FAIVA, PPAPRECUNITARIO y PPAPRECCOSTO.</param>
         private static void TraerExtrasPreparac(string querySelect)
         {
             OleDbCommand cmUsu = new OleDbCommand();
@@ -487,6 +650,18 @@ namespace DistribuidoraPalomarNet
                 drUsu?.Dispose();
             }
         }
+        /// <summary>
+        /// Helper privado async: ejecuta una consulta SELECT y retorna el valor de <c>FAIVA</c>
+        /// de la familia del artículo actualmente en procesamiento.
+        /// </summary>
+        /// <remarks>
+        /// Consulta la tabla <c>FAMILIAS</c> unida a <c>PREPARAC</c> para obtener el IVA
+        /// correspondiente al artículo por su <c>PPACODI</c>.
+        /// Si no hay resultado retorna 0; el llamador (<see cref="GrabarArticuloaPreparacAsync"/>)
+        /// asigna 21% como valor por defecto cuando esto ocurre.
+        /// </remarks>
+        /// <param name="querySelect">Sentencia SELECT que retorna el campo FAIVA.</param>
+        /// <returns>Porcentaje de IVA de la familia, o 0 si no se encuentra.</returns>
         private static async Task<decimal> TraerFAMIVAAsync(string querySelect)
         {
             using (OleDbCommand cmUsu = new OleDbCommand())
@@ -530,6 +705,19 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Verifica si un artículo ya fue agregado al carrito (tabla <c>PREPARAC</c>).
+        /// Como efecto secundario, carga en <see cref="CantExistente"/> la cantidad actual
+        /// del artículo si se lo encuentra.
+        /// </summary>
+        /// <remarks>
+        /// La clave de búsqueda es la combinación <c>PPACOD3 + PPAFLIA + PPAPROV</c>,
+        /// que identifica unívocamente un artículo dentro del pedido.
+        /// </remarks>
+        /// <param name="_PPACOD3">Tercera parte del código del artículo (10 car.).</param>
+        /// <param name="_PPAFLIA">Código de familia del artículo.</param>
+        /// <param name="_PPAPROV">Código de proveedor del artículo.</param>
+        /// <returns><c>true</c> si el artículo ya existe en PREPARAC; <c>false</c> si no o ante error.</returns>
         public static bool ExisteARTICULOPedido(string _PPACOD3, string _PPAFLIA, string _PPAPROV)
         {
             OleDbCommand cmUsu = new OleDbCommand();
@@ -547,6 +735,8 @@ namespace DistribuidoraPalomarNet
                                    " AND PPAPROV=" + _PPAPROV.ToString();
 
                 dr = cmUsu.ExecuteReader();
+                // Efecto secundario: CantExistente queda con la cantidad actual en PREPARAC
+                // para que el llamador pueda sumar o reemplazar según su lógica de negocio
                 CantExistente = 0;
                 if (dr.Read())
                 {
@@ -575,6 +765,11 @@ namespace DistribuidoraPalomarNet
         }
 
 
+        /// <summary>
+        /// Elimina un ítem específico del carrito (tabla <c>PREPARAC</c>) por su autonúmero.
+        /// </summary>
+        /// <param name="item">Autonúmero del registro a eliminar (columna <c>PPAAUTN</c>).</param>
+        /// <returns><c>true</c> si la eliminación fue exitosa; <c>false</c> ante cualquier error.</returns>
         public static bool EliminarItemCarro(int item)
         {
             using (OleDbCommand cm = new OleDbCommand())
@@ -602,6 +797,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        /// <summary>
+        /// Vacía completamente el carrito eliminando <b>todos</b> los registros de la tabla <c>PREPARAC</c>
+        /// en la base local del usuario. Equivalente a "limpiar el pedido".
+        /// </summary>
+        /// <returns><c>true</c> si todos los registros fueron eliminados; <c>false</c> ante cualquier error.</returns>
         public static bool EliminarItemsCarro()
         {
             using (OleDbCommand cm = new OleDbCommand())

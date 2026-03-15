@@ -13,6 +13,8 @@ namespace DistribuidoraPalomarNet
         private static bool _familiasInicializadas = false;
         private Label _lblCargando;
 
+        // Intenta convertir una cadena a decimal aceptando tanto '.' como ',' como separador decimal,
+        // independientemente de la cultura del sistema. Útil para campos editados a mano por el usuario.
         private static bool TryParseDecimalFlexible(string input, out decimal value)
         {
             value = 0m;
@@ -38,6 +40,9 @@ namespace DistribuidoraPalomarNet
             return false;
         }
 
+        // Filtro de teclado reutilizable para TextBox numéricos.
+        // Permite: dígitos, teclas de control (Backspace, Delete) y un único separador decimal ('.' o ',').
+        // Bloquea cualquier otro carácter.
         private static void NumericTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (char.IsControl(e.KeyChar) || char.IsDigit(e.KeyChar))
@@ -59,6 +64,9 @@ namespace DistribuidoraPalomarNet
             e.Handled = true;
         }
 
+        // Al entrar en modo edición en la grilla, aplica el filtro numérico solo a las columnas
+        // que deben contener valores decimales: FADES1 (descuento), Iva y Beneficio.
+        // Se desuscribe primero para evitar suscripciones duplicadas en cada edición.
         private void DataGridView1_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
             if (e.Control is TextBox tb)
@@ -75,6 +83,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Al perder el foco, formatea el valor del TextBox a dos decimales (N2) si es numérico válido.
+        // Normaliza la visualización independientemente de cómo el usuario ingresó el número.
         private void NumericTextBox_Leave(object sender, EventArgs e)
         {
             if (sender is TextBox tb)
@@ -84,6 +94,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Inicializa los controles del formulario, suscribe todos los eventos de botones, checkboxes
+        // y grilla, y aplica el filtro numérico a los campos de entrada (txtbgral, txtiva, txtDescFlia).
         public frmConfFamilia()
         {
             InitializeComponent();
@@ -104,11 +116,16 @@ namespace DistribuidoraPalomarNet
             txtDescFlia.Leave += NumericTextBox_Leave;
         }
 
+        // Evento Load: intencionalmente vacío. La lógica de inicialización se difiere al evento Shown
+        // para que el formulario se renderice antes de ejecutar las consultas a la base de datos.
         private void frmConfFamilia_Load(object sender, EventArgs e)
         {
             // La carga pesada se realiza en el evento Shown para que el formulario se pinte primero
         }
 
+        // Al mostrarse el formulario: ajusta tamaño y posición en pantalla, muestra un indicador de carga
+        // y ejecuta la sincronización de familias (Inicializacion) solo la primera vez que se abre.
+        // Siempre recarga la grilla y la configura al final.
         private void frmConfFamilia_Shown(object sender, EventArgs e)
         {
             Cursor previousCursor = Cursor.Current;
@@ -171,6 +188,9 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Configura la apariencia y comportamiento del DataGridView:
+        // impide agregar/eliminar filas, define selección por fila completa, activa edición al entrar,
+        // y formatea las columnas numéricas (Descuento, Iva, Beneficio) con dos decimales.
         private void ConfigurarGrilla()
         {
             DataGridView1.AutoGenerateColumns = true;
@@ -205,6 +225,9 @@ namespace DistribuidoraPalomarNet
 
         }
 
+        // Habilita o deshabilita los campos de carga general (txtbgral, txtiva, txtDescFlia)
+        // según el estado del CheckBox. Cuando está tildado se puede ingresar un valor único
+        // para aplicar a todas las familias a la vez.
         private void CheckBox1_CheckedChanged(object sender, EventArgs e)
         {
             bool enabled = CheckBox1.Checked;
@@ -216,6 +239,10 @@ namespace DistribuidoraPalomarNet
             txtDescFlia.Enabled = enabled;
         }
 
+        // Graba los descuentos según el modo activo:
+        // - CheckBox1 desmarcado: recorre la grilla fila por fila y actualiza FABEN1, FADES1 y FAIVA por familia.
+        // - CheckBox1 marcado: aplica los valores generales (txtbgral/txtiva/txtDescFlia) a TODAS las familias.
+        // Al finalizar recarga la grilla para reflejar los valores guardados.
         private void btnGrabar_Click(object sender, EventArgs e)
         {
             try
@@ -267,6 +294,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Cierra el formulario. Si hubo cambios guardados (ptbImgSi visible):
+        // 1. Muestra una barra de progreso mientras recalcula.
+        // 2. Aplica los descuentos del cliente (aplicar_desc_Cliente).
+        // 3. Recalcula precios generales y de ofertas (Update_Precios / Update_Precios_Ofertas).
+        // 4. Reaplica el filtro activo en frmPrincipal intentando mantener la fila seleccionada.
         private void btnSalir_Click(object sender, EventArgs e)
         {
             Form frmProgreso = null;
@@ -328,19 +360,42 @@ namespace DistribuidoraPalomarNet
                     lblProgreso.Text = "Actualizando catalogo...";
                     Application.DoEvents();
 
-                    // Solo llamar a Module.funcion_inicial(1) si existe el frmPrincipal
-                    // y tiene datos visibles en la grilla
+                    // Re-aplicar el filtro activo (si hay) o hacer carga completa
                     var fp = Application.OpenForms.OfType<frmPrincipal>().FirstOrDefault();
 
                     if (fp != null && fp.DataGridView1 != null)
                     {
+                        int prevRowIndex = 0;
+                        try
+                        {
+                            prevRowIndex = fp.DataGridView1.CurrentCell?.RowIndex ?? 0;
+                        }
+                        catch
+                        {
+                            prevRowIndex = 0;
+                        }
+
                         bool hayFilasConDatos = fp.DataGridView1.Rows
                             .Cast<DataGridViewRow>()
                             .Any(r => !r.IsNewRow);
 
                         if (hayFilasConDatos)
                         {
-                            Module.funcion_inicial(1);
+                            fp.RefrescarSegunFiltros();
+
+                            try
+                            {
+                                if (fp.DataGridView1.Rows.Count > 0)
+                                {
+                                    int targetRowIndex = Math.Max(0, Math.Min(prevRowIndex, fp.DataGridView1.Rows.Count - 1));
+                                    fp.DataGridView1.CurrentCell = fp.DataGridView1.Rows[targetRowIndex].Cells[0];
+                                    fp.DataGridView1.Rows[targetRowIndex].Selected = true;
+                                    Module.AccionGrilla(fp.DataGridView1);
+                                }
+                            }
+                            catch
+                            {
+                            }
                         }
                     }
 
@@ -367,6 +422,8 @@ namespace DistribuidoraPalomarNet
             this.Close();
         }
 
+        // Reinicia las familias desde cero: borra todos los registros de FAMILIAS en la base de usuario
+        // y los recrea sincronizando desde la base de artículos. Útil si los datos quedaron inconsistentes.
         private void btnRestaurar_Click(object sender, EventArgs e)
         {
             try
@@ -384,7 +441,9 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        // Mantengo este método por si se quiere usar validación por fila, pero el flujo principal sigue el VB
+        // Alternativa no usada en el flujo principal: recorre la grilla y actualiza el beneficio de cada
+        // familia con validación de tipo numérico. Reservada para uso o extensión futura.
+        // (El flujo activo usa btnGrabar_Click con UpdateFamilias directo.)
         private void ActualizarFilasDesdeGrilla()
         {
             if (DataGridView1.RowCount <= 0) return;
@@ -401,6 +460,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Consulta la tabla FAMILIAS de la base de usuario y carga los resultados en el DataGridView.
+        // Columnas: Familia (solo lectura), Descuento Familia (FADES1), Iva (FAIVA), Beneficio (FABEN1).
         private void CargarGrilla()
         {
             OleDbDataAdapter da = null;
@@ -426,6 +487,11 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Sincroniza la tabla FAMILIAS entre la base de artículos (cnn) y la base de usuario (cnnU):
+        // 1. Carga en memoria las familias ya existentes en cnnU.
+        // 2. Recorre las familias de cnn: inserta las que no están en cnnU, actualiza las que cambiaron de descripción.
+        // 3. Elimina de cnnU los registros que ya no existen en cnn (DepurarFamiliasUsuario).
+        // Se ejecuta una sola vez por sesión (_familiasInicializadas).
         private void Inicializacion()
         {
             OleDbCommand cmFamiliasArt = new OleDbCommand();
@@ -511,6 +577,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Verifica si una familia existe en la base de usuario y la inserta si no está.
+        // Se usa como fallback de sincronización por descripción.
         private void ActualizarFAMIVA(string facodi, string fadesc)
         {
             try
@@ -526,6 +594,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Limpia la base de usuario: recorre todos los FACODI en FAMILIAS (cnnU) y elimina
+        // aquellos que ya no existen en la base de artículos (cnn). Previene registros huérfanos.
         private void DepurarFamiliasUsuario()
         {
             OleDbCommand cmdUsu = new OleDbCommand();
@@ -568,6 +638,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Consulta la base de artículos para verificar si un FACODI existe en la tabla FAMILIAS.
+        // Retorna true si existe, false si no o si hay error (seguro para uso en depuración).
         private bool FacodiExisteEnArticulos(string facodi)
         {
             OleDbCommand cmdArt = new OleDbCommand();
@@ -594,6 +666,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Busca una familia en la base de usuario por su descripción (FADESC).
+        // Retorna true si ya existe un registro con ese nombre.
         private bool FamiliaExiste(string Familia)
         {
             OleDbCommand cmFamilias = new OleDbCommand();
@@ -624,6 +698,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Inserta una nueva familia en la base de usuario con todos sus valores numéricos en 0.
+        // Se llama durante la sincronización cuando una familia de artículos no existe en el usuario.
         private void InsertarFamilia(string CodFamilia, string Familia)
         {
             OleDbCommand cmFamilias = new OleDbCommand();
@@ -646,6 +722,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Sobrecarga 1: actualiza solo FABEN1 (beneficio) de una familia identificada por FADESC.
+        // Muestra ptbImgSi (verde) en éxito o ptbImgNo (rojo) en error.
         private void UpdateFamilias(string familia, string ben1)
         {
             OleDbCommand cmUsu = new OleDbCommand();
@@ -675,6 +753,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Sobrecarga 2 (principal): actualiza FABEN1, FADES1 y FAIVA de una familia por FADESC.
+        // Usa parámetros posicionales (Parameters.AddWithValue) para evitar SQL injection y manejar decimales correctamente.
         private void UpdateFamilias(string familia, decimal ben1, decimal fades1, decimal iva)
         {
             using var cmUsu = new OleDbCommand();
@@ -704,6 +784,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Sobrecarga 3: ejecuta un UPDATE con un query string libre sobre FAMILIAS.
+        // Reservada para casos especiales; no se usa en el flujo principal actual.
         private void UpdateFamilias(string stringQuery)
         {
             OleDbCommand cmUsu = new OleDbCommand();
@@ -734,6 +816,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Aplica los valores de los campos generales (txtbgral=beneficio, txtiva=IVA, txtDescFlia=descuento)
+        // a TODAS las familias de la tabla FAMILIAS en la base de usuario.
+        // Si los tres campos tienen valor los actualiza en una sola llamada; si solo algunos tienen valor,
+        // los actualiza de forma independiente. Valida que los valores sean numéricos antes de ejecutar.
         private void CargaGral()
         {
             string UQuery;
@@ -812,6 +898,9 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Construye y ejecuta un UPDATE general sobre FAMILIAS sin cláusula WHERE (afecta todos los registros).
+        // Los tres parámetros son nullable: solo se incluyen en el SET los campos que tengan valor.
+        // Muestra ptbImgSi (verde) en éxito o ptbImgNo (rojo) en error.
         private void UpdateFamiliasGeneral(decimal? ben1, decimal? iva, decimal? desc)
         {
             using var cmUsu = new OleDbCommand();
@@ -860,6 +949,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Elimina TODOS los registros de la tabla FAMILIAS en la base de usuario.
+        // Se usa antes de reinicializar (btnRestaurar) para partir desde un estado limpio.
         private void BorrarFamilias()
         {
             OleDbCommand cmFamilias = new OleDbCommand();
@@ -881,6 +972,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Verifica si un FACODI existe en la tabla FAMILIAS de la base de usuario, buscando por código numérico.
+        // Retorna true si existe, false si no o si hay error.
         private bool IDFamiliaExiste(string idF)
         {
             OleDbCommand cmFamilias = new OleDbCommand();
@@ -912,6 +1005,8 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Actualiza la descripción (FADESC) de una familia en la base de usuario, buscando por su FACODI.
+        // Se usa durante la sincronización cuando la descripción en la base de artículos cambió.
         private void UpdateFamilia(string CodFamilia, string Familia)
         {
             OleDbCommand cmFamilias = new OleDbCommand();

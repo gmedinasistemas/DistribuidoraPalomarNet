@@ -1,3 +1,2 @@
-2026/02/24-13:53:10.827 55cc Reusing MANIFEST C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\Session Storage/MANIFEST-000001
-2026/02/24-13:53:10.828 55cc Recovering log #3
-2026/02/24-13:53:10.832 55cc Reusing old log C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\Session Storage/000003.log 
+2026/03/13-11:48:24.036 6174 Creating DB C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\Session Storage since it was missing.
+2026/03/13-11:48:24.048 6174 Reusing MANIFEST C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\Session Storage/MANIFEST-000001
