@@ -316,25 +316,36 @@ namespace DistribuidoraPalomarNet
             if (ptbImgSi.Visible)
             {
                 Module.aplicar_desc_Cliente(); // Cargo Descuentos 1 y 2
-                Module.Update_Precios();
-                Module.Update_Precios_Ofertas();
 
-                //Module.Update_PrecioSug_Ofertas();
-
-                // Solo llamar a Module.funcion_inicial(1) si existe el frmPrincipal
-                // y tiene datos visibles en la grilla
-                var fp = Application.OpenForms.OfType<frmPrincipal>().FirstOrDefault();
-
-                if (fp != null && fp.DataGridView1 != null)
+                if (!Module.DescuentosConfigurados())
                 {
-                    // Hay al menos una fila real (no la fila nueva vacía)
-                    bool hayFilasConDatos = fp.DataGridView1.Rows
-                        .Cast<DataGridViewRow>()
-                        .Any(r => !r.IsNewRow);
+                    frmPrincipal.Instance?.MostrarNotificacionDescuento();
+                    MessageBox.Show(
+                        "Descuentos no configurados (DESDESC1 = 0).\nPida sus descuentos a la distribuidora.",
+                        "Sin Descuentos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    Module.Update_Precios();
+                    Module.Update_Precios_Ofertas();
 
-                    if (hayFilasConDatos)
+                    //Module.Update_PrecioSug_Ofertas();
+
+                    // Solo llamar a Module.funcion_inicial(1) si existe el frmPrincipal
+                    // y tiene datos visibles en la grilla
+                    var fp = Application.OpenForms.OfType<frmPrincipal>().FirstOrDefault();
+
+                    if (fp != null && fp.DataGridView1 != null)
                     {
-                        fp.RefrescarSegunFiltros();
+                        // Hay al menos una fila real (no la fila nueva vacía)
+                        bool hayFilasConDatos = fp.DataGridView1.Rows
+                            .Cast<DataGridViewRow>()
+                            .Any(r => !r.IsNewRow);
+
+                        if (hayFilasConDatos)
+                        {
+                            fp.RefrescarSegunFiltros();
+                        }
                     }
                 }
             }

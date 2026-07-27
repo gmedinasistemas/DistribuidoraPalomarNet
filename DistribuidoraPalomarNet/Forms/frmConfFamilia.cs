@@ -13,8 +13,14 @@ namespace DistribuidoraPalomarNet
         private static bool _familiasInicializadas = false;
         private Label _lblCargando;
 
+        // Separador de decimales fijo para parseo sin ambigüedad.
+        private static readonly CultureInfo _esAR = CultureInfo.GetCultureInfo("es-AR");
+
         // Intenta convertir una cadena a decimal aceptando tanto '.' como ',' como separador decimal,
-        // independientemente de la cultura del sistema. Útil para campos editados a mano por el usuario.
+        // independientemente de la cultura del sistema.
+        // Usa NumberStyles SIN AllowThousands para evitar que "10.5" sea interpretado como 105
+        // en culturas donde '.' es separador de miles (es-AR, es-ES, etc.), y que "10,5" sea
+        // interpretado como 105 en culturas donde ',' es separador de miles (en-US, etc.).
         private static bool TryParseDecimalFlexible(string input, out decimal value)
         {
             value = 0m;
@@ -23,19 +29,16 @@ namespace DistribuidoraPalomarNet
 
             var s = input.Trim();
 
-            if (decimal.TryParse(s, NumberStyles.Number, CultureInfo.CurrentCulture, out value))
-                return true;
-            if (decimal.TryParse(s, NumberStyles.Number, CultureInfo.InvariantCulture, out value))
-                return true;
+            // Sin AllowThousands: el separador sólo puede ser decimal, nunca de miles.
+            const NumberStyles noThousands =
+                NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite |
+                NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
 
-            var swapped = s.Contains(',')
-                ? s.Replace(",", ".")
-                : s.Replace(".", ",");
+            // 1) InvariantCulture: punto como decimal  → "10.5" → 10,5
+            if (decimal.TryParse(s, noThousands, CultureInfo.InvariantCulture, out value)) return true;
 
-            if (decimal.TryParse(swapped, NumberStyles.Number, CultureInfo.CurrentCulture, out value))
-                return true;
-            if (decimal.TryParse(swapped, NumberStyles.Number, CultureInfo.InvariantCulture, out value))
-                return true;
+            // 2) es-AR: coma como decimal              → "10,5" → 10,5
+            if (decimal.TryParse(s, noThousands, _esAR, out value)) return true;
 
             return false;
         }
@@ -83,6 +86,28 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Al terminar de editar una celda numérica en la grilla, convierte el valor ingresado
+        // (tanto "10.5" como "10,5") al tipo del DataTable (Double desde Access) para que
+        // DataGridView pueda almacenarlo sin errores y lo muestre formateado con N2.
+        private void DataGridView1_CellParsing(object sender, DataGridViewCellParsingEventArgs e)
+        {
+            if (e.ColumnIndex < 0 || e.RowIndex < 0) return;
+            string colName = DataGridView1.Columns[e.ColumnIndex].Name;
+            if (!string.Equals(colName, "FADES1", StringComparison.OrdinalIgnoreCase)
+             && !string.Equals(colName, "Iva", StringComparison.OrdinalIgnoreCase)
+             && !string.Equals(colName, "Beneficio", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            if (e.Value is string raw && TryParseDecimalFlexible(raw, out decimal parsed))
+            {
+                // Convertir al tipo que espera el DataTable (típicamente Double desde Access)
+                Type targetType = e.DesiredType ?? typeof(double);
+                try { e.Value = Convert.ChangeType(parsed, targetType); }
+                catch { e.Value = (double)parsed; }
+                e.ParsingApplied = true;
+            }
+        }
+
         // Al perder el foco, formatea el valor del TextBox a dos decimales (N2) si es numérico válido.
         // Normaliza la visualización independientemente de cómo el usuario ingresó el número.
         private void NumericTextBox_Leave(object sender, EventArgs e)
@@ -108,6 +133,7 @@ namespace DistribuidoraPalomarNet
             btnRestaurar.Click += btnRestaurar_Click;
 
             DataGridView1.EditingControlShowing += DataGridView1_EditingControlShowing;
+            DataGridView1.CellParsing += DataGridView1_CellParsing;
             txtbgral.KeyPress += NumericTextBox_KeyPress;
             txtiva.KeyPress += NumericTextBox_KeyPress;
             txtDescFlia.KeyPress += NumericTextBox_KeyPress;
@@ -285,6 +311,7 @@ namespace DistribuidoraPalomarNet
                 }
 
                 CargarGrilla();
+                ConfigurarGrilla();
                 btnGrabar.Enabled = true;
             }
             catch (Exception ex)
@@ -292,18 +319,20 @@ namespace DistribuidoraPalomarNet
                 btnGrabar.Enabled = true;
                 MessageBox.Show($"Error dentro de 'btnGrabar_Click': {ex.Message}", "Inconveniente durante accion", MessageBoxButtons.OK, MessageBoxIcon.Stop);
             }
+            finally
+            {
+                CheckBox1.Checked = false;
+            }
         }
 
         // Cierra el formulario. Si hubo cambios guardados (ptbImgSi visible):
-        // 1. Muestra una barra de progreso mientras recalcula.
-        // 2. Aplica los descuentos del cliente (aplicar_desc_Cliente).
-        // 3. Recalcula precios generales y de ofertas (Update_Precios / Update_Precios_Ofertas).
+        // 1. Muestra frmProgresoRecalculo (WebView2) con 4 pasos animados.
+        // 2. Valida que DESDESC1 > 0; si no, notifica en webView22 de frmPrincipal y sale.
+        // 3. Recalcula precios generales y de ofertas.
         // 4. Reaplica el filtro activo en frmPrincipal intentando mantener la fila seleccionada.
-        private void btnSalir_Click(object sender, EventArgs e)
+        private async void btnSalir_Click(object sender, EventArgs e)
         {
-            Form frmProgreso = null;
-            Label lblProgreso = null;
-            ProgressBar pbProgreso = null;
+            frmProgresoRecalculo frmProgreso = null;
 
             try
             {
@@ -312,55 +341,46 @@ namespace DistribuidoraPalomarNet
                     Cursor previousCursor = Cursor.Current;
                     Cursor.Current = Cursors.WaitCursor;
 
-                    frmProgreso = new Form();
-                    frmProgreso.StartPosition = FormStartPosition.CenterScreen;
-                    frmProgreso.FormBorderStyle = FormBorderStyle.FixedDialog;
-                    frmProgreso.ControlBox = false;
-                    frmProgreso.MinimizeBox = false;
-                    frmProgreso.MaximizeBox = false;
-                    frmProgreso.ShowInTaskbar = false;
-                    frmProgreso.TopMost = true;
-                    frmProgreso.Width = 520;
-                    frmProgreso.Height = 160;
-                    frmProgreso.Text = "Cerrando configuracion";
-
-                    lblProgreso = new Label();
-                    lblProgreso.AutoSize = false;
-                    lblProgreso.Left = 16;
-                    lblProgreso.Top = 16;
-                    lblProgreso.Width = frmProgreso.ClientSize.Width - 32;
-                    lblProgreso.Height = 50;
-                    lblProgreso.Text = "Aplicando cambios...";
-
-                    pbProgreso = new ProgressBar();
-                    pbProgreso.Left = 16;
-                    pbProgreso.Top = 78;
-                    pbProgreso.Width = frmProgreso.ClientSize.Width - 32;
-                    pbProgreso.Height = 22;
-                    pbProgreso.Style = ProgressBarStyle.Marquee;
-                    pbProgreso.MarqueeAnimationSpeed = 30;
-
-                    frmProgreso.Controls.Add(lblProgreso);
-                    frmProgreso.Controls.Add(pbProgreso);
+                    frmProgreso = new frmProgresoRecalculo();
                     frmProgreso.Show();
-                    Application.DoEvents();
+                    frmProgreso.WaitReady();
 
-                    lblProgreso.Text = "Aplicando descuentos del cliente...";
-                    Application.DoEvents();
-                    Module.aplicar_desc_Cliente(); // Cargo Descuentos 1 y 2
+                    // Paso 0: Aplicar descuentos del cliente
+                    frmProgreso.SetStep(0, "active");
+                    frmProgreso.SetMensaje("Aplicando descuentos del cliente...");
+                    Module.aplicar_desc_Cliente();
+                    frmProgreso.SetStep(0, "done");
 
-                    lblProgreso.Text = "Recalculando precios...";
-                    Application.DoEvents();
+                    if (!Module.DescuentosConfigurados())
+                    {
+                        frmProgreso.SetError("Descuentos no configurados (DESDESC1 = 0)");
+                        System.Threading.Thread.Sleep(1200);
+                        frmProgreso.Close();
+                        frmPrincipal.Instance?.MostrarNotificacionDescuento();
+                        MessageBox.Show(
+                            "Descuentos no configurados (DESDESC1 = 0).\nPida sus descuentos a la distribuidora.",
+                            "Sin Descuentos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        Cursor.Current = previousCursor;
+                        this.Close();
+                        return;
+                    }
+
+                    // Paso 1: Recalcular precios generales
+                    frmProgreso.SetStep(1, "active");
+                    frmProgreso.SetMensaje("Recalculando precios generales...");
                     Module.Update_Precios();
+                    frmProgreso.SetStep(1, "done");
 
-                    lblProgreso.Text = "Recalculando precios de ofertas...";
-                    Application.DoEvents();
+                    // Paso 2: Recalcular precios de ofertas
+                    frmProgreso.SetStep(2, "active");
+                    frmProgreso.SetMensaje("Recalculando precios de ofertas...");
                     Module.Update_Precios_Ofertas();
+                    frmProgreso.SetStep(2, "done");
 
-                    lblProgreso.Text = "Actualizando catalogo...";
-                    Application.DoEvents();
+                    // Paso 3: Actualizar catálogo
+                    frmProgreso.SetStep(3, "active");
+                    frmProgreso.SetMensaje("Actualizando catálogo...");
 
-                    // Re-aplicar el filtro activo (si hay) o hacer carga completa
                     var fp = Application.OpenForms.OfType<frmPrincipal>().FirstOrDefault();
 
                     if (fp != null && fp.DataGridView1 != null)
@@ -390,7 +410,7 @@ namespace DistribuidoraPalomarNet
                                     int targetRowIndex = Math.Max(0, Math.Min(prevRowIndex, fp.DataGridView1.Rows.Count - 1));
                                     fp.DataGridView1.CurrentCell = fp.DataGridView1.Rows[targetRowIndex].Cells[0];
                                     fp.DataGridView1.Rows[targetRowIndex].Selected = true;
-                                    Module.AccionGrilla(fp.DataGridView1);
+                                    await Module.AccionGrilla(fp.DataGridView1);
                                 }
                             }
                             catch
@@ -398,6 +418,11 @@ namespace DistribuidoraPalomarNet
                             }
                         }
                     }
+
+                    frmProgreso.SetStep(3, "done");
+                    frmProgreso.SetFinalizado();
+                    frmProgreso.SetMensaje("¡Proceso completado!");
+                    System.Threading.Thread.Sleep(800);
 
                     Cursor.Current = previousCursor;
                 }
@@ -428,11 +453,35 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
+                // Mensaje de confirmación antes de proceder
+                DialogResult resultado = MessageBox.Show(
+                    "Va a BORRAR y PERDER TODOS los Valores cargados.\n\n" +
+                    "Esta acción actualizará las familias desde la base de datos principal,\n" +
+                    "eliminando todos los descuentos, IVA y beneficios personalizados.\n\n" +
+                    "¿DESEA SEGUIR ADELANTE?",
+                    "⚠️ Confirmar Restauración de Familias",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button2);
+
+                // Si el usuario cancela, salir sin hacer nada
+                if (resultado != DialogResult.Yes)
+                {
+                    return;
+                }
+
                 btnRestaurar.Enabled = false;
                 BorrarFamilias();
                 Inicializacion();
                 CargarGrilla();
                 btnRestaurar.Enabled = true;
+
+                MessageBox.Show(
+                    "Las familias han sido restauradas exitosamente.\n\n" +
+                    "Todos los valores han sido reiniciados desde la base de datos principal.",
+                    "✓ Restauración Completada",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
@@ -732,7 +781,7 @@ namespace DistribuidoraPalomarNet
                 Module.ConectarDBUsuario();
                 cmUsu.Connection = Module.cnnU;
                 cmUsu.CommandType = CommandType.Text;
-                cmUsu.CommandText = "UPDATE FAMILIAS SET FABEN1=" + ben1.ToString() + " WHERE FADESC='" + familia.Replace("'", "''") + "'";
+                cmUsu.CommandText = "UPDATE FAMILIAS SET FABEN1=" + ben1.ToString().Replace(".", ",") + " WHERE FADESC='" + familia.Replace("'", "''") + "'";
                 cmUsu.ExecuteNonQuery();
                 if (Module.cnnU.State == ConnectionState.Open)
                     Module.cnnU.Close();
@@ -764,9 +813,9 @@ namespace DistribuidoraPalomarNet
                 cmUsu.Connection = Module.cnnU;
                 cmUsu.CommandType = CommandType.Text;
                 cmUsu.CommandText = "UPDATE FAMILIAS SET FABEN1 = ?, FADES1 = ?, FAIVA = ? WHERE FADESC = ?";
-                cmUsu.Parameters.AddWithValue("@p1", ben1);
-                cmUsu.Parameters.AddWithValue("@p2", fades1);
-                cmUsu.Parameters.AddWithValue("@p3", iva);
+                cmUsu.Parameters.AddWithValue("@p1", ben1.ToString().Replace(".", ","));
+                cmUsu.Parameters.AddWithValue("@p2", fades1.ToString().Replace(".", ","));
+                cmUsu.Parameters.AddWithValue("@p3", iva.ToString().Replace(".", ","));
                 cmUsu.Parameters.AddWithValue("@p4", familia ?? string.Empty);
                 cmUsu.ExecuteNonQuery();
                 if (Module.cnnU.State == ConnectionState.Open)
@@ -915,17 +964,17 @@ namespace DistribuidoraPalomarNet
                 if (ben1.HasValue)
                 {
                     sets.Add("FABEN1 = ?");
-                    cmUsu.Parameters.AddWithValue("@p_ben", ben1.Value);
+                    cmUsu.Parameters.AddWithValue("@p_ben", ben1.Value.ToString().Replace(".", ","));
                 }
                 if (desc.HasValue)
                 {
                     sets.Add("FADES1 = ?");
-                    cmUsu.Parameters.AddWithValue("@p_desc", desc.Value);
+                    cmUsu.Parameters.AddWithValue("@p_desc", desc.Value.ToString().Replace(".", ","));
                 }
                 if (iva.HasValue)
                 {
                     sets.Add("FAIVA = ?");
-                    cmUsu.Parameters.AddWithValue("@p_iva", iva.Value);
+                    cmUsu.Parameters.AddWithValue("@p_iva", iva.Value.ToString().Replace(".", ","));
                 }
 
                 if (sets.Count == 0)

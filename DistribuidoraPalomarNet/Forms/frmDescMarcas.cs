@@ -131,8 +131,18 @@ namespace DistribuidoraPalomarNet
         {
             if (ptbImgSi.Visible)
             {
-                Module.Update_Precios();
-                Module.Update_Precios_Ofertas();
+                if (!Module.DescuentosConfigurados())
+                {
+                    frmPrincipal.Instance?.MostrarNotificacionDescuento();
+                    MessageBox.Show(
+                        "Descuentos no configurados (DESDESC1 = 0).\nPida sus descuentos a la distribuidora.",
+                        "Sin Descuentos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    Module.Update_Precios();
+                    Module.Update_Precios_Ofertas();
+                }
             }
             this.Close();
         }

@@ -96,7 +96,7 @@ namespace DistribuidoraPalomarNet
         /// Carga en la grilla los artículos marcados como novedades (<c>ARFECASIG &lt;&gt; 0</c>),
         /// es decir, aquellos con una fecha de asignación reciente en la base del distribuidor.
         /// </summary>
-        public static void Funcion_Novedades()
+        public static async Task Funcion_Novedades()
         {
             using var da = new OleDbDataAdapter();
             try
@@ -108,14 +108,15 @@ namespace DistribuidoraPalomarNet
                 da.SelectCommand = new OleDbCommand(
                     "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
                     "p.PRMARC as Marca," +
+                    "IIF(r.rbdesc IS NOT NULL, r.rbdesc, '') as Montadora," +
                     //"l.lidesc as Linea," +
                     "a.armode as Linea," +
                     " a.arinte as Posición," +
                     //" a.ARMARC as Marca2," + 
                     "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
-                    " from listas as a " +
-                    "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                    " from (listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) " +
+                    "LEFT JOIN rubros AS r ON a.ARRUB2 = r.RBCODI " +
                     "WHERE a.ARFECASIG <> 0 and a.arprim<>'000' order by a.arterc", cnn);
 
                 var ds = new DataSet();
@@ -126,7 +127,7 @@ namespace DistribuidoraPalomarNet
                 {
                     _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
                     _frmPrincipal.DataGridView1.Refresh();
-                    SeleccionarGrilla();
+                    await SeleccionarGrilla();
                 }
 
                 if (cnn.State == ConnectionState.Open)
@@ -252,6 +253,16 @@ namespace DistribuidoraPalomarNet
         public static string ini_ruta_banner;
         public static string ini_ruta_gral;
         public static string ini_apli_ftp;
+
+        // --- Configuración FTP para fotos de artículos ---
+        public static string ini_ftp_fotos_host;
+        public static int ini_ftp_fotos_port = 21;
+        public static string ini_ftp_fotos_user;
+        public static string ini_ftp_fotos_pass;
+        public static string ini_ftp_fotos_folder = "/FOTOCATALOGO";
+
+        // Servicio de caché de fotos FTP (inicializado en LeerConfig)
+        public static FtpPhotoCacheService _fotoService;
 
         public static string _textoBanner;
 
@@ -751,7 +762,7 @@ namespace DistribuidoraPalomarNet
         /// <item>Muestra la fecha de última actualización de la base.</item>
         /// </list>
         /// </remarks>
-        public static void Inicializacion()
+        public static async Task Inicializacion()
         {
             try
             {
@@ -760,11 +771,11 @@ namespace DistribuidoraPalomarNet
                 LeerConfig();
                 Cargar_Usuario();
                 //ActualizarFAMIVA();
-                funcion_inicial(0);
+                await funcion_inicial(0);
                 aplicar_desc_Cliente(); // Cargo Descuentos 1 y 2
                 _frmPrincipal.lblFechaAct.Text = $"Actualizado al {FechaActualizacion()}";
                 Application.DoEvents();
-                SeleccionarGrilla();
+                await SeleccionarGrilla();
             }
             catch (Exception ex)
             {
@@ -786,7 +797,7 @@ namespace DistribuidoraPalomarNet
         /// </list>
         /// </remarks>
         /// <param name="opc">0 = inicialización visual; 1 = carga completa de artículos.</param>
-        public static void funcion_inicial(int opc)
+        public static async Task funcion_inicial(int opc)
         {
             using var da = new OleDbDataAdapter();
             try
@@ -807,6 +818,7 @@ namespace DistribuidoraPalomarNet
                     tablaVacia.Columns.Add("Codigo", typeof(string));
                     tablaVacia.Columns.Add("Descripcion", typeof(string));
                     tablaVacia.Columns.Add("Marca", typeof(string));
+                    tablaVacia.Columns.Add("Montadora", typeof(string));
                     tablaVacia.Columns.Add("Linea", typeof(string));
                     tablaVacia.Columns.Add("Posición", typeof(string));
                     tablaVacia.Columns.Add("Preciopublico", typeof(decimal));
@@ -829,6 +841,7 @@ namespace DistribuidoraPalomarNet
                     da.SelectCommand = new OleDbCommand(
                         "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
                         "p.PRMARC as Marca," +
+                        "IIF(r.rbdesc IS NOT NULL, r.rbdesc, '') as Montadora," +
                         //"a.armarc as Marca," +
                         //"l.lidesc as Linea," +
                         "a.armode as Linea," + 
@@ -836,8 +849,8 @@ namespace DistribuidoraPalomarNet
                         //" a.ARMARC as Marca2," + 
                         "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                         ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
-                        " from listas as a " +
-                        "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                        " from (listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) " +
+                        "LEFT JOIN rubros AS r ON a.ARRUB2 = r.RBCODI " +
                         //" left join lineas as l on a.arcuar=l.licodi= " +
                         "where a.arprim<>'000' order by a.arterc", cnn);
 
@@ -847,7 +860,7 @@ namespace DistribuidoraPalomarNet
                     _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
                     _frmPrincipal.DataGridView1.Refresh();
 
-                    SeleccionarGrilla();
+                    await SeleccionarGrilla();
                 }
                 
                 if (cnn.State == ConnectionState.Open)
@@ -918,52 +931,88 @@ namespace DistribuidoraPalomarNet
         /// </remarks>
         public static void Definir_Grilla()
         {
-            var miEstilo = new DataGridViewCellStyle(_frmPrincipal.DataGridView1.Columns["Preciopublico"].DefaultCellStyle)
+          try
+          {
+            var dgv = _frmPrincipal?.DataGridView1;
+            if (dgv == null) return;
+
+            // Si aún no hay columnas o falta alguna esperada, no reconfigurar (evita excepciones)
+            string[] columnasRequeridas =
+            {
+                "Codigo", "Marca", "Descripcion", "Montadora", "Linea",
+                "Posición", "Preciopublico", "Stock", "aroo", "artt", "arubic1", "arobse"
+            };
+            foreach (var nombre in columnasRequeridas)
+            {
+                if (!dgv.Columns.Contains(nombre))
+                    return;
+            }
+
+            var miEstilo = new DataGridViewCellStyle(dgv.Columns["Preciopublico"].DefaultCellStyle)
             {
                 Font = new Font("Arial", 12, FontStyle.Bold)
             };
 
-            var miEstiloStock = new DataGridViewCellStyle(_frmPrincipal.DataGridView1.Columns["Stock"].DefaultCellStyle)
+            var miEstiloStock = new DataGridViewCellStyle(dgv.Columns["Stock"].DefaultCellStyle)
             {
                 Font = new Font("Arial", 2, FontStyle.Regular)
             };
 
-            _frmPrincipal.DataGridView1.Columns["Stock"].DefaultCellStyle = miEstiloStock;
+            dgv.Columns["Stock"].DefaultCellStyle = miEstiloStock;
+            dgv.Columns["Preciopublico"].HeaderCell.Style = miEstilo;
+            dgv.Columns["Preciopublico"].HeaderCell.Style.BackColor = Color.Black;
+            dgv.Columns["Preciopublico"].HeaderCell.Style.ForeColor = Color.White;
+            dgv.Columns["Preciopublico"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dgv.Columns["Preciopublico"].HeaderText = "Precio";
 
-            _frmPrincipal.DataGridView1.Columns["Preciopublico"].HeaderCell.Style = miEstilo;
-            _frmPrincipal.DataGridView1.Columns["Preciopublico"].HeaderCell.Style.BackColor = Color.Black;
-            _frmPrincipal.DataGridView1.Columns["Preciopublico"].HeaderCell.Style.ForeColor = Color.White;
-            _frmPrincipal.DataGridView1.Columns["Preciopublico"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            // Columnas ocultas
+            dgv.Columns["aroo"].Visible    = false;
+            dgv.Columns["artt"].Visible    = false;
+            dgv.Columns["arubic1"].Visible = false;
+            dgv.Columns["arobse"].Visible  = false;
 
-            // Establecer el modo de ajuste de tamaño de las columnas
-            _frmPrincipal.DataGridView1.Columns["Codigo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            _frmPrincipal.DataGridView1.Columns["Marca"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            _frmPrincipal.DataGridView1.Columns["Descripcion"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            _frmPrincipal.DataGridView1.Columns["Linea"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            //_frmPrincipal.DataGridView1.Columns["Modelo"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            _frmPrincipal.DataGridView1.Columns["Posición"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            _frmPrincipal.DataGridView1.Columns["Preciopublico"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            _frmPrincipal.DataGridView1.Columns["aroo"].Visible = false; // Cod familia
-            _frmPrincipal.DataGridView1.Columns["artt"].Visible = false;
-            _frmPrincipal.DataGridView1.Columns["arubic1"].Visible = false;
-            _frmPrincipal.DataGridView1.Columns["arobse"].Visible = false;
-            _frmPrincipal.DataGridView1.Columns["Posición"].Visible = false;
+            // Orden de columnas visibles: Codigo / Marca / Descripcion / Montadora / Linea / Posición / Precio / Stock
+            dgv.Columns["Posición"].Visible  = true;
+            dgv.Columns["Montadora"].Visible = true;
 
-            // Establecer pesos de llenado para cada columna
-            _frmPrincipal.DataGridView1.Columns["Codigo"].FillWeight = 7;
-            _frmPrincipal.DataGridView1.Columns["Marca"].FillWeight = 7;
-            _frmPrincipal.DataGridView1.Columns["Descripcion"].FillWeight = 30;
-            _frmPrincipal.DataGridView1.Columns["Linea"].FillWeight = 30;
-            //_frmPrincipal.DataGridView1.Columns["Modelo"].FillWeight = 30;
-            _frmPrincipal.DataGridView1.Columns["Posición"].FillWeight = 30;
-            _frmPrincipal.DataGridView1.Columns["Preciopublico"].FillWeight = 15;
+            dgv.Columns["Codigo"].DisplayIndex       = 0;
+            dgv.Columns["Marca"].DisplayIndex        = 1;
+            dgv.Columns["Descripcion"].DisplayIndex  = 2;
+            dgv.Columns["Montadora"].DisplayIndex    = 3;
+            dgv.Columns["Linea"].DisplayIndex        = 4;
+            dgv.Columns["Posición"].DisplayIndex     = 5;
+            dgv.Columns["Preciopublico"].DisplayIndex = 6;
+            dgv.Columns["Stock"].DisplayIndex        = 7;
+
+            // Ajuste proporcional de ancho
+            dgv.Columns["Codigo"].AutoSizeMode        = DataGridViewAutoSizeColumnMode.Fill;
+            dgv.Columns["Marca"].AutoSizeMode         = DataGridViewAutoSizeColumnMode.Fill;
+            dgv.Columns["Descripcion"].AutoSizeMode   = DataGridViewAutoSizeColumnMode.Fill;
+            dgv.Columns["Montadora"].AutoSizeMode     = DataGridViewAutoSizeColumnMode.Fill;
+            dgv.Columns["Linea"].AutoSizeMode         = DataGridViewAutoSizeColumnMode.Fill;
+            dgv.Columns["Posición"].AutoSizeMode      = DataGridViewAutoSizeColumnMode.Fill;
+            dgv.Columns["Preciopublico"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+
+            // Pesos proporcionales (total ~100)
+            dgv.Columns["Codigo"].FillWeight        = 7;
+            dgv.Columns["Marca"].FillWeight         = 8;
+            dgv.Columns["Descripcion"].FillWeight   = 28;
+            dgv.Columns["Montadora"].FillWeight     = 12;
+            dgv.Columns["Linea"].FillWeight         = 12;
+            dgv.Columns["Posición"].FillWeight      = 8;
+            dgv.Columns["Preciopublico"].FillWeight = 15;
+          }
+          catch (Exception ex)
+          {
+            GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Definir_Grilla': {ex.Message}");
+          }
         }
 
         /// <summary>
         /// Actualiza el contador de artículos en el label y selecciona el primer registro de la grilla,
         /// disparando así el pipeline de cálculo de precios vía <see cref="AccionGrilla"/>.
         /// </summary>
-        public static void SeleccionarGrilla()
+        public static async Task SeleccionarGrilla()
         {
             try
             {
@@ -971,7 +1020,7 @@ namespace DistribuidoraPalomarNet
                 {
                     _frmPrincipal.lblTotalRegistros.Text = $"ARTÍCULO: {_frmPrincipal.DataGridView1.RowCount}";
                     _frmPrincipal.DataGridView1.CurrentCell = _frmPrincipal.DataGridView1.Rows[0].Cells[0];
-                    AccionGrilla(_frmPrincipal.DataGridView1);
+                    await AccionGrilla(_frmPrincipal.DataGridView1);
                 }
             }
             catch (Exception ex)
@@ -996,14 +1045,34 @@ namespace DistribuidoraPalomarNet
         /// </list>
         /// </remarks>
         /// <param name="dataGrid">DataGridView que disparó el evento de selección.</param>
-        public static void AccionGrilla(DataGridView dataGrid)
+        public static async Task AccionGrilla(DataGridView dataGrid)
         {
             try
             {
-                Cargar_Imagen();
+                // Bloquear visualización de precios si el cliente no tiene descuentos configurados
+                if (!DescuentosConfigurados())
+                {
+                    _frmPrincipal.txtPreciolista.Text      = string.Empty;
+                    _frmPrincipal.txtDescuento1.Text       = string.Empty;
+                    _frmPrincipal.txtDescuento2.Text       = string.Empty;
+                    _frmPrincipal.txtPreciopublico.Text    = string.Empty;
+                    _frmPrincipal.txtDescuentoFamilia.Text = string.Empty;
+                    _frmPrincipal.txtIvaFlia.Text          = string.Empty;
+                    _frmPrincipal.MostrarNotificacionDescuento();
+                    return;
+                }
+
+                _frmPrincipal.OcultarNotificacionDescuento();
+                // Cargar imagen en el hilo de UI (Cargar_Imagen toca controles).
+                // La descarga FTP se offloadea internamente con su propio Task.Run,
+                // por lo que la UI no se bloquea mientras se descarga.
+                _ = Cargar_Imagen();
                 // Por ahora comento las equivalencias
                 if(dataGrid.Name== "DataGridView1") ValidarEquivalencias();
                 
+                if (dataGrid.CurrentCell == null)
+                    return;
+
                 int numFila = dataGrid.CurrentCell.RowIndex;
                 if (dataGrid.Name == "DataGridView1") TraerDatosExtras(numFila);
                 ColorearStock();
@@ -1105,27 +1174,298 @@ namespace DistribuidoraPalomarNet
 
         /// <summary>
         /// Carga la imagen del artículo actualmente seleccionado en el PictureBox de la UI.
-        /// Busca el archivo en la carpeta <c>FOTOS</c> con el nombre del código del artículo.
+        /// Primero intenta cargar desde la carpeta local FOTOS.
+        /// Si no existe localmente y el servicio FTP está configurado, descarga desde FTP con caché.
         /// Si no existe la imagen del artículo, muestra la imagen por defecto <c>SINFOTO.png</c>.
         /// </summary>
-        public static void Cargar_Imagen()
+        public static async Task Cargar_Imagen()
         {
             try
             {
                 int numFila = _frmPrincipal.DataGridView1.CurrentCellAddress.Y;
-                string imagePath = Path.Combine("C:", "DistribuidoraPalomarNet", "DistribuidoraPalomarNet", "imagenes", "FOTOS",
-                    $"{_frmPrincipal.DataGridView1["Codigo", numFila].Value}.jpg");
+                if (numFila < 0)
+                {
+                    MostrarImagenPorDefecto();
+                    return;
+                }
 
-                string defaultImagePath = Path.Combine("C:", "DistribuidoraPalomarNet", "DistribuidoraPalomarNet", "imagenes", "SINFOTO.png");
+                string codigoArticulo = _frmPrincipal.DataGridView1["Codigo", numFila].Value?.ToString();
+                
+                if (string.IsNullOrWhiteSpace(codigoArticulo))
+                {
+                    MostrarImagenPorDefecto();
+                    return;
+                }
 
-                _frmPrincipal.ptbImagen.Image = File.Exists(imagePath)
-                    ? Image.FromFile(imagePath)
-                    : Image.FromFile(defaultImagePath);
+                string basePath = ObtenerCarpetaFotosBase();
+                
+                // 1. Intentar cargar desde carpeta local primero (más rápido) - probar .jpg y .png
+                string[] extensionesLocales = { ".jpg", ".png" };
+                foreach (var ext in extensionesLocales)
+                {
+                    string localImagePath = Path.Combine(basePath, $"{codigoArticulo}{ext}");
+                    if (File.Exists(localImagePath))
+                    {
+                        using (var fs = new FileStream(localImagePath, FileMode.Open, FileAccess.Read))
+                        {
+                            _frmPrincipal.ptbImagen.Image = Image.FromStream(fs);
+                        }
+                        return;
+                    }
+                }
+
+                // 2. Si no existe localmente y el servicio FTP está configurado, intentar descargar
+                // El servicio ya busca automáticamente en .jpg y .png
+                if (_fotoService != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Cargar_Imagen] Solicitando foto FTP para: {codigoArticulo}");
+                    string rutaFotoCache = await Task.Run(async () => await _fotoService.ObtenerRutaLocalFotoAsync(codigoArticulo));
+                    System.Diagnostics.Debug.WriteLine($"[Cargar_Imagen] Resultado FTP: {(rutaFotoCache ?? "null")}");
+
+                    if (rutaFotoCache != null && File.Exists(rutaFotoCache))
+                    {
+                        string rutaFotoBase = null;
+                        try
+                        {
+                            Directory.CreateDirectory(basePath);
+                            rutaFotoBase = Path.Combine(basePath, Path.GetFileName(rutaFotoCache));
+                            bool debeCopiar = true;
+                            if (File.Exists(rutaFotoBase))
+                            {
+                                DateTime baseWrite = File.GetLastWriteTime(rutaFotoBase);
+                                DateTime cacheWrite = File.GetLastWriteTime(rutaFotoCache);
+                                debeCopiar = cacheWrite > baseWrite;
+                            }
+
+                            if (debeCopiar)
+                                File.Copy(rutaFotoCache, rutaFotoBase, overwrite: true);
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[Cargar_Imagen] No se pudo copiar foto desde caché a base: {ex.GetType().Name}: {ex.Message}");
+                            rutaFotoBase = null;
+                        }
+
+                        string rutaParaMostrar = (rutaFotoBase != null && File.Exists(rutaFotoBase))
+                            ? rutaFotoBase
+                            : rutaFotoCache;
+
+                        using (var fs = new FileStream(rutaParaMostrar, FileMode.Open, FileAccess.Read))
+                        {
+                            _frmPrincipal.ptbImagen.Image = Image.FromStream(fs);
+                        }
+                        return;
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("[Cargar_Imagen] _fotoService es null, no se intentará FTP");
+                }
+
+                // 3. Si no se encontró la imagen, mostrar imagen por defecto
+                MostrarImagenPorDefecto();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                string defaultImagePath = Path.Combine("C:", "DistribuidoraPalomarNet", "DistribuidoraPalomarNet", "imagenes", "SINFOTO.png");
-                _frmPrincipal.ptbImagen.Image = Image.FromFile(defaultImagePath);
+                System.Diagnostics.Debug.WriteLine($"[Cargar_Imagen] Error: {ex.Message}");
+                MostrarImagenPorDefecto();
+            }
+        }
+
+        /// <summary>
+        /// Muestra la imagen por defecto SINFOTO.png en el PictureBox.
+        /// </summary>
+        private static void MostrarImagenPorDefecto()
+        {
+            try
+            {
+                string defaultImagePath = ObtenerRutaImagenPorDefecto();
+                if (File.Exists(defaultImagePath))
+                {
+                    using (var fs = new FileStream(defaultImagePath, FileMode.Open, FileAccess.Read))
+                    {
+                        _frmPrincipal.ptbImagen.Image = Image.FromStream(fs);
+                    }
+                }
+                else
+                {
+                    _frmPrincipal.ptbImagen.Image = null;
+                }
+            }
+            catch
+            {
+                _frmPrincipal.ptbImagen.Image = null;
+            }
+        }
+
+        private static string ObtenerCarpetaImagenes()
+        {
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            try
+            {
+                var dir = new DirectoryInfo(baseDir);
+                while (dir != null)
+                {
+                    string candidata = Path.Combine(dir.FullName, "imagenes");
+                    if (Directory.Exists(candidata))
+                        return candidata;
+
+                    dir = dir.Parent;
+                }
+            }
+            catch
+            {
+            }
+
+            return Path.Combine(baseDir, "imagenes");
+        }
+
+        private static string ObtenerCarpetaFotosBase()
+        {
+            return Path.Combine(ObtenerCarpetaImagenes(), "FOTOS");
+        }
+
+        public static string ObtenerCarpetaFotosBasePublica()
+        {
+            return ObtenerCarpetaFotosBase();
+        }
+
+        private static string ObtenerRutaImagenPorDefecto()
+        {
+            return Path.Combine(ObtenerCarpetaImagenes(), "SINFOTO.png");
+        }
+
+        public static string ObtenerRutaImagenPorDefectoPublica()
+        {
+            return ObtenerRutaImagenPorDefecto();
+        }
+
+        /// <summary>
+        /// Método de prueba para cargar la foto de un artículo específico.
+        /// Simula la carga de foto sin necesidad de seleccionar en el DataGridView.
+        /// </summary>
+        /// <param name="codigoArticulo">Código del artículo a buscar (ej: RE4214)</param>
+        public static async void TestCargarFotoArticulo(string codigoArticulo)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"========================================");
+                System.Diagnostics.Debug.WriteLine($"[TEST] Iniciando prueba para artículo: {codigoArticulo}");
+                System.Diagnostics.Debug.WriteLine($"========================================");
+
+                if (string.IsNullOrWhiteSpace(codigoArticulo))
+                {
+                    System.Diagnostics.Debug.WriteLine($"[TEST] ERROR: Código de artículo vacío");
+                    MessageBox.Show("Código de artículo vacío", "Error de Test", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                // 1. Verificar si el servicio FTP está inicializado
+                if (_fotoService == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[TEST] ADVERTENCIA: Servicio FTP no inicializado");
+                    MessageBox.Show("Servicio FTP no inicializado.\nVerifica Config.ini", "Advertencia", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[TEST] ✓ Servicio FTP inicializado correctamente");
+                }
+
+                // 2. Intentar cargar desde carpeta local primero - buscar .jpg y .png
+                string basePath = ObtenerCarpetaFotosBase();
+                string[] extensiones = { ".jpg", ".png" };
+                
+                foreach (var ext in extensiones)
+                {
+                    string localImagePath = Path.Combine(basePath, $"{codigoArticulo}{ext}");
+                    System.Diagnostics.Debug.WriteLine($"[TEST] Buscando en carpeta local: {localImagePath}");
+                    
+                    if (File.Exists(localImagePath))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[TEST] ✓ Foto encontrada en carpeta local ({ext})");
+                        using (var fs = new FileStream(localImagePath, FileMode.Open, FileAccess.Read))
+                        {
+                            _frmPrincipal.ptbImagen.Image = Image.FromStream(fs);
+                        }
+                        MessageBox.Show(
+                            $"Foto cargada desde carpeta local:\n{localImagePath}",
+                            "Test Exitoso - Local",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                        return;
+                    }
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"[TEST] ✗ Foto NO encontrada en carpeta local (.jpg ni .png)");
+
+                // 3. Si no existe localmente y el servicio FTP está configurado, intentar descargar
+                if (_fotoService != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[TEST] Intentando descargar desde FTP...");
+                    System.Diagnostics.Debug.WriteLine($"[TEST] Host: {ini_ftp_fotos_host}");
+                    System.Diagnostics.Debug.WriteLine($"[TEST] Puerto: {ini_ftp_fotos_port}");
+                    System.Diagnostics.Debug.WriteLine($"[TEST] Usuario: {ini_ftp_fotos_user}");
+                    System.Diagnostics.Debug.WriteLine($"[TEST] Carpeta remota: {ini_ftp_fotos_folder}");
+                    System.Diagnostics.Debug.WriteLine($"[TEST] Buscando extensiones: .jpg y .png");
+
+                    string rutaFotoCache = await _fotoService.ObtenerRutaLocalFotoAsync(codigoArticulo);
+
+                    if (rutaFotoCache != null && File.Exists(rutaFotoCache))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[TEST] ✓ Foto descargada/encontrada en caché: {rutaFotoCache}");
+                        using (var fs = new FileStream(rutaFotoCache, FileMode.Open, FileAccess.Read))
+                        {
+                            _frmPrincipal.ptbImagen.Image = Image.FromStream(fs);
+                        }
+
+                        // Verificar estadísticas de caché
+                        int cantidadCache = _fotoService.ObtenerCantidadFotosEnCache();
+                        long tamanoCache = _fotoService.ObtenerTamanoCache();
+                        string tamanoMB = (tamanoCache / 1024.0 / 1024.0).ToString("F2");
+
+                        MessageBox.Show(
+                            $"Foto descargada desde FTP y almacenada en caché:\n{rutaFotoCache}\n\n" +
+                            $"Estadísticas de caché:\n" +
+                            $"- Fotos en caché: {cantidadCache}\n" +
+                            $"- Tamaño total: {tamanoMB} MB",
+                            "Test Exitoso - FTP",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                        return;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[TEST] ✗ Foto NO encontrada en FTP");
+                    }
+                }
+
+                // 4. Si no se encontró la imagen, mostrar imagen por defecto
+                System.Diagnostics.Debug.WriteLine($"[TEST] Mostrando imagen por defecto (SINFOTO.png)");
+                MostrarImagenPorDefecto();
+                MessageBox.Show(
+                    $"Foto no encontrada para el artículo: {codigoArticulo}\n\n" +
+                    "Verificaciones realizadas:\n" +
+                    "✗ Carpeta local\n" +
+                    "✗ Servidor FTP\n\n" +
+                    "Mostrando imagen por defecto (SINFOTO.png)",
+                    "Test - Foto No Encontrada",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
+                System.Diagnostics.Debug.WriteLine($"========================================");
+                System.Diagnostics.Debug.WriteLine($"[TEST] Fin de la prueba");
+                System.Diagnostics.Debug.WriteLine($"========================================");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[TEST] ERROR: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[TEST] StackTrace: {ex.StackTrace}");
+                MessageBox.Show(
+                    $"Error durante el test:\n{ex.Message}",
+                    "Error de Test",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                MostrarImagenPorDefecto();
             }
         }
 
@@ -1743,7 +2083,7 @@ namespace DistribuidoraPalomarNet
         //            }
         //            if (_frmPrincipal.DataGridView1.RowCount > 0)
         //            {
-        //                SeleccionarGrilla();
+        //                await SeleccionarGrilla();
         //            }
         //        }
         //    }
@@ -1766,7 +2106,7 @@ namespace DistribuidoraPalomarNet
         /// Filtros disponibles (se combinan con AND):
         /// <list type="bullet">
         /// <item><c>txtDescripcion</c>: búsqueda multipalabra sobre <c>ARDESC</c>.</item>
-        /// <item><c>txtModelo</c>: búsqueda multipalabra sobre <c>AROBSE</c>.</item>
+        /// <item><c>txtModelo</c>: búsqueda multipalabra sobre <c>ARUBIC1</c>.</item>
         /// <item><c>cmbArmadora</c>: filtro por RUBROS (JOIN con LISTAS.ARRUB2).</item>
         /// <item><c>cmbMarcas</c>: filtro por proveedor (<c>ARPROV = prcodi</c>).</item>
         /// <item><c>cmbRubros</c>: filtro por modelo/línea (<c>ARMODE = rubro</c>).</item>
@@ -1774,7 +2114,7 @@ namespace DistribuidoraPalomarNet
         /// La condición multipalabra es generada por <see cref="GenerarCondicionMultipalabra"/>.
         /// Límite de resultados: 10 000 filas. Límite de longitud de query: 4 000 caracteres.
         /// </remarks>
-        public static void consultas_Relacionales()
+        public static async Task consultas_Relacionales()
         {
             // Declarar variables necesarias
             string campo = string.Empty;
@@ -1790,13 +2130,14 @@ namespace DistribuidoraPalomarNet
             string QueryFinal = string.Empty;
             string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
                     "p.PRMARC as Marca," +
+                    "IIF(r.rbdesc IS NOT NULL, r.rbdesc, '') as Montadora," +
                     //"l.lidesc as Linea," +
                     "a.armode as Linea," +
                     " a.arinte as Posición," +
                     //" a.ARMARC as Marca2," + 
                     "a.arpre2 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
-                    " from (listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) ";
+                    " from ((listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) LEFT JOIN rubros AS r ON a.ARRUB2 = r.RBCODI) ";
 
             string WhereQuery = string.Empty;
             try
@@ -1825,7 +2166,7 @@ namespace DistribuidoraPalomarNet
                 if (!string.IsNullOrEmpty(condDesc))
                     conditions.Add(condDesc);
 
-                string condModelo = GenerarCondicionMultipalabra("a.AROBSE", _frmPrincipal.txtModelo.Text);
+                string condModelo = GenerarCondicionMultipalabra("a.ARUBIC1", _frmPrincipal.txtModelo.Text);
                 if (!string.IsNullOrEmpty(condModelo))
                     conditions.Add(condModelo);
 
@@ -1836,9 +2177,9 @@ namespace DistribuidoraPalomarNet
                     conditions.Add($"a.arprov = {marcaProvCodi}");
 
                 if (!string.IsNullOrEmpty(rubrosSel))
-                    conditions.Add($"a.armode = '{rubrosSel}'");
+                    conditions.Add($"a.ardesc LIKE '%{rubrosSel}%'");
 
-                string joinRubros = needsRubrosJoin ? " INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI " : string.Empty;
+                string joinRubros = string.Empty;
                 WhereQuery = joinRubros + " where " + string.Join(" AND ", conditions);
 
                 QueryFinal = SelectQuery + WhereQuery + " order by a.arterc";
@@ -1859,10 +2200,11 @@ namespace DistribuidoraPalomarNet
                             throw new InvalidOperationException("Demasiados resultados. Refine la búsqueda");
 
                         _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
+                        Definir_Grilla();
 
                         if (_frmPrincipal.DataGridView1.RowCount > 0)
                         {
-                            SeleccionarGrilla();
+                            await SeleccionarGrilla();
                         }
                     }
                     else
@@ -1916,7 +2258,7 @@ namespace DistribuidoraPalomarNet
         /// Aplica los mismos filtros combinados que <see cref="consultas_Relacionales"/>.
         /// La condición adicional <c>a.ARTT &lt;&gt; 0</c> garantiza que solo se muestren artículos con precio de oferta.
         /// </remarks>
-        public static void consultas_Ofertas()
+        public static async Task consultas_Ofertas()
         {
             using var da = new OleDbDataAdapter();
             string QueryRel = string.Empty;
@@ -1926,13 +2268,14 @@ namespace DistribuidoraPalomarNet
                 string QueryFinal = string.Empty;
                 string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
                     "p.PRMARC as Marca," +
+                    "IIF(r.rbdesc IS NOT NULL, r.rbdesc, '') as Montadora," +
                     //"l.lidesc as Linea," +
                     "a.armode as Linea," +
                     " a.arinte as Posición," +
                     //" a.ARMARC as Marca2," + 
                     "a.arpre5 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
-                    " from (listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) ";
+                    " from ((listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) LEFT JOIN rubros AS r ON a.ARRUB2 = r.RBCODI) ";
 
                 string WhereQuery = string.Empty;
 
@@ -1954,7 +2297,7 @@ namespace DistribuidoraPalomarNet
                 if (!string.IsNullOrEmpty(condDesc))
                     conditions.Add(condDesc);
 
-                string condModelo = GenerarCondicionMultipalabra("a.AROBSE", _frmPrincipal.txtModelo.Text);
+                string condModelo = GenerarCondicionMultipalabra("a.ARUBIC1", _frmPrincipal.txtModelo.Text);
                 if (!string.IsNullOrEmpty(condModelo))
                     conditions.Add(condModelo);
 
@@ -1965,9 +2308,9 @@ namespace DistribuidoraPalomarNet
                     conditions.Add($"a.arprov = {marcaProvCodi}");
 
                 if (!string.IsNullOrEmpty(rubrosSel))
-                    conditions.Add($"a.armode = '{rubrosSel}'");
+                    conditions.Add($"a.ardesc LIKE '%{rubrosSel}%'");
 
-                string joinRubros = needsRubrosJoin ? " INNER JOIN RUBROS AS r ON a.ARRUB2 = r.RBCODI " : string.Empty;
+                string joinRubros = string.Empty;
                 WhereQuery = joinRubros + " WHERE " + string.Join(" AND ", conditions);
 
                 QueryFinal = SelectQuery + WhereQuery + " order by a.arterc";
@@ -1988,10 +2331,11 @@ namespace DistribuidoraPalomarNet
                             throw new InvalidOperationException("Demasiados resultados. Refine la búsqueda");
 
                         _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
+                        Definir_Grilla();
 
                         if (_frmPrincipal.DataGridView1.RowCount > 0)
                         {
-                            SeleccionarGrilla();
+                            await SeleccionarGrilla();
                         }
                     }
                     else
@@ -2218,6 +2562,68 @@ namespace DistribuidoraPalomarNet
                             largoCadena = cadena.Length;
                             ini_apli_ftp = cadena.Substring(8, largoCadena - 8);
                         }
+
+                        // *******************Configuración FTP para Fotos*********************
+                        // FtpFotosHost
+                        cadena = leer.ReadLine();
+                        if (cadena != null && cadena.Length > 12 && cadena.Substring(0, 12) == "FtpFotosHost")
+                        {
+                            largoCadena = cadena.Length;
+                            ini_ftp_fotos_host = cadena.Substring(13, largoCadena - 13);
+                        }
+
+                        // FtpFotosPort
+                        cadena = leer.ReadLine();
+                        if (cadena != null && cadena.Length > 12 && cadena.Substring(0, 12) == "FtpFotosPort")
+                        {
+                            largoCadena = cadena.Length;
+                            string portStr = cadena.Substring(13, largoCadena - 13);
+                            if (int.TryParse(portStr, out int port))
+                                ini_ftp_fotos_port = port;
+                        }
+
+                        // FtpFotosUser
+                        cadena = leer.ReadLine();
+                        if (cadena != null && cadena.Length > 12 && cadena.Substring(0, 12) == "FtpFotosUser")
+                        {
+                            largoCadena = cadena.Length;
+                            ini_ftp_fotos_user = cadena.Substring(13, largoCadena - 13);
+                        }
+
+                        // FtpFotosPass
+                        cadena = leer.ReadLine();
+                        if (cadena != null && cadena.Length > 12 && cadena.Substring(0, 12) == "FtpFotosPass")
+                        {
+                            largoCadena = cadena.Length;
+                            ini_ftp_fotos_pass = cadena.Substring(13, largoCadena - 13);
+                        }
+
+                        // FtpFotosFolder (opcional, tiene valor por defecto)
+                        cadena = leer.ReadLine();
+                        if (cadena != null && cadena.Length > 14 && cadena.Substring(0, 14) == "FtpFotosFolder")
+                        {
+                            largoCadena = cadena.Length;
+                            ini_ftp_fotos_folder = cadena.Substring(15, largoCadena - 15);
+                        }
+                    }
+
+                    // Inicializar servicio de caché de fotos FTP si hay configuración válida
+                    if (!string.IsNullOrWhiteSpace(ini_ftp_fotos_host) && 
+                        !string.IsNullOrWhiteSpace(ini_ftp_fotos_user) && 
+                        !string.IsNullOrWhiteSpace(ini_ftp_fotos_pass))
+                    {
+                        _fotoService = new FtpPhotoCacheService(
+                            ini_ftp_fotos_host,
+                            ini_ftp_fotos_port,
+                            ini_ftp_fotos_user,
+                            ini_ftp_fotos_pass,
+                            ini_ftp_fotos_folder
+                        );
+                        System.Diagnostics.Debug.WriteLine($"[Module] Servicio FTP de fotos inicializado: Host={ini_ftp_fotos_host}:{ini_ftp_fotos_port} Folder={ini_ftp_fotos_folder}");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("[Module] Configuración FTP de fotos incompleta, servicio no inicializado");
                     }
                 }
                 else
@@ -2937,7 +3343,7 @@ namespace DistribuidoraPalomarNet
         /// </summary>
         /// <remarks>Llama a <see cref="Cargar_Usuario"/>, <see cref="Update_Precios"/>,
         /// <see cref="Update_Precios_Ofertas"/> y <see cref="funcion_inicial"/>(0) en ese orden.</remarks>
-        public static void Update_Precios_Gral()
+        public static async Task Update_Precios_Gral()
         {
             try
             {
@@ -2947,7 +3353,7 @@ namespace DistribuidoraPalomarNet
                 Cargar_Usuario();
                 Update_Precios();
                 Update_Precios_Ofertas();
-                funcion_inicial(0);
+                await funcion_inicial(0);
                 _frmPrincipal.DataGridView1.DefaultCellStyle.BackColor = Color.White;
                 _frmPrincipal.DataGridView1.DefaultCellStyle.ForeColor = Color.Black;
                 _frmPrincipal.DataGridView1.Refresh();
@@ -3009,7 +3415,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        /// <summary>Restaura el color de fondo blanco en todas las filas de la grilla de artículos y oculta la columna 5.</summary>
+        /// <summary>Restaura el color de fondo blanco en todas las filas de la grilla de artículos.</summary>
         public static void Despintar_Ofertas()
         {
             if (_frmPrincipal.DataGridView1.RowCount > 0)
@@ -3017,7 +3423,6 @@ namespace DistribuidoraPalomarNet
                 _frmPrincipal.DataGridView1.DefaultCellStyle.BackColor = Color.White;
                 _frmPrincipal.DataGridView1.DefaultCellStyle.ForeColor = Color.Black;
                 _frmPrincipal.DataGridView1.Refresh();
-                _frmPrincipal.DataGridView1.Columns[5].Visible = false;
             }
         }
 
@@ -3097,7 +3502,7 @@ namespace DistribuidoraPalomarNet
             ConectarDBArti();
             string sql = "SELECT DISTINCT R.rbcodi, R.rbdesc "+ 
                 "FROM rubros AS R " + 
-                "INNER JOIN [listas] AS LT ON R.RBCODI = LT.ARRUB2 " + 
+                //"INNER JOIN [listas] AS LT ON R.RBCODI = LT.ARRUB2 " + 
                 "WHERE R.RBCODI > 100 ORDER BY R.rbdesc";
             var da = new OleDbDataAdapter(sql, cnn);
             try
@@ -3215,7 +3620,7 @@ namespace DistribuidoraPalomarNet
             ConectarDBArti();
             string sql = "SELECT DISTINCT R.rbcodi, R.rbdesc " +
                 "FROM rubros AS R " +
-                "INNER JOIN [listas] AS LT ON R.RBCODI = LT.ARRUB2 " +
+                //"INNER JOIN [listas] AS LT ON R.RBCODI = LT.ARRUB2 " +
                 "WHERE R.RBCODI < 100 ORDER BY R.rbdesc";
             var da = new OleDbDataAdapter(sql, cnn);
             try
@@ -3662,6 +4067,15 @@ namespace DistribuidoraPalomarNet
         }
 
         /// <summary>
+        /// Indica si el cliente tiene descuentos configurados en la distribuidora.
+        /// </summary>
+        /// <returns>
+        /// <c>true</c> si <see cref="ClienteDescuento1"/> es distinto de cero;
+        /// <c>false</c> cuando CLDES1 = 0 (el distribuidor aún no asignó descuentos).
+        /// </returns>
+        public static bool DescuentosConfigurados() => ClienteDescuento1 != 0;
+
+        /// <summary>
         /// Sincroniza los descuentos del cliente desde la base del distribuidor hacia la base local.
         /// Lee <c>CLDES1</c> y <c>CLDES2</c> de la tabla <c>CLIENTES</c> (base del distribuidor, <c>cnn</c>)
         /// para el cliente identificado por <see cref="US_CODI"/> y los persiste en
@@ -3780,7 +4194,7 @@ namespace DistribuidoraPalomarNet
         /// Carga en la grilla todos los artículos que tienen precio de oferta (<c>ARTT &lt;&gt; 0</c>),
         /// mostrando el precio de oferta calculado (<c>arpre5</c>).
         /// </summary>
-        public static void Funcion_Ofertas()
+        public static async Task Funcion_Ofertas()
         {
             var da = new OleDbDataAdapter();
             try
@@ -3788,21 +4202,23 @@ namespace DistribuidoraPalomarNet
                 ConectarDBArti();
                 da = new OleDbDataAdapter("SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
                     "p.PRMARC as Marca," +
+                    "IIF(r.rbdesc IS NOT NULL, r.rbdesc, '') as Montadora," +
                     //"l.lidesc as Linea," +
                     "a.armode as Linea," +
                     " a.arinte as Posición," +
                     //" a.ARMARC as Marca2," +
-                    " a.arpre5 as Preciopublico, a.artt as aroo" +
-                    ", a.arff as Stock, a.artt, a.arubic1 from listas as a " +
-                    "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                    "a.arpre5 as Preciopublico, IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo" +
+                    ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
+                    " from (listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) " +
+                    "LEFT JOIN rubros AS r ON a.ARRUB2 = r.RBCODI " +
                     " WHERE a.ARTT <> 0 and a.arprim<>'000' order by a.arterc", cnn);
                 var ds = new DataSet();
                 da.Fill(ds);
                 _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
                 _frmPrincipal.DataGridView1.Refresh();
-                SeleccionarGrilla();
+                Definir_Grilla();
+                await SeleccionarGrilla();
                 if (cnn.State == ConnectionState.Open) cnn.Close();
-                //Definir_Grilla();
             }
             catch (Exception ex)
             {
@@ -3833,6 +4249,10 @@ namespace DistribuidoraPalomarNet
                 _frmPrincipal.txtCodigo.Text = string.Empty;
                 if (p1 != 1) _frmPrincipal.cmbArmadora.SelectedIndex = -1;
                 if (p1 != 1) _frmPrincipal.cmbLineas.SelectedIndex = -1;
+                if (p1 != 1) _frmPrincipal.cmbRubros.SelectedIndex = -1;
+                // Resetear filtros de NOVEDADES y OFERTAS
+                if (p1 != 1 && _frmPrincipal.ckbOfertas != null)
+                    _frmPrincipal.ckbOfertas.Checked = false;
                 // lblCodigoSelec.Text = string.Empty;
                 if (p1 != 1)
                     consultas_Relacionales();

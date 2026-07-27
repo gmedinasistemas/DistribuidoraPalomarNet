@@ -113,7 +113,7 @@ namespace DistribuidoraPalomarNet
             txtiva.Margin = new Padding(4, 3, 4, 3);
             txtiva.Name = "txtiva";
             txtiva.Size = new Size(102, 21);
-            txtiva.TabIndex = 4;
+            txtiva.TabIndex = 13;
             txtiva.TextAlign = HorizontalAlignment.Center;
             // 
             // lblDescFlia
@@ -174,7 +174,7 @@ namespace DistribuidoraPalomarNet
             txtbgral.Margin = new Padding(4, 3, 4, 3);
             txtbgral.Name = "txtbgral";
             txtbgral.Size = new Size(102, 21);
-            txtbgral.TabIndex = 2;
+            txtbgral.TabIndex = 14;
             txtbgral.TextAlign = HorizontalAlignment.Center;
             // 
             // btnRestaurar
@@ -245,7 +245,7 @@ namespace DistribuidoraPalomarNet
             btnGrabar.Margin = new Padding(4, 3, 4, 3);
             btnGrabar.Name = "btnGrabar";
             btnGrabar.Size = new Size(58, 60);
-            btnGrabar.TabIndex = 6;
+            btnGrabar.TabIndex = 15;
             ToolTip1.SetToolTip(btnGrabar, "Grabar");
             btnGrabar.UseVisualStyleBackColor = true;
             btnGrabar.Click += btnGrabar_Click;

@@ -246,6 +246,7 @@ namespace DistribuidoraPalomarNet
         private static frmPrincipal _instance;
         private bool _porLimpieza = false;
         private bool _webView2Inicializado = false;
+        private bool _webView22Inicializado = false;
         private string _textoMarquesinaPendiente = string.Empty;
 
         public static frmPrincipal Instance
@@ -277,6 +278,7 @@ namespace DistribuidoraPalomarNet
             btnVerCarrito.Click += BtnVerCarrito_Click;
             btnLimpiar.Click += BtnLimpiar_Click;
             btnnovedades.Click += Btnnovedades_Click;
+            ckbOfertas.Click += ckbOfertas_Click;
             cmbLineas.KeyPress += Combo_KeyPress;
             cmbArmadora.KeyPress += Combo_KeyPress;
             cmbLineas.KeyDown += Combo_KeyDown;
@@ -290,7 +292,12 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
+                webView21.DefaultBackgroundColor = System.Drawing.Color.Black;
                 await webView21.EnsureCoreWebView2Async(null);
+                webView21.CoreWebView2.Settings.IsStatusBarEnabled = false;
+                webView21.CoreWebView2.Settings.AreDevToolsEnabled = false;
+                webView21.CoreWebView2.Settings.IsZoomControlEnabled = false;
+                webView21.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
                 _webView2Inicializado = true;
                 CargarMarquesina();
 
@@ -305,6 +312,20 @@ namespace DistribuidoraPalomarNet
             {
                 _webView2Inicializado = false;
             }
+
+            try
+            {
+                await webView22.EnsureCoreWebView2Async(null);
+                webView22.CoreWebView2.Settings.IsStatusBarEnabled = false;
+                webView22.CoreWebView2.Settings.AreDevToolsEnabled = false;
+                webView22.CoreWebView2.Settings.IsZoomControlEnabled = false;
+                webView22.CoreWebView2.Settings.AreBrowserAcceleratorKeysEnabled = false;
+                _webView22Inicializado = true;
+            }
+            catch
+            {
+                _webView22Inicializado = false;
+            }
         }
 
         private void CargarMarquesina()
@@ -317,15 +338,16 @@ namespace DistribuidoraPalomarNet
         <html>
         <head>
             <meta charset='UTF-8'>
+            <meta name='color-scheme' content='dark'>
             <style>
-                body {{
+                html, body {{
                     margin: 0;
                     padding: 0;
                     overflow: hidden;
-                    background-color: transparent;
+                    background-color: #000000 !important;
                     font-family: 'Segoe UI', Arial, sans-serif;
                     font-size: 14pt;
-                    color: white;
+                    color: #ffffff !important;
                     height: 100%;
                     display: flex;
                     align-items: center;
@@ -335,6 +357,7 @@ namespace DistribuidoraPalomarNet
                     display: inline-block;
                     animation: scroll 35s linear infinite;
                     padding-left: 100%;
+                    color: #ffffff;
                 }}
                 @keyframes scroll {{
                     0% {{ transform: translateX(0); }}
@@ -450,11 +473,11 @@ namespace DistribuidoraPalomarNet
             e.Paint(cellBounds, DataGridViewPaintParts.Border);
             e.Handled = true;
         }
-        private void Btnnovedades_Click(object sender, EventArgs e)
+        private async void Btnnovedades_Click(object sender, EventArgs e)
         {
             try
             {
-                Module.Funcion_Novedades();
+                await Module.Funcion_Novedades();
                 TimerVerOfertas.Enabled = true;
             }
             catch (Exception ex)
@@ -499,11 +522,11 @@ namespace DistribuidoraPalomarNet
             //        Module.valor = txtDescripcion.Text;
             //        if (!ckbOfertas.Checked)
             //        {
-            //            Module.consultas_Relacionales();
+            //            await Module.consultas_Relacionales();
             //        }
             //        else
             //        {
-            //            Module.consultas_Ofertas();
+            //            await Module.consultas_Ofertas();
             //        }
             //    }
             //}
@@ -535,35 +558,21 @@ namespace DistribuidoraPalomarNet
                 if (!string.IsNullOrEmpty(Module.NumEqui))
                 {
                     Module.ConectarDBArti();
-                    Application.DoEvents();
 
-                    string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
-                    "p.PRMARC as Marca," + /*DEJO DE MOSTRA prrazo Y PASO A MOSTRAR PRMARC*/
-                    //"l.lidesc as Linea," +
-                    "a.armode as Linea," +
+                    string SelectQuery = "SELECT DISTINCT a.arterc as Codigo, a.ardesc as Descripcion, " +
+                    "p.PRMARC as Marca," +
                     " a.arinte as Posición," +
-                    //" a.ARMARC as Marca2," + 
-                    //"a.arpre2 as Preciopublico, " +//"IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
-                    "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
+                    "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, " +
                     "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
                     " from (listas as a INNER JOIN proveedo AS p ON p.prcodi = a.arprov) ";
 
-                    //da = new OleDbDataAdapter(
-                    //    "SELECT a.arprim as Primera, a.arterc as Codigo, p.PRMARC as Marca, a.ardesc as Descripcion, " +
-                    //    "a.arobse as Observacioness, a.arpre2 as Preciopublico , a.arprov, a.arobse, a.arubic1 as Obs from listas as a " +
-                    //    "inner join proveedo as p on p.prcodi=a.arprov " +
-                    //    "Where a.arubic1='" + Module.NumEqui + "' " +
-                    //    "order by arcodi", Module.cnn);
                     da = new OleDbDataAdapter(
                         SelectQuery +
-                        "Where a.AROBSE='" + Module.NumEqui + "' " +
-                        "order by arcodi", Module.cnn);
+                        "Where a.AROBSE='" + Module.NumEqui + "' ", Module.cnn);
 
                     DataSet ds = new DataSet();
-                    Application.DoEvents();
                     da.Fill(ds);
-                    Application.DoEvents();
                     DataGridView2.DataSource = ds.Tables[0];
                     DataGridView2.Refresh();
                     DataGridView2.ClearSelection();
@@ -572,7 +581,7 @@ namespace DistribuidoraPalomarNet
                     DataGridView2.Columns["artt"].Visible = false;
                     DataGridView2.Columns["arubic1"].Visible = false;
                     DataGridView2.Columns["arobse"].Visible = false;
-                    DataGridView2.Columns["Linea"].Visible = false;
+                    //DataGridView2.Columns["Linea"].Visible = false;
                     //DataGridView2.Columns["Modelo"].Visible = false;
                     DataGridView2.Columns["Descripcion"].Visible = false;
 
@@ -646,57 +655,11 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
-                btnLimpiar.Enabled = false;
-                // Limpiar campos de búsqueda sin recargar datos
-                txtDescripcion.Text = string.Empty;
-                txtModelo.Text = string.Empty;
-                txtEquivalencia.Text = string.Empty;
-                txtCodigo.Text = string.Empty;
-                txtPreciolista.Text = string.Empty;
-                txtPreciopublico.Text = string.Empty;
-                txtSugerido.Text = string.Empty;
-                txtBeneficio.Text = string.Empty;
-                //txtDescuento1.Text = string.Empty;
-                //txtDescuento2.Text = string.Empty;
-                //txtDescuento3.Text = string.Empty;
-                if (cmbArmadora.Items.Count > 0) cmbArmadora.SelectedIndex = -1;
-                if (cmbLineas.Items.Count > 0) cmbLineas.SelectedIndex = -1;
-
-                if (cmbRubros.Items.Count > 0) cmbRubros.SelectedIndex = -1;
-                if (cmbMarcas.Items.Count > 0) cmbMarcas.SelectedIndex = -1;
-
-                // Dejar la grilla vacía preservando configuración y encabezados
-                if (DataGridView1.DataSource is System.Data.DataTable dt)
-                {
-                    dt.Rows.Clear();
-                    DataGridView1.Refresh();
-                }
-                else
-                {
-                    DataGridView1.Rows.Clear();
-                }
-
-                // Dejar la grilla equivalencias vacía preservando configuración y encabezados
-                if (DataGridView2.DataSource is System.Data.DataTable dte)
-                {
-                    dte.Rows.Clear();
-                    DataGridView2.Refresh();
-                }
-                else
-                {
-                    DataGridView2.Rows.Clear();
-                }
-
-                // Actualizar contador
-                lblTotalRegistros.Text = "Total Registros: 0";
-                btnLimpiar.Enabled = true;
+                Module.LimpiarCampos(0);
             }
             catch (Exception ex)
             {
-                btnLimpiar.Enabled = true;
-                Module.GrabarError(" - " + DateTime.Now.ToLongDateString() + " => " +
-                            DateTime.Now.ToString("hh:mm:ss") +
-                            " 'Click Limpiar': " + ex.Message);
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Click Limpiar': {ex.Message}");
             }
         }
 
@@ -718,13 +681,13 @@ namespace DistribuidoraPalomarNet
             //AcercaDeToolStripMenuItem.Click += new EventHandler(AcercaDeToolStripMenuItem_Click);
         }
 
-        private void ActualizarBasesToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void ActualizarBasesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
                 Cursor = Cursors.WaitCursor;
                 Module.ActualizacionXFTP();
-                Module.consultas_Relacionales();
+                await Module.consultas_Relacionales();
             }
             catch (Exception ex)
             {
@@ -737,13 +700,13 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void ActualizarDatosLocalToolStripMenuItem_Click(object sender, EventArgs e)
+        private async void ActualizarDatosLocalToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
                 Cursor = Cursors.WaitCursor;
                 Module.UpdateValorDBLocal("");  // Pasando string vacío como parámetro
-                Module.consultas_Relacionales();
+                await Module.consultas_Relacionales();
             }
             catch (Exception ex)
             {
@@ -834,7 +797,7 @@ namespace DistribuidoraPalomarNet
             Module.vectornomfoto = null;
         }
 
-        private void frmPrincipal_Load(object sender, EventArgs e)
+        private async void frmPrincipal_Load(object sender, EventArgs e)
         {
             try
             {
@@ -867,8 +830,16 @@ namespace DistribuidoraPalomarNet
                 }
                 Module.SincronizarDescuentosCliente();
                 Module.Cargar_Usuario();
-                Module.Inicializacion();
+                await Module.Inicializacion();
                 ApplyEstadoClienteToUI();
+
+                //// ========== TEST TEMPORAL: Cargar foto RE4214 ==========
+                //// COMENTAR O ELIMINAR ESTA LÍNEA DESPUÉS DE PROBAR
+                //System.Threading.Tasks.Task.Delay(1000).ContinueWith(_ => 
+                //{
+                //    this.Invoke((Action)(() => Module.TestCargarFotoArticulo("RE4214")));
+                //});
+                //// =======================================================
             }
             catch (Exception ex)
             {
@@ -892,15 +863,16 @@ namespace DistribuidoraPalomarNet
                 <html>
                 <head>
                     <meta charset='UTF-8'>
+                    <meta name='color-scheme' content='dark'>
                     <style>
-                        body {{
+                        html, body {{
                             margin: 0;
                             padding: 0;
                             overflow: hidden;
-                            background-color: transparent;
+                            background-color: #000000 !important;
                             font-family: 'Segoe UI', Arial, sans-serif;
                             font-size: 14pt;
-                            color: white;
+                            color: #ffffff !important;
                             height: 100%;
                             display: flex;
                             align-items: center;
@@ -910,6 +882,7 @@ namespace DistribuidoraPalomarNet
                             display: inline-block;
                             animation: scroll 25s linear infinite;
                             padding-left: 100%;
+                            color: #ffffff;
                         }}
                         @keyframes scroll {{
                             0% {{ transform: translateX(0); }}
@@ -930,28 +903,14 @@ namespace DistribuidoraPalomarNet
             Application.Exit();
         }
 
-        private void btnLimpiar_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                btnLimpiar.Enabled = false;
-                Module.LimpiarCampos(0);
-                btnLimpiar.Enabled = true;
-            }
-            catch (Exception ex)
-            {
-                btnLimpiar.Enabled = true;
-                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Click Limpiar': {ex.Message}");
-            }
-        }
-
-        private void DataGridView1_Click(object sender, EventArgs e)
+        
+        private async void DataGridView1_Click(object sender, EventArgs e)
         {
             try
             {
                 if (DataGridView1.CurrentRow != null)
                 {
-                    Module.AccionGrilla(DataGridView1);
+                    await Module.AccionGrilla(DataGridView1);
                     CargarEquivalencias();
 
                     int numFila = DataGridView1.CurrentCell.RowIndex;
@@ -1086,7 +1045,7 @@ namespace DistribuidoraPalomarNet
             //toolStripProgressBar1.Refresh();
         }
 
-        private void txtCodigo_KeyPress(object sender, KeyPressEventArgs e)
+        private async void txtCodigo_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == (char)Keys.Enter)
             {
@@ -1094,7 +1053,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void FiltrarPorCodigo()
+        private async void FiltrarPorCodigo()
         {
             try
             {
@@ -1103,6 +1062,7 @@ namespace DistribuidoraPalomarNet
                     string queryRel = ckbOfertas.Checked
                         ? "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
                             "p.PRMARC as Marca," +
+                            "IIF(r.rbdesc IS NOT NULL, r.rbdesc, '') as Montadora," +
                             //"a.armarc as Marca," 
                             //"l.lidesc as Linea," +
                             "a.armode as Linea," +
@@ -1110,13 +1070,15 @@ namespace DistribuidoraPalomarNet
                           //" a.ARMARC as Marca2," + 
                           "a.arpre5 as Preciopublico, " +
                           "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
-                          ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from listas as a " +
-                            "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                          ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from (listas as a " +
+                            "INNER JOIN proveedo AS p ON p.prcodi = a.arprov) " +
+                            "LEFT JOIN rubros AS r ON a.ARRUB2 = r.RBCODI " +
                           //" left join lineas as l on a.arcuar=l.licodi= " +
                           "where a.ARTT<>0 AND a.arprim+a.arterc like '%" + txtCodigo.Text +
                           "%' order by a.arcodi"
                         : "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
                             "p.PRMARC as Marca," +
+                            "IIF(r.rbdesc IS NOT NULL, r.rbdesc, '') as Montadora," +
                             //"a.armarc as Marca," 
                             //"l.lidesc as Linea," +
                             "a.armode as Linea," +
@@ -1125,8 +1087,9 @@ namespace DistribuidoraPalomarNet
                             //"a.arpre2 as Preciopublico, " +//"IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
                             "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, " +
                           " IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
-                          ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from listas as a " +
-                            "INNER JOIN proveedo AS p ON p.prcodi = a.arprov " +
+                          ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse from (listas as a " +
+                            "INNER JOIN proveedo AS p ON p.prcodi = a.arprov) " +
+                            "LEFT JOIN rubros AS r ON a.ARRUB2 = r.RBCODI " +
                           //" left join lineas as l on a.arcuar=l.licodi= " +
                           "where a.arprim+a.arterc like '%" + txtCodigo.Text +
                           "%' order by a.arcodi";
@@ -1141,9 +1104,10 @@ namespace DistribuidoraPalomarNet
                         {
                             DataGridView1.DataSource = ds.Tables[0];
                             DataGridView1.Refresh();
+                            Module.Definir_Grilla();
                         }
                         if (DataGridView1.RowCount > 0)
-                            Module.SeleccionarGrilla();
+                            await Module.SeleccionarGrilla();
                         if (Module.cnn.State == ConnectionState.Open)
                             Module.cnn.Close();
                     }
@@ -1161,15 +1125,15 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        public void RefrescarSegunFiltros()
+        public async void RefrescarSegunFiltros()
         {
             bool hayFiltroLinea = cmbLineas.SelectedValue is int lineaVal && lineaVal != 0;
             bool hayFiltroCodigo = !string.IsNullOrWhiteSpace(txtCodigo.Text);
             bool hayFiltroDescModelo = !string.IsNullOrWhiteSpace(txtDescripcion.Text) || !string.IsNullOrWhiteSpace(txtModelo.Text);
             bool hayFiltroCombo =
                 (!string.IsNullOrWhiteSpace(cmbArmadora.Text) && cmbArmadora.Text.Trim() != "TODOS") ||
-                (!string.IsNullOrWhiteSpace(cmbRubros.Text)   && cmbRubros.Text.Trim()   != "TODOS") ||
-                (!string.IsNullOrWhiteSpace(cmbMarcas.Text)   && cmbMarcas.Text.Trim()   != "TODOS");
+                (!string.IsNullOrWhiteSpace(cmbRubros.Text) && cmbRubros.Text.Trim() != "TODOS") ||
+                (!string.IsNullOrWhiteSpace(cmbMarcas.Text) && cmbMarcas.Text.Trim() != "TODOS");
 
             if (hayFiltroLinea)
             {
@@ -1181,11 +1145,11 @@ namespace DistribuidoraPalomarNet
             }
             else if (ckbOfertas.Checked)
             {
-                Module.consultas_Ofertas();
+                await Module.consultas_Ofertas();
             }
             else if (hayFiltroDescModelo || hayFiltroCombo)
             {
-                Module.consultas_Relacionales();
+                await Module.consultas_Relacionales();
             }
             else
             {
@@ -1193,7 +1157,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void ckbOfertas_Click(object sender, EventArgs e)
+        private async void ckbOfertas_Click(object sender, EventArgs e)
         {
             try
             {
@@ -1201,7 +1165,7 @@ namespace DistribuidoraPalomarNet
                 // filtro las ofertas de articulo
                 if (ckbOfertas.Checked)
                 {
-                    Module.consultas_Ofertas();
+                    await Module.consultas_Ofertas();
                     //Pintar_Ofertas();
                     if (TimerVerOfertas.Enabled == false) TimerVerOfertas.Enabled = true;
                 }
@@ -1209,7 +1173,7 @@ namespace DistribuidoraPalomarNet
                 {
                     if (!Migra)
                     {
-                        Module.consultas_Relacionales();
+                        await Module.consultas_Relacionales();
                     }
                     //Despintar_Ofertas();
                 }
@@ -1221,7 +1185,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void cmbArmadora_SelectedIndexChanged(object sender, EventArgs e)
+        private async void cmbArmadora_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
@@ -1239,7 +1203,7 @@ namespace DistribuidoraPalomarNet
                     else
                     {
                         Module.CargarComboLineas(cmbArmadora.Text);
-                        Module.consultas_Relacionales();
+                        await Module.consultas_Relacionales();
                     }
                 }
             }
@@ -1249,16 +1213,16 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void cmbMarcas_SelectedIndexChanged(object sender, EventArgs e)
+        private async void cmbMarcas_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
                 if (cmbMarcas.SelectedValue is int marcaVal && marcaVal != 0)
                 {
                     if (ckbOfertas.Checked)
-                        Module.consultas_Ofertas();
+                        await Module.consultas_Ofertas();
                     else
-                        Module.consultas_Relacionales();
+                        await Module.consultas_Relacionales();
                 }
             }
             catch (Exception ex)
@@ -1267,7 +1231,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void cmbRubros_SelectedIndexChanged(object sender, EventArgs e)
+        private async void cmbRubros_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
             {
@@ -1275,9 +1239,9 @@ namespace DistribuidoraPalomarNet
                 if (!string.IsNullOrEmpty(rubrosSel) && rubrosSel != "TODOS")
                 {
                     if (ckbOfertas.Checked)
-                        Module.consultas_Ofertas();
+                        await Module.consultas_Ofertas();
                     else
-                        Module.consultas_Relacionales();
+                        await Module.consultas_Relacionales();
                 }
             }
             catch (Exception ex)
@@ -1286,7 +1250,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void txtEquivalencia_KeyPress(object sender, KeyPressEventArgs e)
+        private async void txtEquivalencia_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == (char)Keys.Enter)
             {
@@ -1298,11 +1262,11 @@ namespace DistribuidoraPalomarNet
                         Module.valor = txtEquivalencia.Text;
                         if (!ckbOfertas.Checked)
                         {
-                            Module.consultas_Relacionales();
+                            await Module.consultas_Relacionales();
                         }
                         else
                         {
-                            Module.consultas_Ofertas();
+                            await Module.consultas_Ofertas();
                         }
                     }
                 }
@@ -1313,13 +1277,77 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void Update_Precios_Ofertas()
+        /// <summary>Muestra la barra de advertencia de descuentos no configurados en webView22.</summary>
+        public void MostrarNotificacionDescuento()
+        {
+            if (!_webView22Inicializado) return;
+            try
+            {
+                string html = @"<!DOCTYPE html>
+<html><head><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Segoe UI',system-ui,sans-serif;
+  background:linear-gradient(90deg,#78350f 0%,#b45309 45%,#d97706 100%);
+  height:100vh;display:flex;align-items:center;
+  padding:0 14px;gap:9px;overflow:hidden;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:#fcd34d;flex-shrink:0;
+  animation:p 1.5s ease-in-out infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.25}}
+.ic{flex-shrink:0}
+.msg{font-size:11.5px;color:#fff;font-weight:600;flex:1;letter-spacing:.1px}
+.badge{
+  background:rgba(0,0,0,.28);border-radius:4px;
+  padding:2px 8px;font-size:10px;color:#fde68a;font-weight:700;flex-shrink:0;
+  white-space:nowrap;
+}
+</style></head><body>
+<div class='dot'></div>
+<svg class='ic' width='14' height='14' viewBox='0 0 24 24' fill='none'
+  stroke='#fcd34d' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'>
+  <path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z'/>
+  <line x1='12' y1='9' x2='12' y2='13'/><line x1='12' y1='17' x2='12.01' y2='17'/>
+</svg>
+<div class='msg'>Sin descuentos configurados &mdash; Pida sus descuentos a la distribuidora</div>
+<div class='badge'>DESDESC1 = 0</div>
+</body></html>";
+                webView22.NavigateToString(html);
+                webView22.Visible = true;
+            }
+            catch { }
+        }
+
+        /// <summary>Oculta la barra de advertencia de descuentos en webView22.</summary>
+        public void OcultarNotificacionDescuento()
+        {
+            if (!_webView22Inicializado) return;
+            try
+            {
+                if (webView22.Visible)
+                {
+                    webView22.NavigateToString("<html><body style='margin:0;background:transparent'></body></html>");
+                    webView22.Visible = false;
+                }
+            }
+            catch { }
+        }
+
+        private async void Update_Precios_Ofertas()
         {
             try
             {
+                if (!Module.DescuentosConfigurados())
+                {
+                    MostrarNotificacionDescuento();
+                    MessageBox.Show(
+                        "Descuentos no configurados (DESDESC1 = 0).\nPida sus descuentos a la distribuidora.",
+                        "Sin Descuentos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
                 Module.Update_PrecioCosto_Ofertas();
                 Module.Update_PrecioSug_Ofertas();
-                Module.consultas_Ofertas();
+                await Module.consultas_Ofertas();
             }
             catch (Exception ex)
             {
@@ -1327,13 +1355,21 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void Update_Precios()
+        private async void Update_Precios()
         {
             try
             {
+                if (!Module.DescuentosConfigurados())
+                {
+                    MostrarNotificacionDescuento();
+                    MessageBox.Show(
+                        "Descuentos no configurados (DESDESC1 = 0).\nPida sus descuentos a la distribuidora.",
+                        "Sin Descuentos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
                 Module.Update_PrecioCosto();
                 Module.Update_PrecioSug();
-                Module.consultas_Relacionales();
+                await Module.consultas_Relacionales();
             }
             catch (Exception ex)
             {
@@ -1400,7 +1436,7 @@ namespace DistribuidoraPalomarNet
             //        }
             //        else
             //        {
-            //            Module.consultas_Relacionales();
+            //            await Module.consultas_Relacionales();
             //        }
             //    }
             //}
@@ -1410,7 +1446,7 @@ namespace DistribuidoraPalomarNet
             //}
         }
 
-        private void Filtrar_x_linea(string _linea)
+        private async void Filtrar_x_linea(string _linea)
         {
             OleDbDataAdapter da = null;
             try
@@ -1418,18 +1454,20 @@ namespace DistribuidoraPalomarNet
                 Application.DoEvents();
                 string SelectQuery = "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
                     "p.prrazo as Marca," +
+                    "IIF(r.rbdesc IS NOT NULL, r.rbdesc, '') as Montadora," +
                     //"l.lidesc as Linea," +
                     "a.armode as Linea," +
                     " a.arinte as Posición," +
                     //" a.ARMARC as Marca2," + 
-                    //"a.arpre2 as Preciopublico, " +//"IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
+                    //("a.arpre2 as Preciopublico, " +//"IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, "+
                     "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.arpre5, a.arpre2) as Preciopublico, " +
                     "IIF(a.artt IS NOT NULL AND a.artt <> 0, a.artt, a.aroo) as aroo " +
                     ", a.arff as Stock, a.artt, IIF(a.arubic1 IS NOT NULL, a.arubic1, '') as arubic1, IIF(a.arobse IS NOT NULL, a.arobse, '') as arobse " +
-                    " from listas as a ";
+                    " from (listas as a ";
 
                 da = new OleDbDataAdapter(SelectQuery +
-                                         "inner join proveedo as p on p.prcodi=a.arprov " +
+                                         "inner join proveedo as p on p.prcodi=a.arprov) " +
+                                         "LEFT JOIN rubros AS r ON a.ARRUB2 = r.RBCODI " +
                                          "where a.armode='" + _linea + "' " +
                                          "order by a.arcodi", Module.cnn);
 
@@ -1440,7 +1478,7 @@ namespace DistribuidoraPalomarNet
                 DataGridView1.DataSource = ds.Tables[0];
                 DataGridView1.Refresh();
 
-                Module.SeleccionarGrilla();
+                await Module.SeleccionarGrilla();
 
                 if (Module.cnn.State == ConnectionState.Open)
                     Module.cnn.Close();
@@ -1497,7 +1535,7 @@ namespace DistribuidoraPalomarNet
         //        DataGridView1.DataSource = ds.Tables[0];
         //        DataGridView1.Refresh();
 
-        //        Module.SeleccionarGrilla();
+        //        await Module.SeleccionarGrilla();
 
         //        if (Module.cnn.State == ConnectionState.Open)
         //            Module.cnn.Close();
@@ -1771,11 +1809,11 @@ namespace DistribuidoraPalomarNet
             //        Module.valor = txtModelo.Text;
             //        if (!ckbOfertas.Checked)
             //        {
-            //            Module.consultas_Relacionales();
+            //            await Module.consultas_Relacionales();
             //        }
             //        else
             //        {
-            //            Module.consultas_Ofertas();
+            //            await Module.consultas_Ofertas();
             //        }
             //    }
             //}
@@ -1817,7 +1855,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void DataGridView1_DoubleClick(object sender, EventArgs e)
+        private async void DataGridView1_DoubleClick(object sender, EventArgs e)
         {
             try
             {
@@ -1827,11 +1865,11 @@ namespace DistribuidoraPalomarNet
                     return;
                 }
 
-                if (this.DataGridView1.RowCount > 0)
-                {
-                    Module.AccionGrilla(DataGridView1);
-                }
-                else
+                // El evento Click ya se disparó con el primer clic del doble clic
+                // y ya ejecutó AccionGrilla + Cargar_Imagen.
+                // Acá solo limpiamos si la grilla está vacía; si tiene datos,
+                // el InputBox aparece inmediatamente sin volver a cargar imagen.
+                if (this.DataGridView1.RowCount == 0)
                 {
                     // Borrar txt precios
                     //lblCodigoSelec.Text = "";
@@ -1843,7 +1881,7 @@ namespace DistribuidoraPalomarNet
                     txtPreciopublico.Text = "";
                     txtBeneficio.Text = "";
                     txtSugerido.Text = "";
-                    ptbImagen.Image = System.Drawing.Image.FromFile(@"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\imagenes\SINFOTO.png");
+                    ptbImagen.Image = System.Drawing.Image.FromFile(Module.ObtenerRutaImagenPorDefectoPublica());
                 }
 
                 if (!string.IsNullOrEmpty(this.txtPreciopublico.Text))
@@ -2089,6 +2127,17 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
+                if (!Module.DescuentosConfigurados())
+                {
+                    MostrarNotificacionDescuento();
+                    MessageBox.Show(
+                        "No es posible acceder a la configuración por familia.\n" +
+                        "El cliente no tiene descuentos configurados (DESDESC1 = 0).\n\n" +
+                        "Pida sus descuentos a la distribuidora.",
+                        "Sin Descuentos", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 var frmConfFamilia = new frmConfFamilia();
                 frmConfFamilia.ShowDialog();
             }
@@ -2099,7 +2148,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private void timer2_Tick(object sender, EventArgs e)
+        private async void timer2_Tick(object sender, EventArgs e)
         {
             try
             {
@@ -2115,11 +2164,11 @@ namespace DistribuidoraPalomarNet
                         if (ckbOfertas.Checked == false) // Filtros comunes
                         {
                             // CargarComboCodigos(".", cmbFamilias.Text);
-                            Module.consultas_Relacionales();
+                            await Module.consultas_Relacionales();
                         }
                         else
                         {
-                            Module.consultas_Ofertas();
+                            await Module.consultas_Ofertas();
                         }
                     }
                 }
@@ -2181,6 +2230,11 @@ namespace DistribuidoraPalomarNet
         }
 
         private void CheckBox1_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label12_Click(object sender, EventArgs e)
         {
 
         }

@@ -181,6 +181,7 @@ namespace DistribuidoraPalomarNet
             backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             webView21 = new Microsoft.Web.WebView2.WinForms.WebView2();
             toolStripProgressBar1 = new ProgressBar();
+            webView22 = new Microsoft.Web.WebView2.WinForms.WebView2();
             GroupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)ptbImagen).BeginInit();
             PanelFiltros.SuspendLayout();
@@ -192,12 +193,13 @@ namespace DistribuidoraPalomarNet
             groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)PictureBox3).BeginInit();
             ((System.ComponentModel.ISupportInitialize)webView21).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)webView22).BeginInit();
             SuspendLayout();
             // 
             // btncerrar
             // 
             btncerrar.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btncerrar.Location = new Point(621, 608);
+            btncerrar.Location = new Point(621, 593);
             btncerrar.Margin = new Padding(4, 3, 4, 3);
             btncerrar.Name = "btncerrar";
             btncerrar.Size = new Size(52, 52);
@@ -241,7 +243,7 @@ namespace DistribuidoraPalomarNet
             GroupBox1.Controls.Add(lblPP);
             GroupBox1.Controls.Add(lblPL);
             GroupBox1.Controls.Add(CheckBox1);
-            GroupBox1.Location = new Point(12, 598);
+            GroupBox1.Location = new Point(12, 582);
             GroupBox1.Margin = new Padding(4, 3, 4, 3);
             GroupBox1.Name = "GroupBox1";
             GroupBox1.Padding = new Padding(4, 3, 4, 3);
@@ -498,17 +500,17 @@ namespace DistribuidoraPalomarNet
             // cmbRubros
             // 
             cmbRubros.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbRubros.Location = new Point(477, 32);
+            cmbRubros.Location = new Point(76, 32);
             cmbRubros.Margin = new Padding(4, 3, 4, 3);
             cmbRubros.Name = "cmbRubros";
-            cmbRubros.Size = new Size(127, 23);
+            cmbRubros.Size = new Size(133, 23);
             cmbRubros.TabIndex = 13;
             cmbRubros.SelectedIndexChanged += cmbRubros_SelectedIndexChanged;
             // 
             // label9
             // 
             label9.ForeColor = Color.White;
-            label9.Location = new Point(426, 32);
+            label9.Location = new Point(1, 32);
             label9.Margin = new Padding(4, 0, 4, 0);
             label9.Name = "label9";
             label9.Size = new Size(52, 23);
@@ -518,36 +520,37 @@ namespace DistribuidoraPalomarNet
             // cmbMarcas
             // 
             cmbMarcas.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbMarcas.Location = new Point(665, 32);
+            cmbMarcas.Location = new Point(671, 32);
             cmbMarcas.Margin = new Padding(4, 3, 4, 3);
             cmbMarcas.Name = "cmbMarcas";
-            cmbMarcas.Size = new Size(104, 23);
+            cmbMarcas.Size = new Size(133, 23);
             cmbMarcas.TabIndex = 14;
             cmbMarcas.SelectedIndexChanged += cmbMarcas_SelectedIndexChanged;
             // 
             // label12
             // 
             label12.ForeColor = Color.White;
-            label12.Location = new Point(608, 32);
+            label12.Location = new Point(620, 34);
             label12.Margin = new Padding(4, 0, 4, 0);
             label12.Name = "label12";
-            label12.Size = new Size(49, 23);
+            label12.Size = new Size(64, 23);
             label12.TabIndex = 15;
             label12.Text = "MARCA";
+            label12.Click += label12_Click;
             // 
             // cmbArmadora
             // 
             cmbArmadora.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbArmadora.Location = new Point(83, 32);
+            cmbArmadora.Location = new Point(294, 32);
             cmbArmadora.Margin = new Padding(4, 3, 4, 3);
             cmbArmadora.Name = "cmbArmadora";
-            cmbArmadora.Size = new Size(163, 23);
+            cmbArmadora.Size = new Size(133, 23);
             cmbArmadora.TabIndex = 5;
             cmbArmadora.SelectedIndexChanged += cmbArmadora_SelectedIndexChanged;
             // 
             // txtModelo
             // 
-            txtModelo.Location = new Point(613, 8);
+            txtModelo.Location = new Point(649, 3);
             txtModelo.Margin = new Padding(4, 3, 4, 3);
             txtModelo.Name = "txtModelo";
             txtModelo.Size = new Size(156, 23);
@@ -557,7 +560,7 @@ namespace DistribuidoraPalomarNet
             // label7
             // 
             label7.ForeColor = Color.White;
-            label7.Location = new Point(8, 32);
+            label7.Location = new Point(219, 34);
             label7.Margin = new Padding(4, 0, 4, 0);
             label7.Name = "label7";
             label7.Size = new Size(78, 23);
@@ -567,26 +570,26 @@ namespace DistribuidoraPalomarNet
             // cmbLineas
             // 
             cmbLineas.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbLineas.Location = new Point(299, 32);
+            cmbLineas.Location = new Point(480, 32);
             cmbLineas.Margin = new Padding(4, 3, 4, 3);
             cmbLineas.Name = "cmbLineas";
-            cmbLineas.Size = new Size(127, 23);
+            cmbLineas.Size = new Size(133, 23);
             cmbLineas.TabIndex = 9;
             cmbLineas.SelectedIndexChanged += cmbLineas_SelectedIndexChanged;
             // 
             // label5
             // 
             label5.ForeColor = Color.White;
-            label5.Location = new Point(520, 8);
+            label5.Location = new Point(520, 3);
             label5.Margin = new Padding(4, 0, 4, 0);
             label5.Name = "label5";
-            label5.Size = new Size(93, 23);
+            label5.Size = new Size(129, 32);
             label5.TabIndex = 7;
-            label5.Text = "OBSERVACION";
+            label5.Text = "OBSERVACION / CODIGO UNIVERSAL";
             // 
             // txtCodigo
             // 
-            txtCodigo.Location = new Point(83, 8);
+            txtCodigo.Location = new Point(75, 3);
             txtCodigo.Margin = new Padding(4, 3, 4, 3);
             txtCodigo.Name = "txtCodigo";
             txtCodigo.Size = new Size(163, 23);
@@ -596,7 +599,7 @@ namespace DistribuidoraPalomarNet
             // Label1
             // 
             Label1.ForeColor = Color.White;
-            Label1.Location = new Point(8, 8);
+            Label1.Location = new Point(0, 3);
             Label1.Margin = new Padding(4, 0, 4, 0);
             Label1.Name = "Label1";
             Label1.Size = new Size(93, 23);
@@ -606,7 +609,7 @@ namespace DistribuidoraPalomarNet
             // Label2
             // 
             Label2.ForeColor = Color.White;
-            Label2.Location = new Point(246, 8);
+            Label2.Location = new Point(238, 3);
             Label2.Margin = new Padding(4, 0, 4, 0);
             Label2.Name = "Label2";
             Label2.Size = new Size(93, 23);
@@ -615,7 +618,7 @@ namespace DistribuidoraPalomarNet
             // 
             // txtDescripcion
             // 
-            txtDescripcion.Location = new Point(339, 8);
+            txtDescripcion.Location = new Point(331, 3);
             txtDescripcion.Margin = new Padding(4, 3, 4, 3);
             txtDescripcion.Name = "txtDescripcion";
             txtDescripcion.Size = new Size(181, 23);
@@ -625,7 +628,7 @@ namespace DistribuidoraPalomarNet
             // btnLimpiar
             // 
             btnLimpiar.Image = (Image)resources.GetObject("btnLimpiar.Image");
-            btnLimpiar.Location = new Point(807, 9);
+            btnLimpiar.Location = new Point(812, 3);
             btnLimpiar.Margin = new Padding(4, 3, 4, 3);
             btnLimpiar.Name = "btnLimpiar";
             btnLimpiar.Size = new Size(52, 52);
@@ -637,7 +640,7 @@ namespace DistribuidoraPalomarNet
             // label6
             // 
             label6.ForeColor = Color.White;
-            label6.Location = new Point(246, 32);
+            label6.Location = new Point(432, 34);
             label6.Margin = new Padding(4, 0, 4, 0);
             label6.Name = "label6";
             label6.Size = new Size(45, 23);
@@ -808,7 +811,7 @@ namespace DistribuidoraPalomarNet
             // btnEquivalencia
             // 
             btnEquivalencia.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnEquivalencia.Location = new Point(586, 608);
+            btnEquivalencia.Location = new Point(586, 593);
             btnEquivalencia.Name = "btnEquivalencia";
             btnEquivalencia.Size = new Size(52, 52);
             btnEquivalencia.TabIndex = 17;
@@ -893,7 +896,7 @@ namespace DistribuidoraPalomarNet
             DataGridView2.Location = new Point(12, 447);
             DataGridView2.Name = "DataGridView2";
             DataGridView2.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            DataGridView2.Size = new Size(519, 149);
+            DataGridView2.Size = new Size(519, 133);
             DataGridView2.TabIndex = 176;
             DataGridView2.ColumnHeaderMouseClick += DataGridView2_ColumnHeaderMouseClick;
             DataGridView2.Click += DataGridView2_Click;
@@ -986,7 +989,7 @@ namespace DistribuidoraPalomarNet
             btnnovedades.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnnovedades.BackColor = Color.FromArgb(87, 151, 161);
             btnnovedades.ForeColor = Color.White;
-            btnnovedades.Location = new Point(598, 635);
+            btnnovedades.Location = new Point(598, 620);
             btnnovedades.Name = "btnnovedades";
             btnnovedades.Size = new Size(98, 24);
             btnnovedades.TabIndex = 179;
@@ -999,7 +1002,7 @@ namespace DistribuidoraPalomarNet
             btnOfertas.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnOfertas.BackColor = Color.FromArgb(87, 151, 161);
             btnOfertas.ForeColor = Color.White;
-            btnOfertas.Location = new Point(598, 605);
+            btnOfertas.Location = new Point(598, 590);
             btnOfertas.Name = "btnOfertas";
             btnOfertas.Size = new Size(98, 24);
             btnOfertas.TabIndex = 180;
@@ -1064,6 +1067,18 @@ namespace DistribuidoraPalomarNet
             toolStripProgressBar1.Size = new Size(394, 11);
             toolStripProgressBar1.TabIndex = 188;
             // 
+            // webView22
+            // 
+            webView22.AllowExternalDrop = true;
+            webView22.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            webView22.CreationProperties = null;
+            webView22.DefaultBackgroundColor = Color.White;
+            webView22.Location = new Point(0, 647);
+            webView22.Name = "webView22";
+            webView22.Size = new Size(696, 31);
+            webView22.TabIndex = 189;
+            webView22.ZoomFactor = 1D;
+            // 
             // frmPrincipal
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -1095,6 +1110,7 @@ namespace DistribuidoraPalomarNet
             Controls.Add(label8);
             Controls.Add(PictureBox1);
             Controls.Add(PictureBox3);
+            Controls.Add(webView22);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = MenuStrip1;
@@ -1118,6 +1134,7 @@ namespace DistribuidoraPalomarNet
             groupBox2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)PictureBox3).EndInit();
             ((System.ComponentModel.ISupportInitialize)webView21).EndInit();
+            ((System.ComponentModel.ISupportInitialize)webView22).EndInit();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -1162,5 +1179,6 @@ namespace DistribuidoraPalomarNet
         public Label label9;
         public ComboBox cmbMarcas;
         public Label label12;
+        public Microsoft.Web.WebView2.WinForms.WebView2 webView22;
     }
 }

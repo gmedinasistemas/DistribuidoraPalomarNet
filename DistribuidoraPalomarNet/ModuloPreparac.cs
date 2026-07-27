@@ -2,6 +2,8 @@ using ServiceReferenceWSPalomar;
 using System;
 using System.Data;
 using System.Data.OleDb;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -141,6 +143,49 @@ namespace DistribuidoraPalomarNet
         #endregion
 
         /// <summary>
+        /// Limpia un string de moneda (puede contener prefijos como XDR, $, separador de miles '.',
+        /// separador decimal ',') y lo convierte a <c>decimal</c> usando <c>InvariantCulture</c>.
+        /// </summary>
+        /// <param name="valor">String crudo del campo monetario.</param>
+        /// <returns>Decimal parseado o 0 si no es válido.</returns>
+        private static decimal ParseMoneda(object valor)
+        {
+            if (valor == null || string.IsNullOrWhiteSpace(valor.ToString()))
+                return 0;
+
+            string limpio = valor.ToString().Trim();
+
+            // Eliminar todo carácter que no sea dígito, coma o punto
+            limpio = Regex.Replace(limpio, @"[^0-9.,]", "");
+
+            if (string.IsNullOrEmpty(limpio))
+                return 0;
+
+            // Detectar el separador decimal: es el ÚLTIMO punto o coma en el string.
+            // Los anteriores son separadores de miles y se eliminan.
+            int lastDot = limpio.LastIndexOf('.');
+            int lastComma = limpio.LastIndexOf(',');
+            int lastSep = Math.Max(lastDot, lastComma);
+
+            if (lastSep > 0)
+            {
+                string enteros = limpio.Substring(0, lastSep).Replace(".", "").Replace(",", "");
+                string decimales = limpio.Substring(lastSep + 1);
+                limpio = enteros + "." + decimales;
+            }
+            else if (lastSep == 0)
+            {
+                // Empieza con separador (ej ".50") — dejarlo como está para TryParse
+                limpio = "0" + limpio.Replace(",", ".");
+            }
+
+            if (decimal.TryParse(limpio, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal resultado))
+                return resultado;
+
+            return 0;
+        }
+
+        /// <summary>
         /// Procesa las filas del <c>DataSet</c> recibido y graba o actualiza el artículo en la tabla
         /// <c>PREPARAC</c> de la base local, según la acción indicada.
         /// </summary>
@@ -189,26 +234,16 @@ namespace DistribuidoraPalomarNet
                             //? Convert.ToDecimal(fila["PPAORIG"].ToString().Replace("$", "").Replace(".", "").Replace(",", "."))
                             //: 0;
 
-                            _PPAORIG = !string.IsNullOrEmpty(fila["PPAORIG"].ToString())
-                            ? Convert.ToDecimal(fila["PPAORIG"].ToString().Replace("$", "").Replace(".", ""))
-                            : 0;
+                            _PPAORIG = ParseMoneda(fila["PPAORIG"]);
                             //_PPAORIG = !string.IsNullOrEmpty(fila["PPAORIG"].ToString()) ? Convert.ToDecimal(fila["PPAORIG"]) : 0;
 
-                            _PPAPREC = !string.IsNullOrEmpty(fila["PPAPREC"].ToString())
-                            ? Convert.ToDecimal(fila["PPAPREC"].ToString().Replace("$", "").Replace(".", ""))
-                            : 0;
-                            _PPABASE = !string.IsNullOrEmpty(fila["PPAPREC"].ToString())
-                            ? Convert.ToDecimal(fila["PPAPREC"].ToString().Replace("$", "").Replace(".", ""))
-                            : 0;
+                            _PPAPREC = ParseMoneda(fila["PPAPREC"]);
+                            _PPABASE = ParseMoneda(fila["PPAPREC"]);
 
                             //_PPAPREC = Convert.ToDecimal(fila["PPAPREC"]);
                             //_PPABASE = Convert.ToDecimal(fila["PPAPREC"]);
-                            _PPACIVA = !string.IsNullOrEmpty(fila["PPACIVA"].ToString())
-                            ? Convert.ToDecimal(fila["PPACIVA"].ToString().Replace("$", "").Replace(".", ""))
-                            : 0;
-                            _PPAPRECUNITARIO = !string.IsNullOrEmpty(fila["PPAPRECUNITARIO"].ToString())
-                            ? Convert.ToDecimal(fila["PPAPRECUNITARIO"].ToString().Replace("$", "").Replace(".", ""))
-                            : 0;
+                            _PPACIVA = ParseMoneda(fila["PPACIVA"]);
+                            _PPAPRECUNITARIO = ParseMoneda(fila["PPAPRECUNITARIO"]);
 
                             //_PPACIVA = !string.IsNullOrEmpty(fila["PPACIVA"].ToString()) ? Convert.ToDecimal(fila["PPACIVA"]) : 0;
                             //_PPAPRECUNITARIO = !string.IsNullOrEmpty(fila["PPAPRECUNITARIO"].ToString()) ? Convert.ToDecimal(fila["PPAPRECUNITARIO"]) : 0;

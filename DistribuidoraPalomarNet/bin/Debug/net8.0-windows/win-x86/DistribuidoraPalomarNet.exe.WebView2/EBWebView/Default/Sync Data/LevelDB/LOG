@@ -1,2 +1,3 @@
-2026/03/13-11:48:04.097 6438 Creating DB C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\Sync Data\LevelDB since it was missing.
-2026/03/13-11:48:04.113 6438 Reusing MANIFEST C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\Sync Data\LevelDB/MANIFEST-000001
+2026/07/23-20:47:59.676 9e8c Reusing MANIFEST C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\Sync Data\LevelDB/MANIFEST-000001
+2026/07/23-20:47:59.679 9e8c Recovering log #3
+2026/07/23-20:47:59.679 9e8c Reusing old log C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.exe.WebView2\EBWebView\Default\Sync Data\LevelDB/000003.log 

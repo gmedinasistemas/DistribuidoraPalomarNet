@@ -10,6 +10,7 @@
       "DistribuidoraPalomarNet/1.0.0": {
         "dependencies": {
           "ClosedXML": "0.105.0",
+          "FluentFTP": "50.0.0",
           "Microsoft.Web.WebView2": "1.0.3719.77",
           "System.Data.OleDb": "8.0.0",
           "System.Resources.Extensions": "8.0.0",
@@ -86,6 +87,14 @@
           "lib/netstandard2.0/ExcelNumberFormat.dll": {
             "assemblyVersion": "1.1.0.0",
             "fileVersion": "1.1.0.0"
+          }
+        }
+      },
+      "FluentFTP/50.0.0": {
+        "runtime": {
+          "lib/net6.0/FluentFTP.dll": {
+            "assemblyVersion": "50.0.0.0",
+            "fileVersion": "50.0.0.0"
           }
         }
       },
@@ -855,6 +864,13 @@
       "sha512": "sha512-R3BVHPs9O+RkExbZYTGT0+9HLbi8ZrNij1Yziyw6znd3J7P3uoIR07uwTLGOogtz1p6+0sna66eBoXu7tBiVQA==",
       "path": "excelnumberformat/1.1.0",
       "hashPath": "excelnumberformat.1.1.0.nupkg.sha512"
+    },
+    "FluentFTP/50.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-vDd3U0klRBXCisbraAoI4G3YKc/PO8gbstlyTzEXeejxQ4Gcnw+qfmgDHYjARrEHJyNJ8LEqEf030ZcKpap/hQ==",
+      "path": "fluentftp/50.0.0",
+      "hashPath": "fluentftp.50.0.0.nupkg.sha512"
     },
     "iTextSharp/5.5.13.3": {
       "type": "package",

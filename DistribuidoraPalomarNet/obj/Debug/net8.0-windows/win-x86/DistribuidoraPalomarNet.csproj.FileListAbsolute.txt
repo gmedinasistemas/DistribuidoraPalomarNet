@@ -12,6 +12,7 @@ C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DocumentFormat.OpenXml.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\DocumentFormat.OpenXml.Framework.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\ExcelNumberFormat.dll
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\FluentFTP.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\itextsharp.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\Microsoft.Extensions.ObjectPool.dll
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\bin\Debug\net8.0-windows\win-x86\Microsoft.IdentityModel.Logging.dll
@@ -110,6 +111,8 @@ C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\ImageViewerApp.frmImagenZoom.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.Forms.frmMensajePersonalizado.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmPrincipal.resources
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmProcesoActualizacion.resources
+C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.frmProgresoRecalculo.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.Properties.Resources.resources
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.csproj.GenerateResource.cache
 C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\obj\Debug\net8.0-windows\win-x86\DistribuidoraPalomarNet.GeneratedMSBuildEditorConfig.editorconfig
