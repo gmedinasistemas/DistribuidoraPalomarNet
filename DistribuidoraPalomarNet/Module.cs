@@ -917,12 +917,24 @@ namespace DistribuidoraPalomarNet
                 
                 if (opc == 0)
                 {
-                    // Solo inicialización visual: combos + estructura de columnas vacía
-                    CargarComboArmadora();
-                    CargarComboLineas("0");
+                    // Solo inicialización visual: combos + estructura de columnas vacía.
+                    // Se activa _aplicandoFiltros para evitar que los SelectedIndexChanged de los
+                    // combos (disparados al setear SelectedIndex durante la carga, ej. cmbMarcas)
+                    // ejecuten consultas_Relacionales/Ofertas en este punto: eso cargaba artículos
+                    // reales en la grilla que quedaban inmediatamente pisados por la tabla vacía de abajo.
+                    if (_frmPrincipal != null) _frmPrincipal._aplicandoFiltros = true;
+                    try
+                    {
+                        CargarComboArmadora();
+                        CargarComboLineas("0");
 
-                    CargarComboRubros();
-                    CargarComboMarcasPorRubro(""); // Cargar todas las marcas inicialmente
+                        CargarComboRubros();
+                        CargarComboMarcasPorRubro(""); // Cargar todas las marcas inicialmente
+                    }
+                    finally
+                    {
+                        if (_frmPrincipal != null) _frmPrincipal._aplicandoFiltros = false;
+                    }
 
                     // Crear una tabla vacía con las columnas que se usan en la grilla
                     var tablaVacia = new DataTable();
@@ -1637,11 +1649,12 @@ namespace DistribuidoraPalomarNet
         /// <remarks>
         /// Flujo:
         /// <list type="number">
-        /// <item>Obtiene el descriptor de familia (<c>FADESC</c>) de la tabla <c>familias</c> en <c>cnn</c>.</item>
-        /// <item>Con ese descriptor, busca <c>FABEN1</c> en la tabla <c>FAMILIAS</c> de <c>cnnU</c> (base local).</item>
+        /// <item>Busca <c>FABEN1</c> directamente en la tabla <c>FAMILIAS</c> de <c>cnnU</c> (base local) por <c>FACODI = _ARTI_ARFLIA</c>.</item>
         /// <item>Si hay beneficio: <c>precioSugerido = baseSugerido + (baseSugerido × FABEN1 / 100)</c>.</item>
         /// </list>
         /// La base del sugerido es <c>precio_final_desc3</c> si hay desc3 activo; sino <c>precio_final</c>.
+        /// <b>Nota:</b> se filtra por <c>FACODI</c> (no por <c>FADESC</c>) porque puede haber familias con
+        /// igual descripción pero distinto proveedor (<c>FAPROV</c>).
         /// </remarks>
         public static void aplicar_beneficio()
         {
@@ -1652,35 +1665,16 @@ namespace DistribuidoraPalomarNet
                     ? precio_final_desc3
                     : precio_final;
 
-                // Buscar FADESC por _ARTI_ARFLIA en base de artículos
-                string fad = string.Empty;
-                using (var cmArti = new OleDbCommand("SELECT TOP 1 FADESC FROM familias WHERE FACODI = ?", cnn))
-                {
-                    try
-                    {
-                        ConectarDBArti();
-                        cmArti.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
-                        var objF = cmArti.ExecuteScalar();
-                        if (objF != null && objF != DBNull.Value)
-                            fad = objF.ToString();
-                    }
-                    finally
-                    {
-                        if (cnn.State == ConnectionState.Open)
-                            cnn.Close();
-                    }
-                }
-
-                // Buscar FABEN1 por FADESC en base de usuario
+                // Buscar FABEN1 directamente por FACODI en base de usuario
                 decimal? faben1 = null;
-                if (!string.IsNullOrEmpty(fad))
+                if (_ARTI_ARFLIA != 0)
                 {
-                    using (var cmUsu = new OleDbCommand("SELECT TOP 1 FABEN1 FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                    using (var cmUsu = new OleDbCommand("SELECT TOP 1 FABEN1 FROM FAMILIAS WHERE FACODI = ?", cnnU))
                     {
                         try
                         {
                             ConectarDBUsuario();
-                            cmUsu.Parameters.AddWithValue("@p1", fad);
+                            cmUsu.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
                             var objB = cmUsu.ExecuteScalar();
                             if (objB != null && objB != DBNull.Value && decimal.TryParse(objB.ToString(), out var benTmp))
                                 faben1 = benTmp;
@@ -1793,34 +1787,17 @@ namespace DistribuidoraPalomarNet
                             // neto sin IVA
                             precio_costo_sin_iva = precio_desc2;
 
-                            // aplicar IVA por familia si existe
+                            // aplicar IVA por familia si existe (consulta directa por FACODI: evita
+                            // ambigüedad cuando dos familias comparten FADESC con distinto FAPROV)
                             decimal precioConIva = precio_desc2;
-                            string fad = string.Empty;
-                            using (var cmArti = new OleDbCommand("SELECT TOP 1 FADESC FROM familias WHERE FACODI = ?", cnn))
+                            if (_ARTI_ARFLIA != 0)
                             {
-                                try
-                                {
-                                    ConectarDBArti();
-                                    cmArti.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
-                                    var objF = cmArti.ExecuteScalar();
-                                    if (objF != null && objF != DBNull.Value)
-                                        fad = objF.ToString();
-                                }
-                                finally
-                                {
-                                    if (cnn.State == ConnectionState.Open)
-                                        cnn.Close();
-                                }
-                            }
-
-                            if (!string.IsNullOrEmpty(fad))
-                            {
-                                using (var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                                using (var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FACODI = ?", cnnU))
                                 {
                                     try
                                     {
                                         ConectarDBUsuario();
-                                        cmUsu.Parameters.AddWithValue("@p1", fad);
+                                        cmUsu.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
                                         var objI = cmUsu.ExecuteScalar();
                                         if (objI != null && objI != DBNull.Value && decimal.TryParse(objI.ToString(), out var ivaTmp) && ivaTmp != 0)
                                         {
@@ -1849,34 +1826,17 @@ namespace DistribuidoraPalomarNet
                                 precio_costo_sin_iva = precio_costo_sin_iva - (precio_costo_sin_iva * descFamilia / 100);
                             }
 
-                            // aplicar IVA por familia también cuando no hay descuentos
+                            // aplicar IVA por familia también cuando no hay descuentos (consulta directa
+                            // por FACODI: evita ambigüedad cuando dos familias comparten FADESC con distinto FAPROV)
                             decimal precioConIva = precio_costo_sin_iva;
-                            string fad = string.Empty;
-                            using (var cmArti = new OleDbCommand("SELECT TOP 1 FADESC FROM familias WHERE FACODI = ?", cnn))
+                            if (_ARTI_ARFLIA != 0)
                             {
-                                try
-                                {
-                                    ConectarDBArti();
-                                    cmArti.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
-                                    var objF = cmArti.ExecuteScalar();
-                                    if (objF != null && objF != DBNull.Value)
-                                        fad = objF.ToString();
-                                }
-                                finally
-                                {
-                                    if (cnn.State == ConnectionState.Open)
-                                        cnn.Close();
-                                }
-                            }
-
-                            if (!string.IsNullOrEmpty(fad))
-                            {
-                                using (var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                                using (var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FACODI = ?", cnnU))
                                 {
                                     try
                                     {
                                         ConectarDBUsuario();
-                                        cmUsu.Parameters.AddWithValue("@p1", fad);
+                                        cmUsu.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
                                         var objI = cmUsu.ExecuteScalar();
                                         if (objI != null && objI != DBNull.Value && decimal.TryParse(objI.ToString(), out var ivaTmp) && ivaTmp != 0)
                                         {
@@ -2273,11 +2233,34 @@ namespace DistribuidoraPalomarNet
                 if (!string.IsNullOrEmpty(condModelo))
                     conditions.Add(condModelo);
 
-                // cmbRubros: busca el texto del rubro en la descripción del artículo (ARDESC)
+                // cmbRubros: ahora representa una FAMILIA (FADESC). Como una misma FADESC puede
+                // corresponder a varios FACODI (ej: "ROTULA Y EXTREMO" -> 3, 4, 6), se resuelven todos
+                // y se filtra por a.ARFLIA IN (...) en vez de buscar texto en la descripción.
                 string rubroSel = _frmPrincipal.cmbRubros?.Text?.Trim() ?? string.Empty;
                 if (!string.IsNullOrEmpty(rubroSel) && rubroSel != "TODOS"
                     && !rubroSel.Contains("DataRowView"))
-                    conditions.Add($"a.ARDESC LIKE '%{rubroSel.Replace("'", "''")}%'");
+                {
+                    var facodisRubro = ObtenerFacodisPorFamilia(rubroSel);
+                    if (facodisRubro.Count > 0)
+                        conditions.Add(ConstruirClausulaIn("a.ARFLIA", facodisRubro));
+                }
+
+                // cmbArmadora: filtra por r.rbdesc (JOIN RUBROS ya presente en el FROM)
+                string armadoraSel = _frmPrincipal.cmbArmadora?.Text?.Trim() ?? string.Empty;
+                if (!string.IsNullOrEmpty(armadoraSel) && armadoraSel != "TODOS" && armadoraSel != " TODOS"
+                    && !armadoraSel.Contains("DataRowView"))
+                    conditions.Add($"r.rbdesc = '{armadoraSel.Replace("'", "''")}'");
+
+                // cmbMarcas: filtra por a.arprov = prcodi (SelectedValue del combo)
+                if (_frmPrincipal.cmbMarcas?.SelectedValue is int marcaVal && marcaVal != 0)
+                    conditions.Add($"a.arprov = {marcaVal}");
+
+                // cmbLineas: filtra por a.armode = lidesc (Text del combo)
+                string lineaSel = _frmPrincipal.cmbLineas?.Text?.Trim() ?? string.Empty;
+                string lineaValStr = _frmPrincipal.cmbLineas?.SelectedValue?.ToString() ?? "0";
+                if (!string.IsNullOrEmpty(lineaSel) && lineaSel != "TODOS" && lineaValStr != "0"
+                    && !lineaSel.Contains("DataRowView"))
+                    conditions.Add($"a.armode = '{lineaSel.Replace("'", "''")}'");
 
                 string WhereQuery = " WHERE " + string.Join(" AND ", conditions);
                 string QueryFinal = SelectQuery + WhereQuery + " order by a.arterc";
@@ -2291,12 +2274,16 @@ namespace DistribuidoraPalomarNet
 
                 if (ds?.Tables?.Count > 0 && ds.Tables[0]?.Rows?.Count > 0)
                 {
-                    // Guardar DataTable maestro para filtros locales
+                    // Guardar DataTable maestro (referencia para uso futuro de filtrado en memoria)
                     _dtMaestro = ds.Tables[0];
                     _dtMaestro.TableName = "Articulos";
 
-                    // Aplicar filtros inferiores (combos) sobre el DataTable en memoria
-                    AplicarFiltrosLocales();
+                    _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
+                    _frmPrincipal.DataGridView1.Refresh();
+                    Definir_Grilla();
+
+                    // NOTA: filtrado en memoria comentado para uso futuro (ver AplicarFiltrosLocales)
+                    // AplicarFiltrosLocales();
 
                     if (_frmPrincipal.DataGridView1.RowCount > 0)
                         await SeleccionarGrilla();
@@ -2320,78 +2307,74 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        /// <summary>
-        /// Aplica los filtros inferiores (Rubro/Armadora/Líneas/Marca) sobre el DataTable maestro
-        /// ya cargado en memoria, sin volver a consultar la BD Access.
-        /// Usa DataView.RowFilter para filtrar los datos visibles en la grilla.
-        /// </summary>
-        public static async void AplicarFiltrosLocales()
-        {
-            if (_frmPrincipal == null) return;
+        // ============================================================================
+        // AplicarFiltrosLocales: filtrado en memoria sobre _dtMaestro (DataView.RowFilter).
+        // Comentado a pedido del usuario (30/08/2026): los combos (Armadora, Rubro, Marca,
+        // Línea) ahora filtran directo contra la BD vía consultas_Relacionales/consultas_Ofertas,
+        // igual que los TextBox. Se deja el código para retomar el enfoque de filtrado en
+        // memoria en una futura ocasión si se requiere.
+        // ============================================================================
+        ///// <summary>
+        ///// Aplica los filtros inferiores (Rubro/Armadora/Líneas/Marca) sobre el DataTable maestro
+        ///// ya cargado en memoria, sin volver a consultar la BD Access.
+        ///// Usa DataView.RowFilter para filtrar los datos visibles en la grilla.
+        ///// </summary>
+        //public static async void AplicarFiltrosLocales()
+        //{
+        //    if (_frmPrincipal == null) return;
 
-            try
-            {
-                // Si no hay DataTable maestro (no se hizo búsqueda previa), traer todos los datos
-                if (_dtMaestro == null)
-                {
-                    await consultas_Relacionales();
-                    return; // consultas_Relacionales ya llama a AplicarFiltrosLocales internamente
-                }
+        //    try
+        //    {
+        //        // Si no hay DataTable maestro (no se hizo búsqueda previa), traer todos los datos
+        //        if (_dtMaestro == null)
+        //        {
+        //            await consultas_Relacionales();
+        //            return; // consultas_Relacionales ya llama a AplicarFiltrosLocales internamente
+        //        }
 
-                var filtros = new System.Collections.Generic.List<string>();
+        //        var filtros = new System.Collections.Generic.List<string>();
 
-                // === DIAGNÓSTICO TEMPORAL ===
-                // === FIN DIAGNÓSTICO ===
+        //        // Filtro por Armadora (Montadora = rbdesc de RUBROS con RBCODI > 100)
+        //        string armadora = _frmPrincipal.cmbArmadora?.Text?.Trim() ?? string.Empty;
+        //        if (!string.IsNullOrEmpty(armadora) && armadora != "TODOS" && armadora != " TODOS"
+        //            && !armadora.Contains("DataRowView"))
+        //            filtros.Add($"Montadora = '{armadora.Replace("'", "''")}'");
 
-                // Filtro por Armadora (Montadora = rbdesc de RUBROS con RBCODI > 100)
-                string armadora = _frmPrincipal.cmbArmadora?.Text?.Trim() ?? string.Empty;
-                if (!string.IsNullOrEmpty(armadora) && armadora != "TODOS" && armadora != " TODOS"
-                    && !armadora.Contains("DataRowView"))
-                    filtros.Add($"Montadora = '{armadora.Replace("'", "''")}'");
+        //        // Nota: cmbRubros NO filtra localmente — va directo a la BD via consultas_Relacionales()
 
-                // Nota: cmbRubros NO filtra localmente — va directo a la BD via consultas_Relacionales()
+        //        // Filtro por Marca (ProvCodi = SelectedValue del combo cmbMarcas)
+        //        if (_frmPrincipal.cmbMarcas?.SelectedValue is int marcaVal && marcaVal != 0)
+        //            filtros.Add($"ProvCodi = {marcaVal}");
 
-                // Filtro por Marca (ProvCodi = SelectedValue del combo cmbMarcas)
-                if (_frmPrincipal.cmbMarcas?.SelectedValue is int marcaVal && marcaVal != 0)
-                    filtros.Add($"ProvCodi = {marcaVal}");
+        //        // Filtro por Línea (cmbLineas → lidesc = armode = columna Linea)
+        //        // SelectedValue es string (licodi); "0" = TODOS
+        //        string lineaSel = _frmPrincipal.cmbLineas?.Text?.Trim() ?? string.Empty;
+        //        string lineaValStr = _frmPrincipal.cmbLineas?.SelectedValue?.ToString() ?? "0";
+        //        if (!string.IsNullOrEmpty(lineaSel) && lineaSel != "TODOS" && lineaValStr != "0"
+        //            && !lineaSel.Contains("DataRowView"))
+        //            filtros.Add($"Linea = '{lineaSel.Replace("'", "''")}'");
 
-                // Filtro por Línea (cmbLineas → lidesc = armode = columna Linea)
-                // SelectedValue es string (licodi); "0" = TODOS
-                string lineaSel = _frmPrincipal.cmbLineas?.Text?.Trim() ?? string.Empty;
-                string lineaValStr = _frmPrincipal.cmbLineas?.SelectedValue?.ToString() ?? "0";
-                if (!string.IsNullOrEmpty(lineaSel) && lineaSel != "TODOS" && lineaValStr != "0"
-                    && !lineaSel.Contains("DataRowView"))
-                    filtros.Add($"Linea = '{lineaSel.Replace("'", "''")}'");
+        //        // Aplicar el RowFilter al DataView
+        //        string rowFilter = filtros.Count > 0 ? string.Join(" AND ", filtros) : string.Empty;
 
-                // Aplicar el RowFilter al DataView
-                string rowFilter = filtros.Count > 0 ? string.Join(" AND ", filtros) : string.Empty;
+        //        DataView dv = _dtMaestro.DefaultView;
+        //        dv.RowFilter = rowFilter;
 
-                // === DIAGNÓSTICO TEMPORAL ===
-                GrabarError($" - {DateTime.Now:dd/MM/yyyy HH:mm:ss} [DIAG] RowFilter: [{rowFilter}]");
-                // === FIN DIAGNÓSTICO ===
+        //        _frmPrincipal.DataGridView1.DataSource = dv;
+        //        _frmPrincipal.DataGridView1.Refresh();
+        //        Definir_Grilla();
 
-                DataView dv = _dtMaestro.DefaultView;
-                dv.RowFilter = rowFilter;
+        //        // Pintar semáforo de Stock
+        //        _frmPrincipal.ColorearGrillaxOfertas(_frmPrincipal.DataGridView1);
 
-                // === DIAGNÓSTICO TEMPORAL ===
-                GrabarError($" - {DateTime.Now:dd/MM/yyyy HH:mm:ss} [DIAG] Filas después de filtro: {dv.Count}");
-                // === FIN DIAGNÓSTICO ===
-
-                _frmPrincipal.DataGridView1.DataSource = dv;
-                _frmPrincipal.DataGridView1.Refresh();
-                Definir_Grilla();
-
-                // Pintar semáforo de Stock
-                _frmPrincipal.ColorearGrillaxOfertas(_frmPrincipal.DataGridView1);
-
-                // Actualizar contador de registros
-                _frmPrincipal.lblTotalRegistros.Text = "ARTÍCULO: " + _frmPrincipal.DataGridView1.RowCount.ToString();
-            }
-            catch (Exception ex)
-            {
-                GrabarError($" - {DateTime.Now:dd/MM/yyyy HH:mm:ss} 'AplicarFiltrosLocales': {ex.Message}");
-            }
-        }
+        //        // Actualizar contador de registros
+        //        _frmPrincipal.lblTotalRegistros.Text = "ARTÍCULO: " + _frmPrincipal.DataGridView1.RowCount.ToString();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        GrabarError($" - {DateTime.Now:dd/MM/yyyy HH:mm:ss} 'AplicarFiltrosLocales': {ex.Message}");
+        //    }
+        //}
 
         /// <summary>
         /// Igual a <see cref="consultas_Relacionales"/> pero sobre artículos en oferta (<c>ARTT &lt;&gt; 0</c>).
@@ -2442,11 +2425,34 @@ namespace DistribuidoraPalomarNet
                 if (!string.IsNullOrEmpty(condModelo))
                     conditions.Add(condModelo);
 
-                // cmbRubros: busca el texto del rubro en la descripción del artículo (ARDESC)
+                // cmbRubros: ahora representa una FAMILIA (FADESC). Como una misma FADESC puede
+                // corresponder a varios FACODI (ej: "ROTULA Y EXTREMO" -> 3, 4, 6), se resuelven todos
+                // y se filtra por a.ARFLIA IN (...) en vez de buscar texto en la descripción.
                 string rubroSelOf = _frmPrincipal.cmbRubros?.Text?.Trim() ?? string.Empty;
                 if (!string.IsNullOrEmpty(rubroSelOf) && rubroSelOf != "TODOS"
                     && !rubroSelOf.Contains("DataRowView"))
-                    conditions.Add($"a.ARDESC LIKE '%{rubroSelOf.Replace("'", "''")}%'");
+                {
+                    var facodisRubroOf = ObtenerFacodisPorFamilia(rubroSelOf);
+                    if (facodisRubroOf.Count > 0)
+                        conditions.Add(ConstruirClausulaIn("a.ARFLIA", facodisRubroOf));
+                }
+
+                // cmbArmadora: filtra por r.rbdesc (JOIN RUBROS ya presente en el FROM)
+                string armadoraSelOf = _frmPrincipal.cmbArmadora?.Text?.Trim() ?? string.Empty;
+                if (!string.IsNullOrEmpty(armadoraSelOf) && armadoraSelOf != "TODOS" && armadoraSelOf != " TODOS"
+                    && !armadoraSelOf.Contains("DataRowView"))
+                    conditions.Add($"r.rbdesc = '{armadoraSelOf.Replace("'", "''")}'");
+
+                // cmbMarcas: filtra por a.arprov = prcodi (SelectedValue del combo)
+                if (_frmPrincipal.cmbMarcas?.SelectedValue is int marcaValOf && marcaValOf != 0)
+                    conditions.Add($"a.arprov = {marcaValOf}");
+
+                // cmbLineas: filtra por a.armode = lidesc (Text del combo)
+                string lineaSelOf = _frmPrincipal.cmbLineas?.Text?.Trim() ?? string.Empty;
+                string lineaValStrOf = _frmPrincipal.cmbLineas?.SelectedValue?.ToString() ?? "0";
+                if (!string.IsNullOrEmpty(lineaSelOf) && lineaSelOf != "TODOS" && lineaValStrOf != "0"
+                    && !lineaSelOf.Contains("DataRowView"))
+                    conditions.Add($"a.armode = '{lineaSelOf.Replace("'", "''")}'");
 
                 string WhereQuery = " WHERE " + string.Join(" AND ", conditions);
                 string QueryFinal = SelectQuery + WhereQuery + " order by a.arterc";
@@ -2460,12 +2466,16 @@ namespace DistribuidoraPalomarNet
 
                 if (ds?.Tables?.Count > 0 && ds.Tables[0]?.Rows?.Count > 0)
                 {
-                    // Guardar DataTable maestro para filtros locales
+                    // Guardar DataTable maestro (referencia para uso futuro de filtrado en memoria)
                     _dtMaestro = ds.Tables[0];
                     _dtMaestro.TableName = "Articulos";
 
-                    // Aplicar filtros inferiores (combos) sobre el DataTable en memoria
-                    AplicarFiltrosLocales();
+                    _frmPrincipal.DataGridView1.DataSource = ds.Tables[0];
+                    _frmPrincipal.DataGridView1.Refresh();
+                    Definir_Grilla();
+
+                    // NOTA: filtrado en memoria comentado para uso futuro (ver AplicarFiltrosLocales)
+                    // AplicarFiltrosLocales();
 
                     if (_frmPrincipal.DataGridView1.RowCount > 0)
                         await SeleccionarGrilla();
@@ -3743,14 +3753,27 @@ namespace DistribuidoraPalomarNet
         /// artículos asociados en LISTAS, ordenados alfabéticamente.
         /// Agrega «TODOS» como primera opción.
         /// </summary>
-        public static void CargarComboArmadora()
+        /// <param name="facodisFiltro">Opcional. Si se provee (con la familia/rubro seleccionada en
+        /// <c>cmbRubros</c>), restringe las armadoras a las que tienen artículos con
+        /// <c>ARFLIA</c> dentro de esta lista.</param>
+        public static void CargarComboArmadora(List<string> facodisFiltro = null)
         {
             Application.DoEvents();
             ConectarDBArti();
-            string sql = "SELECT DISTINCT R.rbcodi, R.rbdesc "+ 
-                "FROM rubros AS R " + 
-                //"INNER JOIN [listas] AS LT ON R.RBCODI = LT.ARRUB2 " + 
-                "WHERE R.RBCODI > 100 ORDER BY R.rbdesc";
+            string sql;
+            if (facodisFiltro != null && facodisFiltro.Count > 0)
+            {
+                sql = "SELECT DISTINCT R.rbcodi, R.rbdesc " +
+                    "FROM rubros AS R INNER JOIN listas AS LT ON LT.ARRUB2 = R.RBCODI " +
+                    "WHERE R.RBCODI > 100 AND " + ConstruirClausulaIn("LT.ARFLIA", facodisFiltro) +
+                    " ORDER BY R.rbdesc";
+            }
+            else
+            {
+                sql = "SELECT DISTINCT R.rbcodi, R.rbdesc " +
+                    "FROM rubros AS R " +
+                    "WHERE R.RBCODI > 100 ORDER BY R.rbdesc";
+            }
             var da = new OleDbDataAdapter(sql, cnn);
             try
             {
@@ -3773,7 +3796,7 @@ namespace DistribuidoraPalomarNet
             catch (Exception ex)
             {
                 if (cnn.State == ConnectionState.Open) cnn.Close();
-                throw new Exception(", dentro de 'CargarComboArmadora': {ex}");
+                throw new Exception($", dentro de 'CargarComboArmadora': {ex.Message}");
             }
             finally
             {
@@ -3786,7 +3809,10 @@ namespace DistribuidoraPalomarNet
         /// </summary>
         /// <param name="_Armadora">Nombre del rubro para filtrar (ej: valor de <c>cmbArmadora</c>)
         /// o <c>"0"</c> para cargar todas las líneas sin filtro.</param>
-        public static void CargarComboLineas(string _Armadora)
+        /// <param name="facodisFiltro">Opcional. Si se provee (con la familia/rubro seleccionada en
+        /// <c>cmbRubros</c>), restringe además las líneas a las que tienen artículos con
+        /// <c>ARFLIA</c> dentro de esta lista.</param>
+        public static void CargarComboLineas(string _Armadora, List<string> facodisFiltro = null)
         {
             OleDbDataAdapter da = new OleDbDataAdapter();
             try
@@ -3801,24 +3827,25 @@ namespace DistribuidoraPalomarNet
                 // Agregar TODOS como primera opción
                 Dt_lineas.Rows.Add("0", "TODOS");
 
-                // Construir SQL base y agregar filtro opcional por armadora
+                // Construir SQL base y agregar filtros opcionales por armadora y/o familia (ARFLIA)
                 bool filtrarPorArmadora = !string.IsNullOrEmpty(_Armadora) && _Armadora != "0";
+                bool filtrarPorFamilia = facodisFiltro != null && facodisFiltro.Count > 0;
 
-                string sql;
+                string sql = filtrarPorArmadora
+                    ? "SELECT DISTINCT LI.licodi, LI.lidesc " +
+                      "FROM ((lineas AS LI INNER JOIN listas AS LT ON LI.lidesc = LT.ARMODE) " +
+                      "INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI) "
+                    : "SELECT DISTINCT LI.licodi, LI.lidesc " +
+                      "FROM (lineas AS LI INNER JOIN listas AS LT ON LI.lidesc = LT.ARMODE) ";
+
+                var wheres = new List<string>();
                 if (filtrarPorArmadora)
-                {
-                    sql =
-                        "SELECT DISTINCT LI.licodi, LI.lidesc " +
-                        "FROM ((lineas AS LI INNER JOIN listas AS LT ON LI.lidesc = LT.ARMODE) " +
-                        "INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI) " +
-                        "WHERE r.RBDESC = ? ";
-                }
-                else
-                {
-                    sql =
-                        "SELECT DISTINCT LI.licodi, LI.lidesc " +
-                        "FROM (lineas AS LI INNER JOIN listas AS LT ON LI.lidesc = LT.ARMODE) ";
-                }
+                    wheres.Add("r.RBDESC = ?");
+                if (filtrarPorFamilia)
+                    wheres.Add(ConstruirClausulaIn("LT.ARFLIA", facodisFiltro));
+
+                if (wheres.Count > 0)
+                    sql += "WHERE " + string.Join(" AND ", wheres) + " ";
 
                 sql += "ORDER BY LI.lidesc";
 
@@ -3865,14 +3892,17 @@ namespace DistribuidoraPalomarNet
                 _frmPrincipal.cmbLineas.SelectedIndex = -1;
             }
         }
+        /// <summary>
+        /// Carga en <c>cmbRubros</c> las descripciones de familia (<c>familias.FADESC</c>, base <c>cnn</c>)
+        /// en lugar de <c>rubros.rbdesc</c>. Se mantiene el nombre "Rubro" en la UI por decisión del negocio,
+        /// pero el combo ahora representa familias de artículos.
+        /// </summary>
         private static void CargarComboRubros()
         {
             Application.DoEvents();
             ConectarDBArti();
-            string sql = "SELECT DISTINCT R.rbcodi, R.rbdesc " +
-                "FROM rubros AS R " +
-                //"INNER JOIN [listas] AS LT ON R.RBCODI = LT.ARRUB2 " +
-                "WHERE R.RBCODI < 100 ORDER BY R.rbdesc";
+            string sql = "SELECT DISTINCT FADESC FROM familias " +
+                "WHERE FADESC IS NOT NULL AND FADESC <> '' ORDER BY FADESC";
             var da = new OleDbDataAdapter(sql, cnn);
             try
             {
@@ -3881,12 +3911,12 @@ namespace DistribuidoraPalomarNet
                 _frmPrincipal.cmbRubros.Items.Clear();
                 var ds = new DataSet();
                 Application.DoEvents();
-                da.Fill(ds, "rubros");
+                da.Fill(ds, "familias");
 
-                foreach (DataRow fila in ds.Tables["rubros"].Rows)
+                foreach (DataRow fila in ds.Tables["familias"].Rows)
                 {
                     Application.DoEvents();
-                    _frmPrincipal.cmbRubros.Items.Add(fila["rbdesc"]);
+                    _frmPrincipal.cmbRubros.Items.Add(fila["FADESC"]);
                 }
                 _frmPrincipal.cmbRubros.Items.Insert(0, "TODOS");
                 ds.Dispose();
@@ -3895,13 +3925,65 @@ namespace DistribuidoraPalomarNet
             catch (Exception ex)
             {
                 if (cnn.State == ConnectionState.Open) cnn.Close();
-                throw new Exception(", dentro de 'CargarComboRubros': {ex}");
+                throw new Exception($", dentro de 'CargarComboRubros': {ex.Message}");
             }
             finally
             {
                 da.Dispose();
             }
         }
+
+        /// <summary>
+        /// Resuelve todos los <c>FACODI</c> (base <c>cnn</c>, tabla <c>familias</c>) que comparten
+        /// una misma descripción de familia (<c>FADESC</c>). Es necesario porque una misma descripción
+        /// puede tener varios códigos de familia distintos (ej: "ROTULA Y EXTREMO" → FACODI 3, 4 y 6).
+        /// </summary>
+        /// <param name="fadesc">Descripción de familia seleccionada en <c>cmbRubros</c>.</param>
+        /// <returns>Lista de FACODI (como string) asociados a esa FADESC. Vacía si <paramref name="fadesc"/>
+        /// está vacío, es "TODOS", o no se encuentra ninguna coincidencia.</returns>
+        public static List<string> ObtenerFacodisPorFamilia(string fadesc)
+        {
+            var result = new List<string>();
+            if (string.IsNullOrWhiteSpace(fadesc) || fadesc.Trim() == "TODOS" || fadesc.Contains("DataRowView"))
+                return result;
+
+            try
+            {
+                ConectarDBArti();
+                using var cmd = new OleDbCommand("SELECT FACODI FROM familias WHERE FADESC = ?", cnn);
+                cmd.Parameters.AddWithValue("@p1", fadesc.Trim());
+                using var rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    if (rdr[0] != DBNull.Value)
+                    {
+                        string facodi = rdr[0].ToString();
+                        if (!string.IsNullOrEmpty(facodi) && !result.Contains(facodi))
+                            result.Add(facodi);
+                    }
+                }
+            }
+            finally
+            {
+                if (cnn.State == ConnectionState.Open)
+                    cnn.Close();
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Construye una cláusula SQL <c>columna IN (v1,v2,...)</c> a partir de una lista de códigos.
+        /// ARFLIA/FACODI son campos numéricos en Access: los valores NO se entrecomillan porque el
+        /// motor Jet/ACE lanza "Data type mismatch in criteria expression" al comparar una columna
+        /// numérica contra literales de texto. Se filtran valores no numéricos por seguridad.
+        /// </summary>
+        private static string ConstruirClausulaIn(string columna, List<string> valores)
+        {
+            var valoresNumericos = valores.Where(v => long.TryParse(v, out _)).ToList();
+            string inList = string.Join(",", valoresNumericos);
+            return $"{columna} IN ({inList})";
+        }
+
         private static void CargarComboMarcas()
         {
             // Consulta: trae código (prcodi) y nombre de marca (prmarc) de la tabla proveedo.
@@ -3966,39 +4048,34 @@ namespace DistribuidoraPalomarNet
         }
 
         /// <summary>
-        /// Carga las marcas (proveedo) filtradas por el rubro seleccionado.
+        /// Carga las marcas (proveedo) filtradas por la familia (rubro) seleccionada.
         /// Si rubroSeleccionado es "TODOS" o vacío, carga todas las marcas.
         /// </summary>
-        /// <param name="rubroSeleccionado">Nombre del rubro (rbdesc) para filtrar las marcas</param>
+        /// <param name="rubroSeleccionado">Descripción de familia (<c>FADESC</c>) seleccionada en
+        /// <c>cmbRubros</c> para filtrar las marcas.</param>
         public static void CargarComboMarcasPorRubro(string rubroSeleccionado = "")
         {
             Application.DoEvents();
             ConectarDBArti();
-            
+
+            var facodisRubro = ObtenerFacodisPorFamilia(rubroSeleccionado);
+
             string sql;
-            if (string.IsNullOrEmpty(rubroSeleccionado) || rubroSeleccionado.Trim() == "TODOS")
+            if (facodisRubro.Count == 0)
             {
-                // Si no hay rubro seleccionado, mostrar todas las marcas
+                // Sin familia seleccionada (o sin coincidencias): mostrar todas las marcas
                 sql = "SELECT DISTINCT p.prcodi, p.prmarc FROM proveedo p WHERE p.prcrub = 'R' ORDER BY p.prmarc";
             }
             else
             {
-                // Filtrar marcas por rubro: la relación pasa por listas (arprov→prcodi, ARRUB2→RBCODI)
+                // Filtrar marcas por familia: la relación pasa por listas (arprov→prcodi, ARFLIA IN facodis)
                 sql = "SELECT DISTINCT p.prcodi, p.prmarc " +
-                      "FROM ((proveedo p " +
-                      "INNER JOIN listas a ON a.arprov = p.prcodi) " +
-                      "INNER JOIN rubros r ON a.ARRUB2 = r.RBCODI) " +
-                      "WHERE p.prcrub = 'R' AND r.rbdesc = ? " +
+                      "FROM (proveedo p INNER JOIN listas a ON a.arprov = p.prcodi) " +
+                      "WHERE p.prcrub = 'R' AND " + ConstruirClausulaIn("a.ARFLIA", facodisRubro) + " " +
                       "ORDER BY p.prmarc";
             }
 
             var da = new OleDbDataAdapter(sql, cnn);
-            
-            // Agregar parámetro si es necesario
-            if (!string.IsNullOrEmpty(rubroSeleccionado) && rubroSeleccionado.Trim() != "TODOS")
-            {
-                da.SelectCommand.Parameters.AddWithValue("@rubroDesc", rubroSeleccionado.Trim());
-            }
 
             try
             {
@@ -4994,18 +5071,19 @@ namespace DistribuidoraPalomarNet
                         cmaccessUpdate.ExecuteNonQuery();
                     }
 
-                    //using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FADESC FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
-                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FADESC FROM [familias] F ", cnn))
+                    // Se itera por FACODI (no FADESC) porque una misma descripción de familia puede
+                    // repetirse con distinto proveedor (FAPROV); FACODI es la clave real y única.
+                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FACODI FROM [familias] F ", cnn))
                     using (var drFam = cmdFam.ExecuteReader())
                     {
                         ConectarDBUsuario();
-                        using var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA, FADES1 FROM FAMILIAS WHERE FADESC = ?", cnnU);
+                        using var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA, FADES1 FROM FAMILIAS WHERE FACODI = ?", cnnU);
                         cmUsu.Parameters.Add("@p1", OleDbType.VarWChar);
 
                         while (drFam.Read())
                         {
-                            string fad = drFam[0]?.ToString() ?? string.Empty;
-                            if (string.IsNullOrEmpty(fad))
+                            string facodi = drFam[0]?.ToString() ?? string.Empty;
+                            if (string.IsNullOrEmpty(facodi))
                                 continue;
 
                             // Releemos descuentos para decidir dónde aplicar IVA
@@ -5015,7 +5093,7 @@ namespace DistribuidoraPalomarNet
 
                             decimal? faiva = null;
                             decimal? fades1 = null;
-                            cmUsu.Parameters[0].Value = fad;
+                            cmUsu.Parameters[0].Value = facodi;
                             using (var rdr = cmUsu.ExecuteReader())
                             {
                                 if (rdr.Read())
@@ -5033,27 +5111,27 @@ namespace DistribuidoraPalomarNet
                                 if (d2 != 0)
                                 {
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 - (L.arpre1*" + des + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 - (L.arpre1*" + des + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                                 else if (d1 != 0)
                                 {
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre0 = FORMAT(L.arpre0 - (L.arpre0*" + des + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre0 = FORMAT(L.arpre0 - (L.arpre0*" + des + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
 
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = L.arpre0 WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = L.arpre0 WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                                 else
                                 {
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 - (L.arpre1*" + des + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 - (L.arpre1*" + des + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                             }
@@ -5065,29 +5143,29 @@ namespace DistribuidoraPalomarNet
                                 if (d2 != 0)
                                 {
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 + (L.arpre1*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 + (L.arpre1*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                                 else if (d1 != 0)
                                 {
                                     // Solo desc1: IVA sobre arpre0 y luego reflejar en arpre1
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre0 = FORMAT(L.arpre0 + (L.arpre0*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre0 = FORMAT(L.arpre0 + (L.arpre0*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
 
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = L.arpre0 WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = L.arpre0 WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                                 else
                                 {
                                     // Sin descuentos: IVA directo sobre arpre1
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 + (L.arpre1*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 + (L.arpre1*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                             }
@@ -5153,17 +5231,19 @@ namespace DistribuidoraPalomarNet
                         cmaccessUpdate.ExecuteNonQuery();
                     }
 
-                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FADESC FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
+                    // Se itera por FACODI (no FADESC) porque una misma descripción de familia puede
+                    // repetirse con distinto proveedor (FAPROV); FACODI es la clave real y única.
+                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FACODI FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
                     using (var drFam = cmdFam.ExecuteReader())
                     {
                         ConectarDBUsuario();
-                        using var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA, FADES1 FROM FAMILIAS WHERE FADESC = ?", cnnU);
+                        using var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA, FADES1 FROM FAMILIAS WHERE FACODI = ?", cnnU);
                         cmUsu.Parameters.Add("@p1", OleDbType.VarWChar);
 
                         while (drFam.Read())
                         {
-                            string fad = drFam[0]?.ToString() ?? string.Empty;
-                            if (string.IsNullOrEmpty(fad))
+                            string facodi = drFam[0]?.ToString() ?? string.Empty;
+                            if (string.IsNullOrEmpty(facodi))
                                 continue;
 
                             decimal d1 = 0, d2 = 0;
@@ -5172,7 +5252,7 @@ namespace DistribuidoraPalomarNet
 
                             decimal? faiva = null;
                             decimal? fades1 = null;
-                            cmUsu.Parameters[0].Value = fad;
+                            cmUsu.Parameters[0].Value = facodi;
                             using (var rdr = cmUsu.ExecuteReader())
                             {
                                 if (rdr.Read())
@@ -5190,27 +5270,27 @@ namespace DistribuidoraPalomarNet
                                 if (d2 != 0)
                                 {
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 - (L.arpre4*" + des + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 - (L.arpre4*" + des + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                                 else if (d1 != 0)
                                 {
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre3 = FORMAT(L.arpre3 - (L.arpre3*" + des + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre3 = FORMAT(L.arpre3 - (L.arpre3*" + des + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
 
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = L.arpre3 WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = L.arpre3 WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                                 else
                                 {
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 - (L.arpre4*" + des + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 - (L.arpre4*" + des + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                             }
@@ -5222,29 +5302,29 @@ namespace DistribuidoraPalomarNet
                                 {
                                     // Con desc2: final en arpre4
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 + (L.arpre4*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 + (L.arpre4*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                                 else if (d1 != 0)
                                 {
                                     // Solo desc1: IVA sobre arpre3 y luego reflejar en arpre4
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre3 = FORMAT(L.arpre3 + (L.arpre3*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre3 = FORMAT(L.arpre3 + (L.arpre3*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
 
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = L.arpre3 WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = L.arpre3 WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                                 else
                                 {
                                     // Sin descuentos: IVA directo sobre arpre4
                                     cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 + (L.arpre4*" + iva + "/100),'Fixed') WHERE F.FADESC = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", fad);
+                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 + (L.arpre4*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
+                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
                             }
@@ -5286,20 +5366,22 @@ namespace DistribuidoraPalomarNet
                     cmaccess.Connection = cnn;
                     cmaccess.CommandType = CommandType.Text;
 
-                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FADESC FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
+                    // Se itera por FACODI (no FADESC) porque una misma descripción de familia puede
+                    // repetirse con distinto proveedor (FAPROV); FACODI es la clave real y única.
+                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FACODI FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
                     using (var drFam = cmdFam.ExecuteReader())
                     {
                         while (drFam.Read())
                         {
-                            string fad = drFam[0]?.ToString() ?? string.Empty;
-                            if (string.IsNullOrEmpty(fad))
+                            string facodi = drFam[0]?.ToString() ?? string.Empty;
+                            if (string.IsNullOrEmpty(facodi))
                                 continue;
 
                             decimal? faben1 = null;
-                            using (var cmUsu = new OleDbCommand("SELECT TOP 1 FABEN1 FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                            using (var cmUsu = new OleDbCommand("SELECT TOP 1 FABEN1 FROM FAMILIAS WHERE FACODI = ?", cnnU))
                             {
                                 ConectarDBUsuario();
-                                cmUsu.Parameters.AddWithValue("@p1", fad);
+                                cmUsu.Parameters.AddWithValue("@p1", facodi);
                                 var obj = cmUsu.ExecuteScalar();
                                 if (obj != null && obj != DBNull.Value)
                                 {
@@ -5314,16 +5396,16 @@ namespace DistribuidoraPalomarNet
                             {
                                 string ben = faben1.Value.ToString().Replace(",", ".");
                                 cmaccess.Parameters.Clear();
-                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre2 = FORMAT(L.arpre1 + (L.arpre1*" + ben + "/100),'Fixed') WHERE F.FADESC = ?";
-                                cmaccess.Parameters.AddWithValue("@p1", fad);
+                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre2 = FORMAT(L.arpre1 + (L.arpre1*" + ben + "/100),'Fixed') WHERE F.FACODI = ?";
+                                cmaccess.Parameters.AddWithValue("@p1", facodi);
                                 cmaccess.ExecuteNonQuery();
                             }
                             else
                             {
                                 cmaccess.Parameters.Clear();
-                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre2 = FORMAT(L.arpre1,'Fixed') WHERE F.FADESC = ?";
-                                cmaccess.Parameters.AddWithValue("@p1", fad);
-                                try { GrabarError($"Familia sin FABEN1 (o 0) al sugerir precio: '{fad}'"); } catch {}
+                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre2 = FORMAT(L.arpre1,'Fixed') WHERE F.FACODI = ?";
+                                cmaccess.Parameters.AddWithValue("@p1", facodi);
+                                try { GrabarError($"Familia sin FABEN1 (o 0) al sugerir precio: FACODI='{facodi}'"); } catch {}
                                 cmaccess.ExecuteNonQuery();
                             }
                         }
@@ -5359,20 +5441,22 @@ namespace DistribuidoraPalomarNet
                     cmaccess.Connection = cnn;
                     cmaccess.CommandType = CommandType.Text;
 
-                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FADESC FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
+                    // Se itera por FACODI (no FADESC) porque una misma descripción de familia puede
+                    // repetirse con distinto proveedor (FAPROV); FACODI es la clave real y única.
+                    using (var cmdFam = new OleDbCommand("SELECT DISTINCT F.FACODI FROM [familias] F INNER JOIN [listas] L ON L.ARFLIA = F.FACODI", cnn))
                     using (var drFam = cmdFam.ExecuteReader())
                     {
                         while (drFam.Read())
                         {
-                            string fad = drFam[0]?.ToString() ?? string.Empty;
-                            if (string.IsNullOrEmpty(fad))
+                            string facodi = drFam[0]?.ToString() ?? string.Empty;
+                            if (string.IsNullOrEmpty(facodi))
                                 continue;
 
                             decimal? faben1 = null;
-                            using (var cmUsu = new OleDbCommand("SELECT TOP 1 FABEN1 FROM FAMILIAS WHERE FADESC = ?", cnnU))
+                            using (var cmUsu = new OleDbCommand("SELECT TOP 1 FABEN1 FROM FAMILIAS WHERE FACODI = ?", cnnU))
                             {
                                 ConectarDBUsuario();
-                                cmUsu.Parameters.AddWithValue("@p1", fad);
+                                cmUsu.Parameters.AddWithValue("@p1", facodi);
                                 var obj = cmUsu.ExecuteScalar();
                                 if (obj != null && obj != DBNull.Value)
                                 {
@@ -5387,16 +5471,16 @@ namespace DistribuidoraPalomarNet
                             {
                                 string ben = faben1.Value.ToString().Replace(",", ".");
                                 cmaccess.Parameters.Clear();
-                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre5 = FORMAT(L.arpre4 + (L.arpre4*" + ben + "/100),'Fixed') WHERE F.FADESC = ?";
-                                cmaccess.Parameters.AddWithValue("@p1", fad);
+                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre5 = FORMAT(L.arpre4 + (L.arpre4*" + ben + "/100),'Fixed') WHERE F.FACODI = ?";
+                                cmaccess.Parameters.AddWithValue("@p1", facodi);
                                 cmaccess.ExecuteNonQuery();
                             }
                             else
                             {
                                 cmaccess.Parameters.Clear();
-                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre5 = FORMAT(L.arpre4,'Fixed') WHERE F.FADESC = ?";
-                                cmaccess.Parameters.AddWithValue("@p1", fad);
-                                try { GrabarError($"Familia sin FABEN1 (o 0) al sugerir precio ofertas: '{fad}'"); } catch {}
+                                cmaccess.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre5 = FORMAT(L.arpre4,'Fixed') WHERE F.FACODI = ?";
+                                cmaccess.Parameters.AddWithValue("@p1", facodi);
+                                try { GrabarError($"Familia sin FABEN1 (o 0) al sugerir precio ofertas: FACODI='{facodi}'"); } catch {}
                                 cmaccess.ExecuteNonQuery();
                             }
                         }

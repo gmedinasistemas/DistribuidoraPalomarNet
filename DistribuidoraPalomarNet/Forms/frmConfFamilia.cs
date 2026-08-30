@@ -231,6 +231,13 @@ namespace DistribuidoraPalomarNet
             {
                 DataGridView1.Columns["Familia"].ReadOnly = true;
                 DataGridView1.Columns["Familia"].Width = 200;
+                DataGridView1.Columns["Familia"].DisplayIndex = 0;
+            }
+            if (DataGridView1.Columns.Contains("Marca"))
+            {
+                DataGridView1.Columns["Marca"].ReadOnly = true;
+                DataGridView1.Columns["Marca"].Width = 120;
+                DataGridView1.Columns["Marca"].DisplayIndex = 1;
             }
             if (DataGridView1.Columns.Contains("FADES1"))
             {
@@ -286,16 +293,16 @@ namespace DistribuidoraPalomarNet
                         {
                             Application.DoEvents();
                             var row = DataGridView1.Rows[s];
-                            string familia = Convert.ToString(row.Cells[0].Value);
-                            string ben1 = Convert.ToString(row.Cells[3].Value);
-                            string fades1 = Convert.ToString(row.Cells[1].Value);
-                            string iva = Convert.ToString(row.Cells[2].Value);
+                            string facodi = Convert.ToString(row.Cells["FACODI"].Value);
+                            string ben1 = Convert.ToString(row.Cells["Beneficio"].Value);
+                            string fades1 = Convert.ToString(row.Cells["FADES1"].Value);
+                            string iva = Convert.ToString(row.Cells["Iva"].Value);
 
                             TryParseDecimalFlexible((ben1 ?? string.Empty).Trim(), out var ben1Val);
                             TryParseDecimalFlexible((fades1 ?? string.Empty).Trim(), out var fades1Val);
                             TryParseDecimalFlexible((iva ?? string.Empty).Trim(), out var ivaVal);
 
-                            UpdateFamilias(familia, ben1Val, fades1Val, ivaVal);
+                            UpdateFamiliasPorCodigo(facodi, ben1Val, fades1Val, ivaVal);
                             s = s + 1;
                         }
                     }
@@ -509,22 +516,73 @@ namespace DistribuidoraPalomarNet
             }
         }
 
+        // Consulta la base de artículos (cnn) la tabla proveedo y devuelve un diccionario PRCODI -> PRMARC.
+        // Se usa para resolver la Marca de cada familia a partir de su FAPROV (ya disponible en cnnU).
+        private Dictionary<string, string> ObtenerMarcasPorProveedor()
+        {
+            var dict = new Dictionary<string, string>();
+            OleDbDataAdapter da = null;
+            try
+            {
+                Module.ConectarDBArti();
+                da = new OleDbDataAdapter("SELECT PRCODI, PRMARC FROM proveedo", Module.cnn);
+                var ds = new DataSet();
+                da.Fill(ds);
+                foreach (DataRow row in ds.Tables[0].Rows)
+                {
+                    string prcodi = Convert.ToString(row["PRCODI"]);
+                    if (string.IsNullOrEmpty(prcodi) || dict.ContainsKey(prcodi)) continue;
+                    dict[prcodi] = row["PRMARC"] == DBNull.Value ? string.Empty : Convert.ToString(row["PRMARC"]);
+                }
+                if (Module.cnn.State == ConnectionState.Open)
+                    Module.cnn.Close();
+            }
+            catch
+            {
+                if (Module.cnn.State == ConnectionState.Open)
+                    Module.cnn.Close();
+            }
+            finally
+            {
+                da?.Dispose();
+            }
+            return dict;
+        }
+
         // Consulta la tabla FAMILIAS de la base de usuario y carga los resultados en el DataGridView.
-        // Columnas: Familia (solo lectura), Descuento Familia (FADES1), Iva (FAIVA), Beneficio (FABEN1).
+        // Cada fila queda identificada por FACODI (columna oculta), ya que una misma descripción de
+        // familia (FADESC) puede repetirse con distinto proveedor (FAPROV).
+        // Columnas visibles: Familia, Marca, Descuento Familia (FADES1), Iva (FAIVA), Beneficio (FABEN1).
         private void CargarGrilla()
         {
             OleDbDataAdapter da = null;
             try
             {
                 Module.ConectarDBUsuario();
-                da = new OleDbDataAdapter("SELECT DISTINCT FADESC as Familia, FADES1, FAIVA AS Iva, FABEN1 as Beneficio from FAMILIAS", Module.cnnU);
+                da = new OleDbDataAdapter("SELECT FACODI, FADESC as Familia, FAPROV, FADES1, FAIVA AS Iva, FABEN1 as Beneficio from FAMILIAS order by FADESC", Module.cnnU);
                 var ds = new DataSet();
                 da.Fill(ds);
+
+                // La Marca (PRMARC) se resuelve por FAPROV (ya presente en cnnU) contra proveedo (cnn).
+                var marcasPorProveedor = ObtenerMarcasPorProveedor();
+                ds.Tables[0].Columns.Add("Marca", typeof(string));
+                foreach (DataRow row in ds.Tables[0].Rows)
+                {
+                    string faprov = row["FAPROV"] == DBNull.Value ? string.Empty : Convert.ToString(row["FAPROV"]);
+                    row["Marca"] = (!string.IsNullOrEmpty(faprov) && marcasPorProveedor.TryGetValue(faprov, out var marca))
+                        ? marca
+                        : string.Empty;
+                }
+
                 DataGridView1.DataSource = ds.Tables[0];
                 DataGridView1.Refresh();
                 DataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
                 if (DataGridView1.Columns.Contains("Familia"))
                     DataGridView1.Columns["Familia"].ReadOnly = true;
+                if (DataGridView1.Columns.Contains("FACODI"))
+                    DataGridView1.Columns["FACODI"].Visible = false;
+                if (DataGridView1.Columns.Contains("FAPROV"))
+                    DataGridView1.Columns["FAPROV"].Visible = false;
                 if (Module.cnnU.State == ConnectionState.Open)
                     Module.cnnU.Close();
             }
@@ -551,7 +609,7 @@ namespace DistribuidoraPalomarNet
                     return;
 
                 // 1) Cargar en memoria las familias existentes en la base de usuario (cnnU)
-                var familiasUsuario = new Dictionary<string, string>(); // FACODI -> FADESC
+                var familiasUsuario = new Dictionary<string, (string FADESC, string FAPROV)>(); // FACODI -> (FADESC, FAPROV)
                 OleDbCommand cmFamiliasUsu = new OleDbCommand();
                 OleDbDataReader drFamiliasUsu = null;
                 try
@@ -559,16 +617,14 @@ namespace DistribuidoraPalomarNet
                     Module.ConectarDBUsuario();
                     cmFamiliasUsu.Connection = Module.cnnU;
                     cmFamiliasUsu.CommandType = CommandType.Text;
-                    cmFamiliasUsu.CommandText = "SELECT FACODI, FADESC FROM FAMILIAS";
+                    cmFamiliasUsu.CommandText = "SELECT FACODI, FADESC, FAPROV FROM FAMILIAS";
                     drFamiliasUsu = cmFamiliasUsu.ExecuteReader();
                     while (drFamiliasUsu.Read())
                     {
                         string facodiU = Convert.ToString(drFamiliasUsu["FACODI"]);
                         string fadescU = Convert.ToString(drFamiliasUsu["FADESC"]);
-                        if (!familiasUsuario.ContainsKey(facodiU))
-                            familiasUsuario.Add(facodiU, fadescU);
-                        else
-                            familiasUsuario[facodiU] = fadescU;
+                        string faprovU = drFamiliasUsu["FAPROV"] == DBNull.Value ? string.Empty : Convert.ToString(drFamiliasUsu["FAPROV"]);
+                        familiasUsuario[facodiU] = (fadescU, faprovU);
                     }
                 }
                 finally
@@ -582,7 +638,7 @@ namespace DistribuidoraPalomarNet
                 Module.ConectarDBArti();
                 cmFamiliasArt.Connection = Module.cnn;
                 cmFamiliasArt.CommandType = CommandType.Text;
-                cmFamiliasArt.CommandText = "SELECT DISTINCT f.facodi, f.fadesc from familias as f " +
+                cmFamiliasArt.CommandText = "SELECT DISTINCT f.facodi, f.fadesc, f.faprov from familias as f " +
                                             //" inner join descuent as d on d.desflia=f.facodi " +
                                             //" where d.desclie=" + Module.US_CODI +
                                             " order by f.fadesc";
@@ -592,18 +648,20 @@ namespace DistribuidoraPalomarNet
                 {
                     string facodi = drFamiliasArt["FACODI"].ToString();
                     string fadesc = drFamiliasArt["FADESC"].ToString();
+                    string faprov = drFamiliasArt["FAPROV"] == DBNull.Value ? string.Empty : drFamiliasArt["FAPROV"].ToString();
 
-                    if (!familiasUsuario.TryGetValue(facodi, out var descActual))
+                    if (!familiasUsuario.TryGetValue(facodi, out var datosActuales))
                     {
                         // No existe en la base de usuario, insertar
-                        InsertarFamilia(facodi, fadesc);
-                        familiasUsuario[facodi] = fadesc;
+                        InsertarFamilia(facodi, fadesc, faprov);
+                        familiasUsuario[facodi] = (fadesc, faprov);
                     }
-                    else if (!string.Equals(descActual, fadesc, StringComparison.Ordinal))
+                    else if (!string.Equals(datosActuales.FADESC, fadesc, StringComparison.Ordinal)
+                             || !string.Equals(datosActuales.FAPROV, faprov, StringComparison.Ordinal))
                     {
-                        // Existe pero con descripcion distinta, actualizar
-                        UpdateFamilia(facodi, fadesc);
-                        familiasUsuario[facodi] = fadesc;
+                        // Existe pero con descripcion o proveedor distinto, actualizar
+                        UpdateFamilia(facodi, fadesc, faprov);
+                        familiasUsuario[facodi] = (fadesc, faprov);
                     }
                 }
                 drFamiliasArt.Close();
@@ -627,14 +685,14 @@ namespace DistribuidoraPalomarNet
         }
 
         // Verifica si una familia existe en la base de usuario y la inserta si no está.
-        // Se usa como fallback de sincronización por descripción.
-        private void ActualizarFAMIVA(string facodi, string fadesc)
+        // Se usa como fallback de sincronización por código de familia (FACODI).
+        private void ActualizarFAMIVA(string facodi, string fadesc, string faprov = "")
         {
             try
             {
-                if (!FamiliaExiste(fadesc))
+                if (!IDFamiliaExiste(facodi))
                 {
-                    InsertarFamilia(facodi, fadesc);
+                    InsertarFamilia(facodi, fadesc, faprov);
                 }
             }
             catch (Exception ex)
@@ -717,6 +775,8 @@ namespace DistribuidoraPalomarNet
 
         // Busca una familia en la base de usuario por su descripción (FADESC).
         // Retorna true si ya existe un registro con ese nombre.
+        // NOTA: puede haber varias familias con la misma descripción (distinto FAPROV);
+        // para identificar una fila específica usar IDFamiliaExiste (FACODI).
         private bool FamiliaExiste(string Familia)
         {
             OleDbCommand cmFamilias = new OleDbCommand();
@@ -749,7 +809,7 @@ namespace DistribuidoraPalomarNet
 
         // Inserta una nueva familia en la base de usuario con todos sus valores numéricos en 0.
         // Se llama durante la sincronización cuando una familia de artículos no existe en el usuario.
-        private void InsertarFamilia(string CodFamilia, string Familia)
+        private void InsertarFamilia(string CodFamilia, string Familia, string faprov = "")
         {
             OleDbCommand cmFamilias = new OleDbCommand();
             try
@@ -757,7 +817,8 @@ namespace DistribuidoraPalomarNet
                 Module.ConectarDBUsuario();
                 cmFamilias.Connection = Module.cnnU;
                 cmFamilias.CommandType = CommandType.Text;
-                cmFamilias.CommandText = "insert into FAMILIAS (FACODI,FADESC,FABEN1,FADES1,FAIVA) values ('" + (CodFamilia ?? string.Empty).Replace("'", "''") + "','" + (Familia ?? string.Empty).Replace("'", "''") + "',0,0,0)";
+                string faprovVal = string.IsNullOrWhiteSpace(faprov) ? "NULL" : faprov;
+                cmFamilias.CommandText = "insert into FAMILIAS (FACODI,FADESC,FABEN1,FADES1,FAIVA,FAPROV) values ('" + (CodFamilia ?? string.Empty).Replace("'", "''") + "','" + (Familia ?? string.Empty).Replace("'", "''") + "',0,0,0," + faprovVal + ")";
                 Application.DoEvents();
                 cmFamilias.ExecuteNonQuery();
                 if (Module.cnnU.State == ConnectionState.Open)
@@ -802,8 +863,9 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        // Sobrecarga 2 (principal): actualiza FABEN1, FADES1 y FAIVA de una familia por FADESC.
-        // Usa parámetros posicionales (Parameters.AddWithValue) para evitar SQL injection y manejar decimales correctamente.
+        // Sobrecarga 2 (legacy, no usada en el flujo activo): actualiza FABEN1, FADES1 y FAIVA de una
+        // familia por FADESC. Se mantiene solo por compatibilidad con ActualizarFilasDesdeGrilla.
+        // ADVERTENCIA: puede afectar más de una fila si hay familias con igual FADESC y distinto FAPROV.
         private void UpdateFamilias(string familia, decimal ben1, decimal fades1, decimal iva)
         {
             using var cmUsu = new OleDbCommand();
@@ -830,6 +892,38 @@ namespace DistribuidoraPalomarNet
                 ptbImgSi.Visible = false;
                 ptbImgNo.Visible = true;
                 throw new Exception(",Error dentro de 'UpdateFamilias' " + ex.Message);
+            }
+        }
+
+        // Actualiza FABEN1, FADES1 y FAIVA de una familia identificada por su FACODI (clave única real).
+        // Reemplaza a UpdateFamilias(string, decimal, decimal, decimal) en el flujo activo (btnGrabar_Click),
+        // ya que FADESC puede repetirse entre familias con distinto proveedor (FAPROV).
+        private void UpdateFamiliasPorCodigo(string facodi, decimal ben1, decimal fades1, decimal iva)
+        {
+            using var cmUsu = new OleDbCommand();
+            try
+            {
+                Module.ConectarDBUsuario();
+                cmUsu.Connection = Module.cnnU;
+                cmUsu.CommandType = CommandType.Text;
+                cmUsu.CommandText = "UPDATE FAMILIAS SET FABEN1 = ?, FADES1 = ?, FAIVA = ? WHERE FACODI = ?";
+                cmUsu.Parameters.AddWithValue("@p1", ben1.ToString().Replace(".", ","));
+                cmUsu.Parameters.AddWithValue("@p2", fades1.ToString().Replace(".", ","));
+                cmUsu.Parameters.AddWithValue("@p3", iva.ToString().Replace(".", ","));
+                cmUsu.Parameters.AddWithValue("@p4", facodi ?? string.Empty);
+                cmUsu.ExecuteNonQuery();
+                if (Module.cnnU.State == ConnectionState.Open)
+                    Module.cnnU.Close();
+                ptbImgSi.Visible = true;
+                ptbImgNo.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                if (Module.cnnU.State == ConnectionState.Open)
+                    Module.cnnU.Close();
+                ptbImgSi.Visible = false;
+                ptbImgNo.Visible = true;
+                throw new Exception(",Error dentro de 'UpdateFamiliasPorCodigo' " + ex.Message);
             }
         }
 
@@ -1054,9 +1148,10 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        // Actualiza la descripción (FADESC) de una familia en la base de usuario, buscando por su FACODI.
-        // Se usa durante la sincronización cuando la descripción en la base de artículos cambió.
-        private void UpdateFamilia(string CodFamilia, string Familia)
+        // Actualiza la descripción (FADESC) y el proveedor (FAPROV) de una familia en la base de usuario,
+        // buscando por su FACODI. Se usa durante la sincronización cuando alguno de esos datos cambió
+        // en la base de artículos.
+        private void UpdateFamilia(string CodFamilia, string Familia, string faprov = "")
         {
             OleDbCommand cmFamilias = new OleDbCommand();
             try
@@ -1064,7 +1159,8 @@ namespace DistribuidoraPalomarNet
                 Module.ConectarDBUsuario();
                 cmFamilias.Connection = Module.cnnU;
                 cmFamilias.CommandType = CommandType.Text;
-                cmFamilias.CommandText = "update FAMILIAS set FADESC='" + (Familia ?? string.Empty).Replace("'", "''") + "' where FACODI=" + CodFamilia;
+                string faprovVal = string.IsNullOrWhiteSpace(faprov) ? "NULL" : faprov;
+                cmFamilias.CommandText = "update FAMILIAS set FADESC='" + (Familia ?? string.Empty).Replace("'", "''") + "', FAPROV=" + faprovVal + " where FACODI=" + CodFamilia;
                 Application.DoEvents();
                 cmFamilias.ExecuteNonQuery();
                 if (Module.cnnU.State == ConnectionState.Open)
