@@ -1,4 +1,4 @@
-namespace DistribuidoraPalomarNet
+﻿namespace DistribuidoraPalomarNet
 {
     partial class frmPrincipal
     {
@@ -7,7 +7,7 @@ namespace DistribuidoraPalomarNet
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        // Controles públicos
+        // Controles p├║blicos
         public System.Windows.Forms.CheckBox ckbOfertas;
         public System.Windows.Forms.TextBox txtCodigo;
         public System.Windows.Forms.TextBox txtDescripcion;
@@ -56,7 +56,7 @@ namespace DistribuidoraPalomarNet
         private System.Windows.Forms.Button btnMaximizar;
         private System.Windows.Forms.Button btnCerrar;
 
-        // Controles del menú
+        // Controles del men├║
         private System.Windows.Forms.MenuStrip MenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem ArchivoToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ActualizarBasesToolStripMenuItem;
@@ -585,7 +585,7 @@ namespace DistribuidoraPalomarNet
             label5.Name = "label5";
             label5.Size = new Size(129, 32);
             label5.TabIndex = 7;
-            label5.Text = "OBSERVACION / CODIGO UNIVERSAL";
+            label5.Text = "OBSERVACIÓN / CÓDIGO UNIVERSAL";
             // 
             // txtCodigo
             // 
@@ -594,7 +594,7 @@ namespace DistribuidoraPalomarNet
             txtCodigo.Name = "txtCodigo";
             txtCodigo.Size = new Size(163, 23);
             txtCodigo.TabIndex = 1;
-            txtCodigo.KeyPress += txtCodigo_KeyPress;
+            txtCodigo.TextChanged += txtCodigo_TextChanged;
             // 
             // Label1
             // 
@@ -1024,7 +1024,6 @@ namespace DistribuidoraPalomarNet
             // 
             PictureBox3.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             PictureBox3.BackColor = Color.Transparent;
-            PictureBox3.Image = (Image)resources.GetObject("PictureBox3.Image");
             PictureBox3.Location = new Point(738, 535);
             PictureBox3.Name = "PictureBox3";
             PictureBox3.Size = new Size(194, 110);

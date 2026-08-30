@@ -249,7 +249,8 @@ namespace DistribuidoraPalomarNet
                             //_PPAPRECUNITARIO = !string.IsNullOrEmpty(fila["PPAPRECUNITARIO"].ToString()) ? Convert.ToDecimal(fila["PPAPRECUNITARIO"]) : 0;
 
                             _PPABARR = !string.IsNullOrEmpty(fila["ARBARR"].ToString()) ? Convert.ToDecimal(fila["ARBARR"]) : 0;
-                            _PPACODI = !string.IsNullOrEmpty(fila["CODIGO"].ToString()) ? fila["CODIGO"].ToString() : "";
+                            // CORREGIDO: PPACODI ahora usa ARCODI2 como pidió Mara
+                            _PPACODI = !string.IsNullOrEmpty(fila["ARCODI2"].ToString()) ? fila["ARCODI2"].ToString() : "";
                             _PPAFLIA = !string.IsNullOrEmpty(fila["FAMILIA"].ToString()) ? Convert.ToDecimal(fila["FAMILIA"]) : 0;
                             _PPAIMPO = !string.IsNullOrEmpty(fila["ORIGEN"].ToString()) ? fila["ORIGEN"].ToString() : "";
                             _PPAPROV = !string.IsNullOrEmpty(fila["PROVEEDOR"].ToString()) ? Convert.ToDecimal(fila["PROVEEDOR"]) : 0;
@@ -260,7 +261,8 @@ namespace DistribuidoraPalomarNet
                             _PPACOD1 = !string.IsNullOrEmpty(fila["PRIMERA"].ToString()) ? fila["PRIMERA"].ToString() : "";
                             _PPACOD2 = !string.IsNullOrEmpty(fila["SEGUNDA"].ToString()) ? fila["SEGUNDA"].ToString() : "";
                             _PPACOD3 = !string.IsNullOrEmpty(fila["TERCERA"].ToString()) ? fila["TERCERA"].ToString() : "";
-                            _PPACOD4 = !string.IsNullOrEmpty(fila["CUARTA"].ToString()) ? fila["CUARTA"].ToString() : "";
+                            // CAMBIO: PPACOD4 no se graba nada (se deja vacío)
+                            _PPACOD4 = "";
                             // Datos del cliente tomados de las variables globales de Module (cargadas en ValidarCodiCliente)
                             _PPARAZO = Module.US_CLRAZO;
                             _PPASITI = Module.US_CLCIVA;
@@ -376,7 +378,7 @@ namespace DistribuidoraPalomarNet
         public static async Task BuscarArticuloParaPreparacAsync(string accion)
         {
             using var da = new OleDbDataAdapter();
-            string sql = "SELECT TOP 1 A.ARPRIM AS PRIMERA, A.ARSEGU AS SEGUNDA, A.ARTERC AS TERCERA, A.ARCUAR AS CUARTA, A.ARCODI AS CODIGO, A.ARDESC AS DESCRIPCION, a.armode as Linea " +
+            string sql = "SELECT TOP 1 A.ARPRIM AS PRIMERA, A.ARSEGU AS SEGUNDA, A.ARTERC AS TERCERA, A.ARCUAR AS CUARTA, A.ARCODI AS CODIGO, A.ARCODI2, A.ARDESC AS DESCRIPCION, a.armode as Linea " +
                         ", P.PRMARC AS MARCA, A.ARFF AS STOCK" +
                         ", format (A.AROO+(A.AROO*F.FAMIVA/100),'Currency') as PPAORIG" +
                         $", format ({Module.precio_costo_sin_iva.ToString().Replace(",", ".")}+({Module.precio_costo_sin_iva.ToString().Replace(",", ".")}*F.FAMIVA/100),'Currency') AS PRECIO" +

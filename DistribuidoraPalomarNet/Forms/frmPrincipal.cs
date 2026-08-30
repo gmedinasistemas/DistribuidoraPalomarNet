@@ -25,6 +25,8 @@ namespace DistribuidoraPalomarNet
     {
         private static Image _iconoOferta;
         private bool _mensajeClienteMostrado = false;
+        /// <summary>Bandera para evitar disparos en cascada de filtros cuando se recargan combos dependientes.</summary>
+        public bool _aplicandoFiltros = false;
 
         public void ApplyEstadoClienteToUI()
         {
@@ -382,8 +384,23 @@ namespace DistribuidoraPalomarNet
                 return;
             }
 
+            // Verificar si estamos en el hilo UI
+            if (InvokeRequired)
+            {
+                Invoke(new Action<string>(ActualizarTexto), nuevoTexto);
+                return;
+            }
+
             try
             {
+                // Verificación adicional de seguridad
+                if (webView21?.CoreWebView2 == null)
+                {
+                    _textoMarquesinaPendiente = nuevoTexto ?? string.Empty;
+                    _webView2Inicializado = false; // Marcar como no inicializado si CoreWebView2 es null
+                    return;
+                }
+
                 string script = $@"
                 var marqueeDiv = document.querySelector('.marquee');
                 if (marqueeDiv) {{
@@ -392,9 +409,12 @@ namespace DistribuidoraPalomarNet
             ";
                 webView21.CoreWebView2.ExecuteScriptAsync(script);
             }
-            catch
+            catch (Exception ex)
             {
+                // Log del error para debugging (opcional)
+                System.Diagnostics.Debug.WriteLine($"Error en ActualizarTexto: {ex.Message}");
                 _textoMarquesinaPendiente = nuevoTexto ?? string.Empty;
+                _webView2Inicializado = false; // Marcar como no inicializado en caso de error
             }
         }
 
@@ -507,7 +527,7 @@ namespace DistribuidoraPalomarNet
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error en Click 'Generar TXT': " + ex.ToString(), "Alerta", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //MessageBox.Show("Error en Click 'Generar TXT': " + ex.ToString(), "Alerta", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -584,6 +604,9 @@ namespace DistribuidoraPalomarNet
                     //DataGridView2.Columns["Linea"].Visible = false;
                     //DataGridView2.Columns["Modelo"].Visible = false;
                     DataGridView2.Columns["Descripcion"].Visible = false;
+
+                    // NUEVO: Configurar columna CODIGO como link clickeable
+                    EnsureCodigoColumnLinkStyling();
 
                     var miEstiloStock = new DataGridViewCellStyle(DataGridView2.Columns["Stock"].DefaultCellStyle)
                     {
@@ -751,21 +774,25 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
-                if (Module.GetCarroComprasForm() == null || Module.GetCarroComprasForm().IsDisposed)
+                // CORREGIDO: Ruta correcta con "Net"
+                string rutaPedidos = @"C:\DistribuidoraPalomarNet\DistribuidoraPalomarNet\Pedidos\";
+
+                // NUEVO: Verificar si la carpeta existe, si no, crearla
+                if (!Directory.Exists(rutaPedidos))
                 {
-                    var frmCarroCompras = new frmCarroCompras();
-                    Module.SetCarroComprasForm(frmCarroCompras);
-                    frmCarroCompras.Show();
+                    Directory.CreateDirectory(rutaPedidos);
                 }
-                else
-                {
-                    Module.GetCarroComprasForm().BringToFront();
-                }
+
+                // Abrir la carpeta en el explorador de Windows
+                Process.Start("explorer.exe", rutaPedidos);
             }
             catch (Exception ex)
             {
-                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Ver Pedidos Enviados': {ex.Message}");
-                MessageBox.Show("Error al abrir pedidos enviados: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error al abrir la carpeta de pedidos:\n\n" +
+                    $"Ruta: C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Pedidos\\\n\n" +
+                    $"Error: {ex.Message}\n\n" +
+                    $"Verifique que tenga permisos para acceder a esta ubicación.",
+                    "Error - Pedidos Generados", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -805,52 +832,63 @@ namespace DistribuidoraPalomarNet
                 Module.LeerConfig();
                 if (!string.IsNullOrWhiteSpace(Module._textoBanner))
                     ActualizarTexto(Module._textoBanner);
-                bool ret = Module.DescargaArchivo("BannerPalomar.gif",
-                    Module.ini_ruta_gral + "\\DistribuidoraPalomarNet\\Imagenes\\BannerPalomar.gif",
-                    Module.ini_usu_ftp, Module.ini_pass_ftp, Module.ini_ruta_ftp);
-                CargarBanner();
-                Module.FechaActualizacion();
-                //Module.BuscarActualizacionDisponible();
-                if (Module.BuscarActualizacionDisponible())
-                {
-                    Application.DoEvents();
-                    if (MessageBox.Show("Hay una nueva actualización de la lista", "", MessageBoxButtons.OK, MessageBoxIcon.Information) == DialogResult.OK)
-                    {
-                        Application.DoEvents();
-                        Module.ActualizacionXFTP();
-                        //// llamo a la actualizacion automatica de precio, formulario DatosUsuario y a su timerAutoUpdatPrecios.
-                        //// pongo la bandera en true, para que el formulario detecte que se esta abriendo automaticamente luego de 
-                        //// la actualizacion de la base por ftp.
-                        //bandUpdatexActualizacion = true;
-                        //// llamo al formulario.
-                        //// frmDatosUsuario.ShowDialog()
-                        ///
-                        //Module.Inicializacion();
-                    }
-                }
+
+                // ✅ OPTIMIZACIÓN: Inicializar datos críticos primero (sin bloquear)
                 Module.SincronizarDescuentosCliente();
                 Module.Cargar_Usuario();
                 await Module.Inicializacion();
                 ApplyEstadoClienteToUI();
 
-                //// ========== TEST TEMPORAL: Cargar foto RE4214 ==========
-                //// COMENTAR O ELIMINAR ESTA LÍNEA DESPUÉS DE PROBAR
-                //System.Threading.Tasks.Task.Delay(1000).ContinueWith(_ => 
-                //{
-                //    this.Invoke((Action)(() => Module.TestCargarFotoArticulo("RE4214")));
-                //});
-                //// =======================================================
+                // ✅ OPTIMIZACIÓN: Descargar banners en segundo plano (no bloquea la UI)
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Module.DescargaArchivoAsync("BannerPalomar.gif",
+                            Module.ini_ruta_gral + "\\DistribuidoraPalomarNet\\Imagenes\\BannerPalomar.gif",
+                            Module.ini_usu_ftp, Module.ini_pass_ftp, Module.ini_ruta_ftp);
+
+                        await Module.DescargaArchivoAsync("bannerweb.gif",
+                            Module.ini_ruta_gral + "\\DistribuidoraPalomarNet\\Imagenes\\bannerweb.gif",
+                            Module.ini_usu_ftp, Module.ini_pass_ftp, Module.ini_ruta_ftp);
+
+                        // Cargar banners en el hilo UI
+                        this.Invoke((Action)(() => CargarBanner()));
+                    }
+                    catch (Exception ex)
+                    {
+                        Module.GrabarError($" - {DateTime.Now:dd/MM/yyyy HH:mm:ss} 'Descarga Banners Async': {ex.Message}");
+                    }
+                });
+
+                // ✅ OPTIMIZACIÓN: Verificar actualizaciones en segundo plano (no bloquea la UI)
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        Module.FechaActualizacion();
+                        bool hayActualizacion = await Module.BuscarActualizacionDisponibleAsync();
+
+                        if (hayActualizacion)
+                        {
+                            this.Invoke((Action)(() =>
+                            {
+                                if (MessageBox.Show("Hay una nueva actualización de la lista", "", MessageBoxButtons.OK, MessageBoxIcon.Information) == DialogResult.OK)
+                                {
+                                    Module.ActualizacionXFTP();
+                                }
+                            }));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Module.GrabarError($" - {DateTime.Now:dd/MM/yyyy HH:mm:ss} 'Verificación Actualización Async': {ex.Message}");
+                    }
+                });
             }
             catch (Exception ex)
             {
                 Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Inicio Formulario Principal': {ex.Message}");
-            }
-            finally
-            {
-                //// Configura el Panel con 70% de opacidad (Alpha = 178)
-                //panel2.BackColor = Color.FromArgb(178, panel2.BackColor); // 178 ≈ 70% opacidad
-                //PictureBox3.Parent = panel2;
-                //PictureBox3.BackColor = Color.Transparent; // Asegura que el PictureBox no tape el Panel
             }
         }
 
@@ -903,7 +941,7 @@ namespace DistribuidoraPalomarNet
             Application.Exit();
         }
 
-        
+
         private async void DataGridView1_Click(object sender, EventArgs e)
         {
             try
@@ -996,12 +1034,65 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
-                imgBanner.Image = Image.FromFile("C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Imagenes\\BannerPalomar.gif");
-                imgBanner.SizeMode = PictureBoxSizeMode.StretchImage;
+                // Cargar banner grande si el archivo ya existe localmente
+                string rutaBannerGrande = "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Imagenes\\BannerPalomar.gif";
+                if (File.Exists(rutaBannerGrande))
+                {
+                    imgBanner.Image = Image.FromFile(rutaBannerGrande);
+                    imgBanner.SizeMode = PictureBoxSizeMode.StretchImage;
+                }
+
+                // Cargar banner botón si el archivo ya existe localmente
+                string rutaBannerBoton = "C:\\DistribuidoraPalomarNet\\DistribuidoraPalomarNet\\Imagenes\\bannerweb.gif";
+                if (File.Exists(rutaBannerBoton))
+                {
+                    PictureBox3.Image = Image.FromFile(rutaBannerBoton);
+                    PictureBox3.SizeMode = PictureBoxSizeMode.StretchImage;
+                }
             }
             catch (Exception ex)
             {
-                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Carga Banner': {ex.Message}");
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Cargar Banner': {ex.Message}");
+            }
+        }
+
+        // Evento de clic para el banner grande
+        private void ImgBanner_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(Module.ini_link_banner_grande))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = Module.ini_link_banner_grande,
+                        UseShellExecute = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Click Banner Grande': {ex.Message}");
+            }
+        }
+
+        // Evento de clic para PictureBox3 (banner botón)
+        private void PictureBox3_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(Module.ini_link_banner_boton))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = Module.ini_link_banner_boton,
+                        UseShellExecute = true
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Click Banner Botón': {ex.Message}");
             }
         }
 
@@ -1045,11 +1136,16 @@ namespace DistribuidoraPalomarNet
             //toolStripProgressBar1.Refresh();
         }
 
-        private async void txtCodigo_KeyPress(object sender, KeyPressEventArgs e)
+        private void txtCodigo_TextChanged(object sender, EventArgs e)
         {
-            if (e.KeyChar == (char)Keys.Enter)
+            try
             {
-                FiltrarPorCodigo();
+                timer2.Stop();
+                timer2.Start();
+            }
+            catch (Exception ex)
+            {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Código': {ex.Message}");
             }
         }
 
@@ -1185,45 +1281,38 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        private async void cmbArmadora_SelectedIndexChanged(object sender, EventArgs e)
+        private void cmbArmadora_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (_aplicandoFiltros) return;
             try
             {
                 if (!string.IsNullOrEmpty(cmbArmadora.Text) && cmbArmadora.Text != "System.Data.DataRowView")
                 {
-                    Module.campo = string.Empty;
-                    Module.valor = string.Empty;
-                    //Module.LimpiarCampos(1);
-
                     if (cmbArmadora.Text == " TODOS" || cmbArmadora.Text == "TODOS")
                     {
                         cmbArmadora.Text = string.Empty;
-                        Module.funcion_inicial(0);
                     }
-                    else
-                    {
-                        Module.CargarComboLineas(cmbArmadora.Text);
-                        await Module.consultas_Relacionales();
-                    }
+                    _aplicandoFiltros = true;
+                    Module.CargarComboLineas(cmbArmadora.Text);
+                    _aplicandoFiltros = false;
+                    // Filtrar sobre datos ya cargados en memoria (sin consultar la BD)
+                    Module.AplicarFiltrosLocales();
                 }
             }
             catch (Exception ex)
             {
+                _aplicandoFiltros = false;
                 Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Armadora': {ex.Message}");
             }
         }
 
-        private async void cmbMarcas_SelectedIndexChanged(object sender, EventArgs e)
+        private void cmbMarcas_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (_aplicandoFiltros) return;
             try
             {
-                if (cmbMarcas.SelectedValue is int marcaVal && marcaVal != 0)
-                {
-                    if (ckbOfertas.Checked)
-                        await Module.consultas_Ofertas();
-                    else
-                        await Module.consultas_Relacionales();
-                }
+                // Filtrar sobre datos ya cargados en memoria (sin consultar la BD)
+                Module.AplicarFiltrosLocales();
             }
             catch (Exception ex)
             {
@@ -1233,19 +1322,25 @@ namespace DistribuidoraPalomarNet
 
         private async void cmbRubros_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (_aplicandoFiltros) return;
             try
             {
                 string rubrosSel = cmbRubros.Text?.Trim() ?? string.Empty;
-                if (!string.IsNullOrEmpty(rubrosSel) && rubrosSel != "TODOS")
-                {
-                    if (ckbOfertas.Checked)
-                        await Module.consultas_Ofertas();
-                    else
-                        await Module.consultas_Relacionales();
-                }
+
+                // Actualizar las marcas basadas en el rubro seleccionado
+                _aplicandoFiltros = true;
+                Module.CargarComboMarcasPorRubro(rubrosSel);
+                _aplicandoFiltros = false;
+
+                // Filtrar via consulta SQL a la BD (el rubro se filtra con JOIN RUBROS)
+                if (!ckbOfertas.Checked)
+                    await Module.consultas_Relacionales();
+                else
+                    await Module.consultas_Ofertas();
             }
             catch (Exception ex)
             {
+                _aplicandoFiltros = false;
                 Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Rubro': {ex.Message}");
             }
         }
@@ -1403,22 +1498,15 @@ body{
 
         private void cmbLineas_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (_aplicandoFiltros) return;
             try
             {
-                // Verificar si hay un elemento seleccionado y que SelectedValue no sea null
-                if (cmbLineas.SelectedValue != null && int.TryParse(cmbLineas.SelectedValue.ToString(), out int selectedValue))
-                {
-                    if (selectedValue != 0)
-                    {
-                        Filtrar_x_linea(cmbLineas.Text);
-                    }
-                }
-                //cmbLineas.Visible = false;
+                // Filtrar sobre datos ya cargados en memoria (sin consultar la BD)
+                Module.AplicarFiltrosLocales();
             }
             catch (Exception ex)
             {
-                //cmbLineas.Visible = false;
-                MessageBox.Show("Error dentro de Filtro por Lineas: " + ex.Message, "Alerta", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Líneas': {ex.Message}");
             }
 
             //try
@@ -1647,7 +1735,7 @@ body{
                 */
             }
         }
-        private void ColorearGrillaxOfertas(DataGridView dgv)
+        public void ColorearGrillaxOfertas(DataGridView dgv)
         {
             Color customColorGreen = Color.FromArgb(118, 250, 111);
             try
@@ -1679,35 +1767,37 @@ body{
                             }
 
                             // Semáforo de Stock
-                            if (dgv["stock", w].Value != null)
+                            if (dgv["stock", w].Value != null && dgv["stock", w].Value != DBNull.Value)
                             {
                                 int stockValue = Convert.ToInt32(dgv["stock", w].Value);
                                 if (stockValue >= Module.ini_cond_verde)
                                 {
                                     dgv["stock", w].Style.BackColor = Color.Green;
                                     dgv["stock", w].Style.ForeColor = Color.Green;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionBackColor = Color.Green;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionForeColor = Color.Green;
+                                    dgv["stock", w].Style.SelectionBackColor = Color.Green;
+                                    dgv["stock", w].Style.SelectionForeColor = Color.Green;
                                 }
                                 else if (stockValue < Module.ini_cond_verde && stockValue > Module.ini_cond_rojo)
                                 {
                                     dgv["stock", w].Style.BackColor = Color.Yellow;
                                     dgv["stock", w].Style.ForeColor = Color.Yellow;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionBackColor = Color.Yellow;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionForeColor = Color.Yellow;
+                                    dgv["stock", w].Style.SelectionBackColor = Color.Yellow;
+                                    dgv["stock", w].Style.SelectionForeColor = Color.Yellow;
                                 }
                                 else if (stockValue <= Module.ini_cond_rojo)
                                 {
                                     dgv["stock", w].Style.BackColor = Color.Red;
                                     dgv["stock", w].Style.ForeColor = Color.Red;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionBackColor = Color.Red;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionForeColor = Color.Red;
+                                    dgv["stock", w].Style.SelectionBackColor = Color.Red;
+                                    dgv["stock", w].Style.SelectionForeColor = Color.Red;
                                 }
                             }
                             else
                             {
                                 dgv["stock", w].Style.BackColor = Color.Red;
-                                dgv["stock", w].Style.ForeColor = Color.White;
+                                dgv["stock", w].Style.ForeColor = Color.Red;
+                                dgv["stock", w].Style.SelectionBackColor = Color.Red;
+                                dgv["stock", w].Style.SelectionForeColor = Color.Red;
                             }
                         }
                     }
@@ -1733,57 +1823,75 @@ body{
                                 dgv.Rows[w].DefaultCellStyle.BackColor = Color.White;
                                 dgv.Rows[w].DefaultCellStyle.ForeColor = Color.Black;
                             }
+
+                            // NUEVO: Preservar estilo de links en columna Codigo para DataGridView2
+                            if (dgv.Name == "DataGridView2" && dgv.Columns.Contains("Codigo"))
+                            {
+                                dgv["Codigo", w].Style.ForeColor = Color.Blue;
+                                var font = dgv.Font;
+                                dgv["Codigo", w].Style.Font = new Font(font, FontStyle.Underline);
+                                dgv["Codigo", w].ToolTipText = "VER";
+                            }
                             // Semáforo de Stock
-                            if (dgv["stock", w].Value != null)
+                            if (dgv["stock", w].Value != null && dgv["stock", w].Value != DBNull.Value)
                             {
                                 int stockValue = Convert.ToInt32(dgv["stock", w].Value);
                                 if (stockValue >= Module.ini_cond_verde)
                                 {
                                     dgv["stock", w].Style.BackColor = Color.Green;
                                     dgv["stock", w].Style.ForeColor = Color.Green;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionBackColor = Color.Green;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionForeColor = Color.Green;
+                                    dgv["stock", w].Style.SelectionBackColor = Color.Green;
+                                    dgv["stock", w].Style.SelectionForeColor = Color.Green;
                                 }
                                 else if (stockValue < Module.ini_cond_verde && stockValue > Module.ini_cond_rojo)
                                 {
                                     dgv["stock", w].Style.BackColor = Color.Yellow;
                                     dgv["stock", w].Style.ForeColor = Color.Yellow;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionBackColor = Color.Yellow;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionForeColor = Color.Yellow;
+                                    dgv["stock", w].Style.SelectionBackColor = Color.Yellow;
+                                    dgv["stock", w].Style.SelectionForeColor = Color.Yellow;
                                 }
                                 else if (stockValue <= Module.ini_cond_rojo)
                                 {
                                     dgv["stock", w].Style.BackColor = Color.Red;
                                     dgv["stock", w].Style.ForeColor = Color.Red;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionBackColor = Color.Red;
-                                    dgv.Columns["Stock"].DefaultCellStyle.SelectionForeColor = Color.Red;
+                                    dgv["stock", w].Style.SelectionBackColor = Color.Red;
+                                    dgv["stock", w].Style.SelectionForeColor = Color.Red;
                                 }
                             }
                             else
                             {
                                 dgv["stock", w].Style.BackColor = Color.Red;
-                                dgv["stock", w].Style.ForeColor = Color.White;
+                                dgv["stock", w].Style.ForeColor = Color.Red;
+                                dgv["stock", w].Style.SelectionBackColor = Color.Red;
+                                dgv["stock", w].Style.SelectionForeColor = Color.Red;
                             }
                         }
                     }
 
                     if (dgv.Rows.Count == 1)
                     {
-                        // Suponemos que el DataGridView está enlazado a un DataTable
-                        var tabla = (DataTable)dgv.DataSource;
+                        // Obtener DataTable desde DataSource (puede ser DataTable o DataView)
+                        DataTable tabla = null;
+                        if (dgv.DataSource is DataTable dt)
+                            tabla = dt;
+                        else if (dgv.DataSource is DataView dv)
+                            tabla = dv.Table;
 
-                        // Crear una nueva fila
-                        var nuevaFila = tabla.NewRow();
+                        if (tabla != null)
+                        {
+                            // Crear una nueva fila
+                            var nuevaFila = tabla.NewRow();
 
-                        // Agregar la nueva fila a la tabla
-                        tabla.Rows.Add(nuevaFila);
+                            // Agregar la nueva fila a la tabla
+                            tabla.Rows.Add(nuevaFila);
 
-                        // Refrescar el DataGridView
-                        dgv.Refresh();
+                            // Refrescar el DataGridView
+                            dgv.Refresh();
 
-                        // Obtener la fila y establecer su altura
-                        var fila = dgv.Rows[dgv.Rows.Count - 1];
-                        fila.Height = 1; // En C# usamos 1 en lugar de 0.1 ya que Height es int
+                            // Obtener la fila y establecer su altura
+                            var fila = dgv.Rows[dgv.Rows.Count - 1];
+                            fila.Height = 1; // En C# usamos 1 en lugar de 0.1 ya que Height es int
+                        }
                     }
                 }
             }
@@ -1850,6 +1958,10 @@ body{
             {
                 // Simula un clic en la celda (fila 0, columna 0) al cargar el formulario
                 DataGridView2.Refresh();
+
+                // NUEVO: Re-aplicar estilo de links después del refresh
+                EnsureCodigoColumnLinkStyling();
+
                 //SimulateClickOnDataGridViewCell(DataGridView2, 1, 0);
                 //SimulateClickOnDataGridViewCell(DataGridView2, 1, 0);
             }
@@ -2017,6 +2129,32 @@ body{
                 if (DataGridView2.CurrentRow != null)
                 {
                     int numFila = DataGridView2.CurrentCell.RowIndex;
+                    int numColumna = DataGridView2.CurrentCell.ColumnIndex;
+
+                    // NUEVO: Si se hizo clic en la columna CODIGO, ejecutar búsqueda
+                    if (DataGridView2.Columns[numColumna].Name == "Codigo")
+                    {
+                        string codigoBuscar = DataGridView2["Codigo", numFila].Value.ToString();
+
+                        // Limpiar campos de búsqueda y poner el código
+                        txtDescripcion.Text = "";
+                        txtModelo.Text = "";
+                        txtEquivalencia.Text = "";
+                        txtCodigo.Text = codigoBuscar;
+
+                        // Resetear combos
+                        cmbRubros.SelectedIndex = -1;
+                        cmbMarcas.SelectedIndex = -1;
+                        cmbArmadora.SelectedIndex = -1;
+                        cmbLineas.SelectedIndex = -1;
+
+                        // CORREGIDO: Ejecutar filtro por código (como si presionara Enter)
+                        FiltrarPorCodigo();
+
+                        return; // No ejecutar el resto del código
+                    }
+
+                    // MANTENER: Funcionalidad original para otras columnas
                     string StringSelect = "SELECT TOP 1 IIF(R.RBDESC IS NULL, '', R.RBDESC) AS RBDESC, IIF(A.ARORIG IS NULL, '', A.ARORIG) AS ARORIG" +
                         ", IIF(A.AROBSE IS NULL, '', A.AROBSE) AS AROBSE " +
                         ", IIF(A.ARUBIC1 IS NULL, '', A.ARUBIC1) AS ARUBIC1 " +
@@ -2154,7 +2292,7 @@ body{
             {
                 if (_porLimpieza == false)
                 {
-                    if (!string.IsNullOrWhiteSpace(txtDescripcion.Text) || !string.IsNullOrWhiteSpace(txtModelo.Text))
+                    if (!string.IsNullOrWhiteSpace(txtCodigo.Text) || !string.IsNullOrWhiteSpace(txtDescripcion.Text) || !string.IsNullOrWhiteSpace(txtModelo.Text))
                     {
                         // Detiene el temporizador
                         timer2.Stop();
@@ -2176,6 +2314,7 @@ body{
             catch (Exception ex)
             {
                 // Manejo de excepciones (puedes dejar vacío como en VB o agregar logging)
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'timer2_consultas': {ex.Message}");
             }
             finally
             {
@@ -2239,7 +2378,6 @@ body{
 
         }
 
-
         //private void PictureBox3_Paint(object sender, PaintEventArgs e)
         //{
         //    if (PictureBox3.Image != null)
@@ -2262,5 +2400,71 @@ body{
         //            attributes);
         //    }
         //}
+
+        private void DataGridView2_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
+        {
+            try
+            {
+                // Solo cambiar el cursor si estamos sobre la columna "Codigo"
+                if (e.RowIndex >= 0 && e.ColumnIndex >= 0 &&
+                    DataGridView2.Columns[e.ColumnIndex].Name == "Codigo")
+                {
+                    DataGridView2.Cursor = Cursors.Hand;
+                }
+            }
+            catch (Exception ex)
+            {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Mouse Enter Grilla': {ex.Message}");
+            }
+        }
+
+        private void DataGridView2_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+        {
+            try
+            {
+                // Restaurar el cursor normal al salir de cualquier celda
+                DataGridView2.Cursor = Cursors.Default;
+            }
+            catch (Exception ex)
+            {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Mouse Leave Grilla': {ex.Message}");
+            }
+        }
+
+        private void EnsureCodigoColumnLinkStyling()
+        {
+            try
+            {
+                // Reapply link styling to Codigo column
+                if (DataGridView2.Columns.Contains("Codigo"))
+                {
+                    var estiloLink = new DataGridViewCellStyle
+                    {
+                        ForeColor = Color.Blue,
+                        Font = new Font(DataGridView2.Font, FontStyle.Underline),
+                        SelectionForeColor = Color.Blue,
+                        SelectionBackColor = Color.LightBlue
+                    };
+                    DataGridView2.Columns["Codigo"].DefaultCellStyle = estiloLink;
+
+                    // CORREGIDO: No poner tooltip en el header, se maneja individualmente por celda
+                    DataGridView2.Columns["Codigo"].ToolTipText = "";
+
+                    // Aplicar tooltip "VER" a cada celda individual de la columna Codigo
+                    foreach (DataGridViewRow row in DataGridView2.Rows)
+                    {
+                        if (row.Cells["Codigo"] != null)
+                        {
+                            row.Cells["Codigo"].ToolTipText = "VER";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Ensure Link Styling': {ex.Message}");
+            }
+        }
+
     }
 }
