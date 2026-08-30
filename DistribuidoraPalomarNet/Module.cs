@@ -907,6 +907,37 @@ namespace DistribuidoraPalomarNet
         /// los artículos en DataGridView1. Activa el timer de ofertas y simula clic en la primera fila.</item>
         /// </list>
         /// </remarks>
+        /// <summary>
+        /// Deja <c>DataGridView1</c> completamente vacío, solo con los headers de columnas
+        /// (mismas columnas que trae la consulta real de artículos). Usado en la inicialización
+        /// visual (<see cref="funcion_inicial"/> opc=0) y al presionar "Limpiar" (<see cref="LimpiarCampos"/>).
+        /// </summary>
+        public static void MostrarGrillaVacia()
+        {
+            if (_frmPrincipal == null) return;
+
+            var tablaVacia = new DataTable();
+            tablaVacia.Columns.Add("Codigo", typeof(string));
+            tablaVacia.Columns.Add("Descripcion", typeof(string));
+            tablaVacia.Columns.Add("Marca", typeof(string));
+            tablaVacia.Columns.Add("Montadora", typeof(string));
+            tablaVacia.Columns.Add("Linea", typeof(string));
+            tablaVacia.Columns.Add("Posición", typeof(string));
+            tablaVacia.Columns.Add("Preciopublico", typeof(decimal));
+            tablaVacia.Columns.Add("aroo", typeof(decimal));
+            tablaVacia.Columns.Add("Stock", typeof(int));
+            tablaVacia.Columns.Add("artt", typeof(decimal));
+            tablaVacia.Columns.Add("arubic1", typeof(string));
+            tablaVacia.Columns.Add("arobse", typeof(string));
+
+            _dtMaestro = null;
+            _frmPrincipal.DataGridView1.DataSource = tablaVacia;
+            _frmPrincipal.DataGridView1.Refresh();
+
+            Application.DoEvents();
+            Definir_Grilla();
+        }
+
         /// <param name="opc">0 = inicialización visual; 1 = carga completa de artículos.</param>
         public static async Task funcion_inicial(int opc)
         {
@@ -936,26 +967,7 @@ namespace DistribuidoraPalomarNet
                         if (_frmPrincipal != null) _frmPrincipal._aplicandoFiltros = false;
                     }
 
-                    // Crear una tabla vacía con las columnas que se usan en la grilla
-                    var tablaVacia = new DataTable();
-                    tablaVacia.Columns.Add("Codigo", typeof(string));
-                    tablaVacia.Columns.Add("Descripcion", typeof(string));
-                    tablaVacia.Columns.Add("Marca", typeof(string));
-                    tablaVacia.Columns.Add("Montadora", typeof(string));
-                    tablaVacia.Columns.Add("Linea", typeof(string));
-                    tablaVacia.Columns.Add("Posición", typeof(string));
-                    tablaVacia.Columns.Add("Preciopublico", typeof(decimal));
-                    tablaVacia.Columns.Add("aroo", typeof(decimal));
-                    tablaVacia.Columns.Add("Stock", typeof(int));
-                    tablaVacia.Columns.Add("artt", typeof(decimal));
-                    tablaVacia.Columns.Add("arubic1", typeof(string));
-                    tablaVacia.Columns.Add("arobse", typeof(string));
-
-                    _frmPrincipal.DataGridView1.DataSource = tablaVacia;
-                    _frmPrincipal.DataGridView1.Refresh();
-
-                    Application.DoEvents();
-                    Definir_Grilla();
+                    MostrarGrillaVacia();
                 }
                 else
                 {
@@ -4661,23 +4673,37 @@ namespace DistribuidoraPalomarNet
                 _frmPrincipal.txtModelo.Text = string.Empty;
                 _frmPrincipal.txtEquivalencia.Text = string.Empty;
                 _frmPrincipal.txtCodigo.Text = string.Empty;
-                if (p1 != 1) _frmPrincipal.cmbArmadora.SelectedIndex = -1;
-                if (p1 != 1) _frmPrincipal.cmbLineas.SelectedIndex = -1;
-                if (p1 != 1) _frmPrincipal.cmbRubros.SelectedIndex = -1;
-                
-                // Cuando se limpia rubros, actualizar marcas para mostrar todas
-                if (p1 != 1) 
+
+                // Resetear combos bajo _aplicandoFiltros para evitar que cada SelectedIndexChanged
+                // (cmbArmadora, cmbLineas, cmbRubros, cmbMarcas) dispare en cascada consultas_Relacionales/
+                // Ofertas: eso provocaba múltiples redibujados de la grilla con artículos reales.
+                if (p1 != 1)
                 {
-                    CargarComboMarcasPorRubro(""); // Cargar todas las marcas
-                    _frmPrincipal.cmbMarcas.SelectedIndex = -1; // Sin selección
+                    _frmPrincipal._aplicandoFiltros = true;
+                    try
+                    {
+                        _frmPrincipal.cmbArmadora.SelectedIndex = -1;
+                        _frmPrincipal.cmbLineas.SelectedIndex = -1;
+                        _frmPrincipal.cmbRubros.SelectedIndex = -1;
+
+                        // Cuando se limpia rubros, actualizar marcas para mostrar todas
+                        CargarComboMarcasPorRubro(""); // Cargar todas las marcas
+                        _frmPrincipal.cmbMarcas.SelectedIndex = -1; // Sin selección
+                    }
+                    finally
+                    {
+                        _frmPrincipal._aplicandoFiltros = false;
+                    }
                 }
-                
+
                 // Resetear filtros de NOVEDADES y OFERTAS
                 if (p1 != 1 && _frmPrincipal.ckbOfertas != null)
                     _frmPrincipal.ckbOfertas.Checked = false;
                 // lblCodigoSelec.Text = string.Empty;
+                // La grilla queda vacía (solo headers), igual que al iniciar el catálogo:
+                // no se relanza consultas_Relacionales para no volver a mostrar artículos.
                 if (p1 != 1)
-                    consultas_Relacionales();
+                    MostrarGrillaVacia();
                 Despintar_Ofertas();
             }
             catch (Exception ex)
