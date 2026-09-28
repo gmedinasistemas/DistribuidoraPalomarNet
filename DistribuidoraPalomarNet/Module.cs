@@ -936,6 +936,9 @@ namespace DistribuidoraPalomarNet
 
             Application.DoEvents();
             Definir_Grilla();
+            
+            // NUEVO: Limpiar equivalencias y observaciones cuando no hay artículos
+            LimpiarEquivalenciasYObservaciones();
         }
 
         /// <param name="opc">0 = inicialización visual; 1 = carga completa de artículos.</param>
@@ -957,10 +960,10 @@ namespace DistribuidoraPalomarNet
                     try
                     {
                         CargarComboArmadora();
-                        CargarComboLineas("0");
+                        CargarComboLineas();
 
                         CargarComboRubros();
-                        CargarComboMarcasPorRubro(""); // Cargar todas las marcas inicialmente
+                        CargarComboMarcasPorRubro(); // Cargar todas las marcas inicialmente
                     }
                     finally
                     {
@@ -1913,6 +1916,36 @@ namespace DistribuidoraPalomarNet
             }
         }
         /// <summary>
+        /// Retorna el porcentaje de descuento de familia (<c>FADES1</c>) para un <c>FACODI</c> específico.
+        /// </summary>
+        /// <param name="facodi">Código de familia (<c>FACODI</c>) del artículo.</param>
+        /// <returns>Porcentaje de descuento familiar (ej: 5.0 para el 5%), o 0 si no aplica.</returns>
+        public static decimal aplicar_desc_Familia(int facodi)
+        {
+            try
+            {
+                if (facodi == 0)
+                    return 0;
+
+                using var cmd = new OleDbCommand("SELECT TOP 1 FADES1 FROM FAMILIAS WHERE FACODI = ?", cnnU);
+                ConectarDBUsuario();
+                cmd.Parameters.AddWithValue("@p1", facodi);
+                var obj = cmd.ExecuteScalar();
+                if (obj != null && obj != DBNull.Value && decimal.TryParse(obj.ToString(), out var d))
+                    return d;
+                return 0;
+            }
+            catch
+            {
+                return 0;
+            }
+            finally
+            {
+                if (cnnU.State == ConnectionState.Open)
+                    cnnU.Close();
+            }
+        }
+        /// <summary>
         /// Retorna el porcentaje de IVA de familia (<c>FAIVA</c>) del artículo actualmente seleccionado.
         /// </summary>
         /// <remarks>
@@ -2190,8 +2223,8 @@ namespace DistribuidoraPalomarNet
         /// <remarks>
         /// Filtros disponibles (se combinan con AND):
         /// <list type="bullet">
-        /// <item><c>txtDescripcion</c>: búsqueda multipalabra sobre <c>ARDESC</c>.</item>
-        /// <item><c>txtModelo</c>: búsqueda multipalabra sobre <c>ARUBIC1</c>.</item>
+        /// <item><c>txtDescripcion</c>: búsqueda multipalabra sobre <c>ARDESC</c> (Descripción), <c>r.rbdesc</c> (Montadora) O <c>a.armode</c> (Línea).</item>
+        /// <item><c>txtModelo</c>: búsqueda multipalabra sobre <c>AROBSE</c> (Observación) O <c>ARUBIC1</c> (Equivalencia).</item>
         /// <item><c>cmbArmadora</c>: filtro por RUBROS (JOIN con LISTAS.ARRUB2).</item>
         /// <item><c>cmbMarcas</c>: filtro por proveedor (<c>ARPROV = prcodi</c>).</item>
         /// <item><c>cmbRubros</c>: filtro por modelo/línea (<c>ARMODE = rubro</c>).</item>
@@ -2235,15 +2268,37 @@ namespace DistribuidoraPalomarNet
                 if (!string.IsNullOrEmpty(txtCod))
                     conditions.Add($"a.arprim+a.arterc like '%{txtCod}%'");
 
-                // txtDescripcion: búsqueda multipalabra sobre ARDESC
-                string condDesc = GenerarCondicionMultipalabra("a.ARDESC", _frmPrincipal.txtDescripcion.Text);
-                if (!string.IsNullOrEmpty(condDesc))
-                    conditions.Add(condDesc);
+                // txtDescripcion: búsqueda multipalabra en ARDESC (Descripción) O r.rbdesc (Montadora) O a.armode (Línea)
+                if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion?.Text))
+                {
+                    string condDescARDESC = GenerarCondicionMultipalabra("a.ARDESC", _frmPrincipal.txtDescripcion.Text);
+                    string condDescMontadora = GenerarCondicionMultipalabra("r.rbdesc", _frmPrincipal.txtDescripcion.Text);
+                    string condDescLinea = GenerarCondicionMultipalabra("a.armode", _frmPrincipal.txtDescripcion.Text);
+                    
+                    var condicionesDesc = new System.Collections.Generic.List<string>();
+                    if (!string.IsNullOrEmpty(condDescARDESC)) condicionesDesc.Add(condDescARDESC);
+                    if (!string.IsNullOrEmpty(condDescMontadora)) condicionesDesc.Add(condDescMontadora);
+                    if (!string.IsNullOrEmpty(condDescLinea)) condicionesDesc.Add(condDescLinea);
+                    
+                    if (condicionesDesc.Count > 0)
+                    {
+                        // Combinar las 3 condiciones con OR
+                        conditions.Add($"({string.Join(" OR ", condicionesDesc)})");
+                    }
+                }
 
-                // txtModelo (Observación/Código Universal): búsqueda multipalabra sobre ARUBIC1
-                string condModelo = GenerarCondicionMultipalabra("a.ARUBIC1", _frmPrincipal.txtModelo.Text);
-                if (!string.IsNullOrEmpty(condModelo))
-                    conditions.Add(condModelo);
+                // txtModelo: búsqueda en AROBSE (Observación) O en ARUBIC1 (Equivalencia)
+                if (!string.IsNullOrEmpty(_frmPrincipal.txtModelo?.Text))
+                {
+                    string condModeloAROBSE = GenerarCondicionMultipalabra("a.AROBSE", _frmPrincipal.txtModelo.Text);
+                    string condModeloARUBIC1 = GenerarCondicionMultipalabra("a.ARUBIC1", _frmPrincipal.txtModelo.Text);
+                    
+                    if (!string.IsNullOrEmpty(condModeloAROBSE) && !string.IsNullOrEmpty(condModeloARUBIC1))
+                    {
+                        // Combinar ambas condiciones con OR
+                        conditions.Add($"({condModeloAROBSE} OR {condModeloARUBIC1})");
+                    }
+                }
 
                 // cmbRubros: ahora representa una FAMILIA (FADESC). Como una misma FADESC puede
                 // corresponder a varios FACODI (ej: "ROTULA Y EXTREMO" -> 3, 4, 6), se resuelven todos
@@ -2267,12 +2322,10 @@ namespace DistribuidoraPalomarNet
                 if (_frmPrincipal.cmbMarcas?.SelectedValue is int marcaVal && marcaVal != 0)
                     conditions.Add($"a.arprov = {marcaVal}");
 
-                // cmbLineas: filtra por a.armode = lidesc (Text del combo)
-                string lineaSel = _frmPrincipal.cmbLineas?.Text?.Trim() ?? string.Empty;
+                // cmbLineas: filtra por a.ARCUAR = licodi (ARCUAR es texto en Access)
                 string lineaValStr = _frmPrincipal.cmbLineas?.SelectedValue?.ToString() ?? "0";
-                if (!string.IsNullOrEmpty(lineaSel) && lineaSel != "TODOS" && lineaValStr != "0"
-                    && !lineaSel.Contains("DataRowView"))
-                    conditions.Add($"a.armode = '{lineaSel.Replace("'", "''")}'");
+                if (lineaValStr != "0" && !string.IsNullOrEmpty(lineaValStr))
+                    conditions.Add($"a.ARCUAR = '{lineaValStr}'");
 
                 string WhereQuery = " WHERE " + string.Join(" AND ", conditions);
                 string QueryFinal = SelectQuery + WhereQuery + " order by a.arterc";
@@ -2427,15 +2480,37 @@ namespace DistribuidoraPalomarNet
                 if (!string.IsNullOrEmpty(txtCod))
                     conditions.Add($"a.arprim+a.arterc like '%{txtCod}%'");
 
-                // txtDescripcion: búsqueda multipalabra sobre ARDESC
-                string condDesc = GenerarCondicionMultipalabra("a.ARDESC", _frmPrincipal.txtDescripcion.Text);
-                if (!string.IsNullOrEmpty(condDesc))
-                    conditions.Add(condDesc);
+                // txtDescripcion: búsqueda multipalabra en ARDESC (Descripción) O r.rbdesc (Montadora) O a.armode (Línea)
+                if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion?.Text))
+                {
+                    string condDescARDESC = GenerarCondicionMultipalabra("a.ARDESC", _frmPrincipal.txtDescripcion.Text);
+                    string condDescMontadora = GenerarCondicionMultipalabra("r.rbdesc", _frmPrincipal.txtDescripcion.Text);
+                    string condDescLinea = GenerarCondicionMultipalabra("a.armode", _frmPrincipal.txtDescripcion.Text);
+                    
+                    var condicionesDesc = new System.Collections.Generic.List<string>();
+                    if (!string.IsNullOrEmpty(condDescARDESC)) condicionesDesc.Add(condDescARDESC);
+                    if (!string.IsNullOrEmpty(condDescMontadora)) condicionesDesc.Add(condDescMontadora);
+                    if (!string.IsNullOrEmpty(condDescLinea)) condicionesDesc.Add(condDescLinea);
+                    
+                    if (condicionesDesc.Count > 0)
+                    {
+                        // Combinar las 3 condiciones con OR
+                        conditions.Add($"({string.Join(" OR ", condicionesDesc)})");
+                    }
+                }
 
-                // txtModelo (Observación/Código Universal): búsqueda multipalabra sobre ARUBIC1
-                string condModelo = GenerarCondicionMultipalabra("a.ARUBIC1", _frmPrincipal.txtModelo.Text);
-                if (!string.IsNullOrEmpty(condModelo))
-                    conditions.Add(condModelo);
+                // txtModelo: búsqueda en AROBSE (Observación) O en ARUBIC1 (Equivalencia)
+                if (!string.IsNullOrEmpty(_frmPrincipal.txtModelo?.Text))
+                {
+                    string condModeloAROBSE = GenerarCondicionMultipalabra("a.AROBSE", _frmPrincipal.txtModelo.Text);
+                    string condModeloARUBIC1 = GenerarCondicionMultipalabra("a.ARUBIC1", _frmPrincipal.txtModelo.Text);
+                    
+                    if (!string.IsNullOrEmpty(condModeloAROBSE) && !string.IsNullOrEmpty(condModeloARUBIC1))
+                    {
+                        // Combinar ambas condiciones con OR
+                        conditions.Add($"({condModeloAROBSE} OR {condModeloARUBIC1})");
+                    }
+                }
 
                 // cmbRubros: ahora representa una FAMILIA (FADESC). Como una misma FADESC puede
                 // corresponder a varios FACODI (ej: "ROTULA Y EXTREMO" -> 3, 4, 6), se resuelven todos
@@ -2459,12 +2534,10 @@ namespace DistribuidoraPalomarNet
                 if (_frmPrincipal.cmbMarcas?.SelectedValue is int marcaValOf && marcaValOf != 0)
                     conditions.Add($"a.arprov = {marcaValOf}");
 
-                // cmbLineas: filtra por a.armode = lidesc (Text del combo)
-                string lineaSelOf = _frmPrincipal.cmbLineas?.Text?.Trim() ?? string.Empty;
+                // cmbLineas: filtra por a.ARCUAR = licodi (ARCUAR es texto en Access)
                 string lineaValStrOf = _frmPrincipal.cmbLineas?.SelectedValue?.ToString() ?? "0";
-                if (!string.IsNullOrEmpty(lineaSelOf) && lineaSelOf != "TODOS" && lineaValStrOf != "0"
-                    && !lineaSelOf.Contains("DataRowView"))
-                    conditions.Add($"a.armode = '{lineaSelOf.Replace("'", "''")}'");
+                if (lineaValStrOf != "0" && !string.IsNullOrEmpty(lineaValStrOf))
+                    conditions.Add($"a.ARCUAR = '{lineaValStrOf}'");
 
                 string WhereQuery = " WHERE " + string.Join(" AND ", conditions);
                 string QueryFinal = SelectQuery + WhereQuery + " order by a.arterc";
@@ -3772,9 +3845,11 @@ namespace DistribuidoraPalomarNet
         {
             Application.DoEvents();
             ConectarDBArti();
+            bool filtrar = facodisFiltro != null && facodisFiltro.Count > 0;
             string sql;
-            if (facodisFiltro != null && facodisFiltro.Count > 0)
+            if (filtrar)
             {
+                // Con filtro: solo armadoras que tienen artículos con ARFLIA en la familia seleccionada
                 sql = "SELECT DISTINCT R.rbcodi, R.rbdesc " +
                     "FROM rubros AS R INNER JOIN listas AS LT ON LT.ARRUB2 = R.RBCODI " +
                     "WHERE R.RBCODI > 100 AND " + ConstruirClausulaIn("LT.ARFLIA", facodisFiltro) +
@@ -3782,6 +3857,7 @@ namespace DistribuidoraPalomarNet
             }
             else
             {
+                // Sin filtro (inicio): todas las armadoras
                 sql = "SELECT DISTINCT R.rbcodi, R.rbdesc " +
                     "FROM rubros AS R " +
                     "WHERE R.RBCODI > 100 ORDER BY R.rbdesc";
@@ -3816,15 +3892,12 @@ namespace DistribuidoraPalomarNet
             }
         }
         /// <summary>
-        /// Carga en <c>cmbLineas</c> las líneas (<c>lineas.lidesc</c>) disponibles,
-        /// opcionalmente filtradas por una armadora/rubro específico.
+        /// Carga en <c>cmbLineas</c> las líneas disponibles, filtradas acumulativamente.
+        /// La relación con listas es por <c>ARCUAR = LICODI</c> (código numérico de línea).
         /// </summary>
-        /// <param name="_Armadora">Nombre del rubro para filtrar (ej: valor de <c>cmbArmadora</c>)
-        /// o <c>"0"</c> para cargar todas las líneas sin filtro.</param>
-        /// <param name="facodisFiltro">Opcional. Si se provee (con la familia/rubro seleccionada en
-        /// <c>cmbRubros</c>), restringe además las líneas a las que tienen artículos con
-        /// <c>ARFLIA</c> dentro de esta lista.</param>
-        public static void CargarComboLineas(string _Armadora, List<string> facodisFiltro = null)
+        /// <param name="facodisFiltro">Opcional. Lista de FACODI (familia) para filtrar por <c>ARFLIA</c>.</param>
+        /// <param name="arrub2Filtro">Opcional. RBCODI de la armadora seleccionada para filtrar por <c>ARRUB2</c>.</param>
+        public static void CargarComboLineas(List<string> facodisFiltro = null, string arrub2Filtro = null)
         {
             OleDbDataAdapter da = new OleDbDataAdapter();
             try
@@ -3832,6 +3905,8 @@ namespace DistribuidoraPalomarNet
                 if (_frmPrincipal == null) throw new InvalidOperationException("Formulario principal no inicializado");
 
                 Application.DoEvents();
+                ConectarDBArti();
+
                 DataTable Dt_lineas = new DataTable();
                 Dt_lineas.Columns.Add("licodi", typeof(string));
                 Dt_lineas.Columns.Add("lidesc", typeof(string));
@@ -3839,39 +3914,37 @@ namespace DistribuidoraPalomarNet
                 // Agregar TODOS como primera opción
                 Dt_lineas.Rows.Add("0", "TODOS");
 
-                // Construir SQL base y agregar filtros opcionales por armadora y/o familia (ARFLIA)
-                bool filtrarPorArmadora = !string.IsNullOrEmpty(_Armadora) && _Armadora != "0";
+                // Construir SQL: si hay filtros, restringir por ARCUAR=LICODI con WHERE acumulativo;
+                // sin filtros (inicio), cargar todas las líneas directamente de la tabla lineas.
                 bool filtrarPorFamilia = facodisFiltro != null && facodisFiltro.Count > 0;
+                bool filtrarPorArmadora = !string.IsNullOrEmpty(arrub2Filtro) && arrub2Filtro != "0";
+                bool hayFiltros = filtrarPorFamilia || filtrarPorArmadora;
 
-                string sql = filtrarPorArmadora
-                    ? "SELECT DISTINCT LI.licodi, LI.lidesc " +
-                      "FROM ((lineas AS LI INNER JOIN listas AS LT ON LI.lidesc = LT.ARMODE) " +
-                      "INNER JOIN RUBROS AS r ON LT.ARRUB2 = r.RBCODI) "
-                    : "SELECT DISTINCT LI.licodi, LI.lidesc " +
-                      "FROM (lineas AS LI INNER JOIN listas AS LT ON LI.lidesc = LT.ARMODE) ";
-
-                var wheres = new List<string>();
-                if (filtrarPorArmadora)
-                    wheres.Add("r.RBDESC = ?");
-                if (filtrarPorFamilia)
-                    wheres.Add(ConstruirClausulaIn("LT.ARFLIA", facodisFiltro));
-
-                if (wheres.Count > 0)
-                    sql += "WHERE " + string.Join(" AND ", wheres) + " ";
-
-                sql += "ORDER BY LI.lidesc";
-
-                da = new OleDbDataAdapter(sql, cnn);
-
-                if (filtrarPorArmadora)
+                string sql;
+                if (hayFiltros)
                 {
-                    da.SelectCommand.Parameters.AddWithValue("@Rubro", _Armadora);
+                    sql = "SELECT DISTINCT LI.licodi, LI.lidesc " +
+                        "FROM lineas AS LI INNER JOIN listas AS LT ON LT.ARCUAR = CStr(LI.LICODI) ";
+
+                    var wheres = new List<string>();
+                    if (filtrarPorFamilia)
+                        wheres.Add(ConstruirClausulaIn("LT.ARFLIA", facodisFiltro));
+                    if (filtrarPorArmadora)
+                        wheres.Add($"LT.ARRUB2 = {arrub2Filtro}");
+
+                    sql += "WHERE " + string.Join(" AND ", wheres) + " ";
+                    sql += "ORDER BY LI.lidesc";
+                }
+                else
+                {
+                    // Sin filtros: todas las líneas
+                    sql = "SELECT DISTINCT licodi, lidesc FROM lineas ORDER BY lidesc";
                 }
 
+                da = new OleDbDataAdapter(sql, cnn);
                 DataTable Dt_temp = new DataTable();
                 da.Fill(Dt_temp);
 
-                // Copiar los datos de la consulta
                 foreach (DataRow row in Dt_temp.Rows)
                 {
                     Dt_lineas.Rows.Add(row["licodi"], row["lidesc"]);
@@ -3887,16 +3960,10 @@ namespace DistribuidoraPalomarNet
             }
             catch (Exception ex)
             {
-                if (_frmPrincipal != null)
-                {
-                    //_frmPrincipal.cmbRubros.Visible = false;
-                    //_frmPrincipal.cmbLineas.Visible = false;
-                }
-
                 if (cnn.State == ConnectionState.Open)
                     cnn.Close();
 
-                throw new Exception($", dentro de 'CargarComboLineas': {ex}");
+                throw new Exception($", dentro de 'CargarComboLineas': {ex.Message}");
             }
             finally
             {
@@ -3984,6 +4051,46 @@ namespace DistribuidoraPalomarNet
         }
 
         /// <summary>
+        /// Resuelve el <c>RBCODI</c> de la armadora seleccionada en <c>cmbArmadora</c> a partir de su <c>RBDESC</c>.
+        /// </summary>
+        /// <param name="rbdesc">Texto de la armadora (ej: "AUDI").</param>
+        /// <returns>RBCODI como string, o null si no hay selección válida.</returns>
+        public static string ObtenerRbcodiPorArmadora(string rbdesc)
+        {
+            if (string.IsNullOrWhiteSpace(rbdesc) || rbdesc.Trim() == "TODOS" || rbdesc.Contains("DataRowView"))
+                return null;
+            try
+            {
+                ConectarDBArti();
+                using var cmd = new OleDbCommand("SELECT TOP 1 RBCODI FROM rubros WHERE RBDESC = ?", cnn);
+                cmd.Parameters.AddWithValue("@p1", rbdesc.Trim());
+                var obj = cmd.ExecuteScalar();
+                if (obj != null && obj != DBNull.Value)
+                    return obj.ToString();
+                return null;
+            }
+            finally
+            {
+                if (cnn.State == ConnectionState.Open)
+                    cnn.Close();
+            }
+        }
+
+        /// <summary>
+        /// Obtiene el <c>LICODI</c> (ValueMember) de la línea seleccionada en <c>cmbLineas</c>.
+        /// </summary>
+        /// <returns>LICODI como string, o null si no hay selección válida.</returns>
+        public static string ObtenerLicodiSeleccionado()
+        {
+            if (_frmPrincipal?.cmbLineas == null) return null;
+            string val = _frmPrincipal.cmbLineas.SelectedValue?.ToString() ?? "0";
+            string txt = _frmPrincipal.cmbLineas.Text?.Trim() ?? "";
+            if (val == "0" || string.IsNullOrEmpty(txt) || txt == "TODOS" || txt.Contains("DataRowView"))
+                return null;
+            return val;
+        }
+
+        /// <summary>
         /// Construye una cláusula SQL <c>columna IN (v1,v2,...)</c> a partir de una lista de códigos.
         /// ARFLIA/FACODI son campos numéricos en Access: los valores NO se entrecomillan porque el
         /// motor Jet/ACE lanza "Data type mismatch in criteria expression" al comparar una columna
@@ -4060,31 +4167,41 @@ namespace DistribuidoraPalomarNet
         }
 
         /// <summary>
-        /// Carga las marcas (proveedo) filtradas por la familia (rubro) seleccionada.
-        /// Si rubroSeleccionado es "TODOS" o vacío, carga todas las marcas.
+        /// Carga las marcas (proveedo) filtradas acumulativamente por familia, armadora y/o línea.
+        /// Si no hay filtros activos, carga todas las marcas con <c>prcrub = 'R'</c>.
         /// </summary>
-        /// <param name="rubroSeleccionado">Descripción de familia (<c>FADESC</c>) seleccionada en
-        /// <c>cmbRubros</c> para filtrar las marcas.</param>
-        public static void CargarComboMarcasPorRubro(string rubroSeleccionado = "")
+        /// <param name="facodisFiltro">Opcional. Lista de FACODI para filtrar por <c>ARFLIA</c>.</param>
+        /// <param name="arrub2Filtro">Opcional. RBCODI de la armadora para filtrar por <c>ARRUB2</c>.</param>
+        /// <param name="arcuarFiltro">Opcional. LICODI de la línea para filtrar por <c>ARCUAR</c>.</param>
+        public static void CargarComboMarcasPorRubro(List<string> facodisFiltro = null, string arrub2Filtro = null, string arcuarFiltro = null)
         {
             Application.DoEvents();
             ConectarDBArti();
 
-            var facodisRubro = ObtenerFacodisPorFamilia(rubroSeleccionado);
+            bool filtrarPorFamilia = facodisFiltro != null && facodisFiltro.Count > 0;
+            bool filtrarPorArmadora = !string.IsNullOrEmpty(arrub2Filtro) && arrub2Filtro != "0";
+            bool filtrarPorLinea = !string.IsNullOrEmpty(arcuarFiltro) && arcuarFiltro != "0";
+            bool hayFiltros = filtrarPorFamilia || filtrarPorArmadora || filtrarPorLinea;
 
             string sql;
-            if (facodisRubro.Count == 0)
+            if (!hayFiltros)
             {
-                // Sin familia seleccionada (o sin coincidencias): mostrar todas las marcas
                 sql = "SELECT DISTINCT p.prcodi, p.prmarc FROM proveedo p WHERE p.prcrub = 'R' ORDER BY p.prmarc";
             }
             else
             {
-                // Filtrar marcas por familia: la relación pasa por listas (arprov→prcodi, ARFLIA IN facodis)
                 sql = "SELECT DISTINCT p.prcodi, p.prmarc " +
                       "FROM (proveedo p INNER JOIN listas a ON a.arprov = p.prcodi) " +
-                      "WHERE p.prcrub = 'R' AND " + ConstruirClausulaIn("a.ARFLIA", facodisRubro) + " " +
-                      "ORDER BY p.prmarc";
+                      "WHERE p.prcrub = 'R' ";
+
+                if (filtrarPorFamilia)
+                    sql += "AND " + ConstruirClausulaIn("a.ARFLIA", facodisFiltro) + " ";
+                if (filtrarPorArmadora)
+                    sql += $"AND a.ARRUB2 = {arrub2Filtro} ";
+                if (filtrarPorLinea)
+                    sql += $"AND a.ARCUAR = '{arcuarFiltro}' ";
+
+                sql += "ORDER BY p.prmarc";
             }
 
             var da = new OleDbDataAdapter(sql, cnn);
@@ -4093,37 +4210,26 @@ namespace DistribuidoraPalomarNet
             {
                 if (_frmPrincipal == null) throw new InvalidOperationException("Formulario principal no inicializado");
 
-                // Crear DataTable local para poder agregar la fila "TODOS"
                 var Dt_marcas = new DataTable();
-                Dt_marcas.Columns.Add("prcodi", typeof(int));    // valor interno (clave)
-                Dt_marcas.Columns.Add("prmarc", typeof(string)); // texto visible en el combo
-
-                // Fila especial "TODOS": prcodi = 0 indica sin filtro activo
+                Dt_marcas.Columns.Add("prcodi", typeof(int));
+                Dt_marcas.Columns.Add("prmarc", typeof(string));
                 Dt_marcas.Rows.Add(0, "TODOS");
 
                 Application.DoEvents();
 
-                // Llenar con datos filtrados por rubro
                 var ds = new DataSet();
                 da.Fill(ds, "marcas");
                 Application.DoEvents();
 
                 foreach (DataRow fila in ds.Tables["marcas"].Rows)
                 {
-                    // Agregar cada marca: prcodi como valor, prmarc como texto
-                    Dt_marcas.Rows.Add(
-                        fila["prcodi"],  // valor que se leerá con cmbMarcas.SelectedValue
-                        fila["prmarc"]   // texto que verá el usuario en la lista
-                    );
+                    Dt_marcas.Rows.Add(fila["prcodi"], fila["prmarc"]);
                     Application.DoEvents();
                 }
 
-                // Bindear al combo
                 _frmPrincipal.cmbMarcas.DataSource = Dt_marcas;
                 _frmPrincipal.cmbMarcas.DisplayMember = "prmarc";
                 _frmPrincipal.cmbMarcas.ValueMember = "prcodi";
-
-                // Seleccionar "TODOS" por defecto al cambiar de rubro
                 _frmPrincipal.cmbMarcas.SelectedIndex = 0;
 
                 ds.Dispose();
@@ -4674,21 +4780,17 @@ namespace DistribuidoraPalomarNet
                 _frmPrincipal.txtEquivalencia.Text = string.Empty;
                 _frmPrincipal.txtCodigo.Text = string.Empty;
 
-                // Resetear combos bajo _aplicandoFiltros para evitar que cada SelectedIndexChanged
-                // (cmbArmadora, cmbLineas, cmbRubros, cmbMarcas) dispare en cascada consultas_Relacionales/
-                // Ofertas: eso provocaba múltiples redibujados de la grilla con artículos reales.
+                // Recargar todos los combos SIN filtro (estado inicial del catálogo) bajo
+                // _aplicandoFiltros para evitar que los SelectedIndexChanged disparen consultas.
                 if (p1 != 1)
                 {
                     _frmPrincipal._aplicandoFiltros = true;
                     try
                     {
-                        _frmPrincipal.cmbArmadora.SelectedIndex = -1;
-                        _frmPrincipal.cmbLineas.SelectedIndex = -1;
-                        _frmPrincipal.cmbRubros.SelectedIndex = -1;
-
-                        // Cuando se limpia rubros, actualizar marcas para mostrar todas
-                        CargarComboMarcasPorRubro(""); // Cargar todas las marcas
-                        _frmPrincipal.cmbMarcas.SelectedIndex = -1; // Sin selección
+                        CargarComboArmadora();       // Todas las armadoras
+                        CargarComboLineas();          // Todas las líneas
+                        CargarComboRubros();          // Todas las familias
+                        CargarComboMarcasPorRubro();  // Todas las marcas
                     }
                     finally
                     {
@@ -4699,16 +4801,50 @@ namespace DistribuidoraPalomarNet
                 // Resetear filtros de NOVEDADES y OFERTAS
                 if (p1 != 1 && _frmPrincipal.ckbOfertas != null)
                     _frmPrincipal.ckbOfertas.Checked = false;
-                // lblCodigoSelec.Text = string.Empty;
-                // La grilla queda vacía (solo headers), igual que al iniciar el catálogo:
-                // no se relanza consultas_Relacionales para no volver a mostrar artículos.
+                // La grilla queda vacía (solo headers), igual que al iniciar el catálogo
                 if (p1 != 1)
                     MostrarGrillaVacia();
                 Despintar_Ofertas();
+                
+                // NUEVO: Limpiar equivalencias y cuadro amarillo de observaciones
+                LimpiarEquivalenciasYObservaciones();
             }
             catch (Exception ex)
             {
                 GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Limpiar Campos': {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Limpia la grilla de equivalencias (DataGridView2) y el cuadro amarillo de observaciones.
+        /// Se usa cuando no hay artículo seleccionado en la grilla principal.
+        /// </summary>
+        public static void LimpiarEquivalenciasYObservaciones()
+        {
+            try
+            {
+                if (_frmPrincipal == null) return;
+
+                // Limpiar grilla de equivalencias
+                if (_frmPrincipal.DataGridView2 != null)
+                {
+                    _frmPrincipal.DataGridView2.DataSource = null;
+                    _frmPrincipal.DataGridView2.Rows.Clear();
+                }
+
+                // Limpiar cuadro amarillo de observaciones
+                if (_frmPrincipal.lblObservaciones != null)
+                    _frmPrincipal.lblObservaciones.Text = string.Empty;
+                
+                if (_frmPrincipal.lblRubro != null)
+                    _frmPrincipal.lblRubro.Text = string.Empty;
+                
+                if (_frmPrincipal.lblOrigen != null)
+                    _frmPrincipal.lblOrigen.Text = string.Empty;
+            }
+            catch (Exception ex)
+            {
+                GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Limpiar Equivalencias y Observaciones': {ex.Message}");
             }
         }
 
@@ -5542,10 +5678,13 @@ namespace DistribuidoraPalomarNet
 
                 if (dr.Read())
                 {
-                    _frmPrincipal.lblRubro.Text = "Rubro: " + dr["RBDESC"].ToString();
-                    _frmPrincipal.lblOrigen.Text = "Origen: "+ dr["ARORIG"].ToString();
+                    // Solo mostrar Observación y Equivalencia
                     _frmPrincipal.lblObservaciones.Text = "Observación: " + dr["ARUBIC1"].ToString() + 
                         Environment.NewLine + "Equivalencia: " + dr["AROBSE"].ToString();
+                    
+                    // Ocultar o limpiar Rubro y Origen
+                    _frmPrincipal.lblRubro.Text = string.Empty;
+                    _frmPrincipal.lblOrigen.Text = string.Empty;
                 }
             }
             catch (Exception ex)

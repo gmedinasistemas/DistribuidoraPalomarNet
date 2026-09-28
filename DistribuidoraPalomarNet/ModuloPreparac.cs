@@ -252,6 +252,8 @@ namespace DistribuidoraPalomarNet
                             // CORREGIDO: PPACODI ahora usa ARCODI2 como pidió Mara
                             _PPACODI = !string.IsNullOrEmpty(fila["ARCODI2"].ToString()) ? fila["ARCODI2"].ToString() : "";
                             _PPAFLIA = !string.IsNullOrEmpty(fila["FAMILIA"].ToString()) ? Convert.ToDecimal(fila["FAMILIA"]) : 0;
+                            // Descuento de familia (FADES1) → se graba en PPADESK para que el sistema de facturación lo reciba
+                            _PPADESK = (_PPAFLIA != 0) ? Module.aplicar_desc_Familia(Convert.ToInt32(_PPAFLIA)) : 0;
                             _PPAIMPO = !string.IsNullOrEmpty(fila["ORIGEN"].ToString()) ? fila["ORIGEN"].ToString() : "";
                             _PPAPROV = !string.IsNullOrEmpty(fila["PROVEEDOR"].ToString()) ? Convert.ToDecimal(fila["PROVEEDOR"]) : 0;
                             _PPAARFF = "";
@@ -289,7 +291,7 @@ namespace DistribuidoraPalomarNet
                                     $" VALUES(" +
                                     $"{_PPANUME},1,{Module.US_CODI},{_PPABARR},'{_PPACOD1}','{_PPACOD2}','{_PPACOD3}','{_PPACOD4}'," +
                                     $"'{_PPADESC}','{Cant}','{_PPAFECH}','{_PPATPRE}','{_PPAPREC}','{_PPACIVA}','{_PPARAZO}'," +
-                                    $"'{_PPASITI}','{_PPAQOT}',{_PPAPPA},'{_PPADESK}','{_PPAORIG}','{_PPACODI}','{_PPATARJ}'," +
+                                    $"'{_PPASITI}','{_PPAQOT}',{_PPAPPA},{_PPADESK},'{_PPAORIG}','{_PPACODI}','{_PPATARJ}'," +
                                     $"{_PPACUOT},{_PPAVEND},'{_PPAFLIA}','{_PPAIMPO}',{_PPAPROV},{_PPAAUTO},'{_PPAARFF}'," +
                                     $"{_PPAFIVA},'{_PPAOBSE}',{_PPAUSER},'{_PPACOMP}',{_PPABULT},{_PPAKILO},{_PPASEGU}," +
                                     $"{_PPAREMF},{_PPAREMN},{_PPAPIEZ},'{_PPAMARC}',{_PPAPOR1},{_PPAPOR2},'{_PPABASE}'," +
@@ -303,7 +305,7 @@ namespace DistribuidoraPalomarNet
                                 strQuery = $"UPDATE PREPARAC SET" +
                                     $" PPAPREC='{_PPAPREC}', PPACANT='{Cant}', PPACIVA='{_PPACIVA}'," +
                                     $" SUBTSIVA='{_SUBTSIVA}', PPAPRECUNITARIO='{_PPAPRECUNITARIO}'," +
-                                    $" PPAPRECCOSTO='{_PPAPRECCOSTO}'" +
+                                    $" PPAPRECCOSTO='{_PPAPRECCOSTO}', PPADESK={_PPADESK}" +
                                     $" WHERE PPACOD3='{_PPACOD3}' AND PPAFLIA={_PPAFLIA} AND PPAPROV={_PPAPROV}";
                             }
                         }

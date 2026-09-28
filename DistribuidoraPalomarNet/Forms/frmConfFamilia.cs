@@ -460,7 +460,7 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
-                // Mensaje de confirmación antes de proceder
+                // PRIMER mensaje de confirmación
                 DialogResult resultado = MessageBox.Show(
                     "Va a BORRAR y PERDER TODOS los Valores cargados.\n\n" +
                     "Esta acción actualizará las familias desde la base de datos principal,\n" +
@@ -471,12 +471,27 @@ namespace DistribuidoraPalomarNet
                     MessageBoxIcon.Warning,
                     MessageBoxDefaultButton.Button2);
 
-                // Si el usuario cancela, salir sin hacer nada
-                if (resultado != DialogResult.Yes)
+                // Si el usuario elige NO, cancelar inmediatamente
+                if (resultado == DialogResult.No)
                 {
                     return;
                 }
 
+                // SEGUNDA confirmación: Si eligió SÍ, preguntar de nuevo
+                DialogResult segundaConfirmacion = MessageBox.Show(
+                    "¿Está seguro?",
+                    "⚠️ Confirmación Final",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question,
+                    MessageBoxDefaultButton.Button2);
+
+                // Si en la segunda confirmación elige NO, cancelar
+                if (segundaConfirmacion != DialogResult.Yes)
+                {
+                    return;
+                }
+
+                // Proceder con la restauración
                 btnRestaurar.Enabled = false;
                 BorrarFamilias();
                 Inicializacion();

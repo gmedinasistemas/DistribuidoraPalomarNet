@@ -1286,23 +1286,23 @@ namespace DistribuidoraPalomarNet
             if (_aplicandoFiltros) return;
             try
             {
-                if (!string.IsNullOrEmpty(cmbArmadora.Text) && cmbArmadora.Text != "System.Data.DataRowView")
-                {
-                    if (cmbArmadora.Text == " TODOS" || cmbArmadora.Text == "TODOS")
-                    {
-                        cmbArmadora.Text = string.Empty;
-                    }
-                    _aplicandoFiltros = true;
-                    Module.CargarComboLineas(cmbArmadora.Text);
-                    _aplicandoFiltros = false;
-                    // Filtrar via consulta SQL a la BD (el armadora se filtra con JOIN RUBROS)
-                    if (!ckbOfertas.Checked)
-                        await Module.consultas_Relacionales();
-                    else
-                        await Module.consultas_Ofertas();
-                    // NOTA: filtrado en memoria (AplicarFiltrosLocales) queda comentado para uso futuro
-                    // Module.AplicarFiltrosLocales();
-                }
+                // Cascada acumulativa: Armadora cambió → recargar Líneas y Marcas
+                // con filtros acumulativos (ARFLIA del Rubro + ARRUB2 de la Armadora)
+                string rubrosSel = cmbRubros.Text?.Trim() ?? string.Empty;
+                var facodisRubro = Module.ObtenerFacodisPorFamilia(rubrosSel);
+
+                string armadoraSel = cmbArmadora.Text?.Trim() ?? string.Empty;
+                string arrub2 = Module.ObtenerRbcodiPorArmadora(armadoraSel);
+
+                _aplicandoFiltros = true;
+                Module.CargarComboLineas(facodisRubro.Count > 0 ? facodisRubro : null, arrub2);
+                Module.CargarComboMarcasPorRubro(facodisRubro.Count > 0 ? facodisRubro : null, arrub2);
+                _aplicandoFiltros = false;
+
+                if (!ckbOfertas.Checked)
+                    await Module.consultas_Relacionales();
+                else
+                    await Module.consultas_Ofertas();
             }
             catch (Exception ex)
             {
@@ -1337,18 +1337,16 @@ namespace DistribuidoraPalomarNet
             {
                 string rubrosSel = cmbRubros.Text?.Trim() ?? string.Empty;
 
-                // cmbRubros ahora representa una FAMILIA (FADESC). Se resuelven sus FACODI
-                // (puede haber varios para la misma descripción) y se usan para filtrar en
-                // cascada Armadora, Líneas y Marcas, según lo acordado con el negocio.
+                // Cascada acumulativa: Rubro cambió → recargar Armadora, Líneas y Marcas
+                // filtrados por ARFLIA (los FACODI de la familia seleccionada).
                 var facodisRubro = Module.ObtenerFacodisPorFamilia(rubrosSel);
 
                 _aplicandoFiltros = true;
                 Module.CargarComboArmadora(facodisRubro);
-                Module.CargarComboLineas("0", facodisRubro);
-                Module.CargarComboMarcasPorRubro(rubrosSel);
+                Module.CargarComboLineas(facodisRubro.Count > 0 ? facodisRubro : null);
+                Module.CargarComboMarcasPorRubro(facodisRubro.Count > 0 ? facodisRubro : null);
                 _aplicandoFiltros = false;
 
-                // Filtrar via consulta SQL a la BD (el rubro/familia se filtra por a.ARFLIA IN (...))
                 if (!ckbOfertas.Checked)
                     await Module.consultas_Relacionales();
                 else
@@ -1517,16 +1515,31 @@ body{
             if (_aplicandoFiltros) return;
             try
             {
-                // Filtrar via consulta SQL a la BD (la línea se filtra por a.armode)
+                // Cascada acumulativa: Línea cambió → recargar Marcas
+                // con filtros acumulativos (ARFLIA + ARRUB2 + ARCUAR)
+                string rubrosSel = cmbRubros.Text?.Trim() ?? string.Empty;
+                var facodisRubro = Module.ObtenerFacodisPorFamilia(rubrosSel);
+
+                string armadoraSel = cmbArmadora.Text?.Trim() ?? string.Empty;
+                string arrub2 = Module.ObtenerRbcodiPorArmadora(armadoraSel);
+
+                string arcuar = Module.ObtenerLicodiSeleccionado();
+
+                _aplicandoFiltros = true;
+                Module.CargarComboMarcasPorRubro(
+                    facodisRubro.Count > 0 ? facodisRubro : null,
+                    arrub2,
+                    arcuar);
+                _aplicandoFiltros = false;
+
                 if (!ckbOfertas.Checked)
                     await Module.consultas_Relacionales();
                 else
                     await Module.consultas_Ofertas();
-                // NOTA: filtrado en memoria (AplicarFiltrosLocales) queda comentado para uso futuro
-                // Module.AplicarFiltrosLocales();
             }
             catch (Exception ex)
             {
+                _aplicandoFiltros = false;
                 Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Filtro Líneas': {ex.Message}");
             }
         }

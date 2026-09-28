@@ -253,6 +253,7 @@
             // 
             // txtIvaFlia
             // 
+            txtIvaFlia.Enabled = false;
             txtIvaFlia.Location = new Point(286, 38);
             txtIvaFlia.Name = "txtIvaFlia";
             txtIvaFlia.Size = new Size(37, 23);
@@ -295,6 +296,7 @@
             // 
             // txtPreciolista
             // 
+            txtPreciolista.Enabled = false;
             txtPreciolista.Location = new Point(26, 38);
             txtPreciolista.Margin = new Padding(4, 3, 4, 3);
             txtPreciolista.Name = "txtPreciolista";
@@ -304,6 +306,7 @@
             // 
             // txtDescuento1
             // 
+            txtDescuento1.Enabled = false;
             txtDescuento1.Location = new Point(91, 38);
             txtDescuento1.Margin = new Padding(4, 3, 4, 3);
             txtDescuento1.Name = "txtDescuento1";
@@ -313,6 +316,7 @@
             // 
             // txtDescuento2
             // 
+            txtDescuento2.Enabled = false;
             txtDescuento2.Location = new Point(156, 38);
             txtDescuento2.Margin = new Padding(4, 3, 4, 3);
             txtDescuento2.Name = "txtDescuento2";
@@ -322,6 +326,7 @@
             // 
             // txtDescuentoFamilia
             // 
+            txtDescuentoFamilia.Enabled = false;
             txtDescuentoFamilia.Location = new Point(221, 38);
             txtDescuentoFamilia.Margin = new Padding(4, 3, 4, 3);
             txtDescuentoFamilia.Name = "txtDescuentoFamilia";
@@ -332,6 +337,7 @@
             // 
             // txtPreciopublico
             // 
+            txtPreciopublico.Enabled = false;
             txtPreciopublico.Location = new Point(324, 38);
             txtPreciopublico.Margin = new Padding(4, 3, 4, 3);
             txtPreciopublico.Name = "txtPreciopublico";
@@ -341,6 +347,7 @@
             // 
             // txtBeneficio
             // 
+            txtBeneficio.Enabled = false;
             txtBeneficio.Location = new Point(389, 38);
             txtBeneficio.Name = "txtBeneficio";
             txtBeneficio.Size = new Size(65, 23);
@@ -349,6 +356,7 @@
             // 
             // txtSugerido
             // 
+            txtSugerido.Enabled = false;
             txtSugerido.Location = new Point(455, 38);
             txtSugerido.Name = "txtSugerido";
             txtSugerido.Size = new Size(65, 23);
@@ -887,6 +895,7 @@
             imgBanner.Size = new Size(870, 50);
             imgBanner.TabIndex = 11;
             imgBanner.TabStop = false;
+            imgBanner.Click += ImgBanner_Click;
             // 
             // DataGridView2
             // 
@@ -1030,6 +1039,7 @@
             PictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
             PictureBox3.TabIndex = 183;
             PictureBox3.TabStop = false;
+            PictureBox3.Click += PictureBox3_Click;
             // 
             // lblAlertaUpdate
             // 
@@ -1147,7 +1157,7 @@
         public TextBox txtModelo;
         public Label label7;
         public Label label6;
-        private DataGridView DataGridView2;
+        public DataGridView DataGridView2;
         public Label label8;
         private GroupBox groupBox2;
         private Button btnnovedades;
