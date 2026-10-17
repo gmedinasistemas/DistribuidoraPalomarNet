@@ -2263,27 +2263,37 @@ namespace DistribuidoraPalomarNet
                 var conditions = new System.Collections.Generic.List<string>();
                 conditions.Add("a.arprim<>'000'");
 
-                // txtCodigo: busca por concatenación arprim+arterc
+                // txtCodigo: busca por concatenación arprim+arterc O solo en arterc
                 string txtCod = _frmPrincipal.txtCodigo?.Text?.Trim() ?? string.Empty;
                 if (!string.IsNullOrEmpty(txtCod))
-                    conditions.Add($"a.arprim+a.arterc like '%{txtCod}%'");
+                    conditions.Add($"(a.arprim+a.arterc like '%{txtCod}%' OR a.arterc like '%{txtCod}%')");
 
                 // txtDescripcion: búsqueda multipalabra en ARDESC (Descripción) O r.rbdesc (Montadora) O a.armode (Línea)
+                // NUEVA LÓGICA: Cada palabra puede estar en cualquier campo, pero deben estar TODAS las palabras
                 if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion?.Text))
                 {
-                    string condDescARDESC = GenerarCondicionMultipalabra("a.ARDESC", _frmPrincipal.txtDescripcion.Text);
-                    string condDescMontadora = GenerarCondicionMultipalabra("r.rbdesc", _frmPrincipal.txtDescripcion.Text);
-                    string condDescLinea = GenerarCondicionMultipalabra("a.armode", _frmPrincipal.txtDescripcion.Text);
+                    string[] palabras = _frmPrincipal.txtDescripcion.Text.Trim()
+                                          .Split(' ')
+                                          .Where(p => !string.IsNullOrWhiteSpace(p))
+                                          .ToArray();
                     
-                    var condicionesDesc = new System.Collections.Generic.List<string>();
-                    if (!string.IsNullOrEmpty(condDescARDESC)) condicionesDesc.Add(condDescARDESC);
-                    if (!string.IsNullOrEmpty(condDescMontadora)) condicionesDesc.Add(condDescMontadora);
-                    if (!string.IsNullOrEmpty(condDescLinea)) condicionesDesc.Add(condDescLinea);
-                    
-                    if (condicionesDesc.Count > 0)
+                    if (palabras.Length > 0)
                     {
-                        // Combinar las 3 condiciones con OR
-                        conditions.Add($"({string.Join(" OR ", condicionesDesc)})");
+                        // Para cada palabra, generar: (palabra en ARDESC OR palabra en rbdesc OR palabra en armode)
+                        var condicionesPorPalabra = new System.Collections.Generic.List<string>();
+                        
+                        foreach (string palabra in palabras)
+                        {
+                            string palabraEscapada = palabra.Trim().Replace("'", "''");
+                            string condPalabra = $"(a.ARDESC like '%{palabraEscapada}%' OR r.rbdesc like '%{palabraEscapada}%' OR a.armode like '%{palabraEscapada}%')";
+                            condicionesPorPalabra.Add(condPalabra);
+                        }
+                        
+                        // Combinar todas las condiciones con AND: cada palabra debe estar en al menos uno de los campos
+                        if (condicionesPorPalabra.Count > 0)
+                        {
+                            conditions.Add($"({string.Join(" AND ", condicionesPorPalabra)})");
+                        }
                     }
                 }
 
@@ -2475,27 +2485,37 @@ namespace DistribuidoraPalomarNet
                 conditions.Add("a.ARTT<>0");
                 conditions.Add("a.arprim<>'000'");
 
-                // txtCodigo: busca por concatenación arprim+arterc
+                // txtCodigo: busca por concatenación arprim+arterc O solo en arterc
                 string txtCod = _frmPrincipal.txtCodigo?.Text?.Trim() ?? string.Empty;
                 if (!string.IsNullOrEmpty(txtCod))
-                    conditions.Add($"a.arprim+a.arterc like '%{txtCod}%'");
+                    conditions.Add($"(a.arprim+a.arterc like '%{txtCod}%' OR a.arterc like '%{txtCod}%')");
 
                 // txtDescripcion: búsqueda multipalabra en ARDESC (Descripción) O r.rbdesc (Montadora) O a.armode (Línea)
+                // NUEVA LÓGICA: Cada palabra puede estar en cualquier campo, pero deben estar TODAS las palabras
                 if (!string.IsNullOrEmpty(_frmPrincipal.txtDescripcion?.Text))
                 {
-                    string condDescARDESC = GenerarCondicionMultipalabra("a.ARDESC", _frmPrincipal.txtDescripcion.Text);
-                    string condDescMontadora = GenerarCondicionMultipalabra("r.rbdesc", _frmPrincipal.txtDescripcion.Text);
-                    string condDescLinea = GenerarCondicionMultipalabra("a.armode", _frmPrincipal.txtDescripcion.Text);
+                    string[] palabras = _frmPrincipal.txtDescripcion.Text.Trim()
+                                          .Split(' ')
+                                          .Where(p => !string.IsNullOrWhiteSpace(p))
+                                          .ToArray();
                     
-                    var condicionesDesc = new System.Collections.Generic.List<string>();
-                    if (!string.IsNullOrEmpty(condDescARDESC)) condicionesDesc.Add(condDescARDESC);
-                    if (!string.IsNullOrEmpty(condDescMontadora)) condicionesDesc.Add(condDescMontadora);
-                    if (!string.IsNullOrEmpty(condDescLinea)) condicionesDesc.Add(condDescLinea);
-                    
-                    if (condicionesDesc.Count > 0)
+                    if (palabras.Length > 0)
                     {
-                        // Combinar las 3 condiciones con OR
-                        conditions.Add($"({string.Join(" OR ", condicionesDesc)})");
+                        // Para cada palabra, generar: (palabra en ARDESC OR palabra en rbdesc OR palabra en armode)
+                        var condicionesPorPalabra = new System.Collections.Generic.List<string>();
+                        
+                        foreach (string palabra in palabras)
+                        {
+                            string palabraEscapada = palabra.Trim().Replace("'", "''");
+                            string condPalabra = $"(a.ARDESC like '%{palabraEscapada}%' OR r.rbdesc like '%{palabraEscapada}%' OR a.armode like '%{palabraEscapada}%')";
+                            condicionesPorPalabra.Add(condPalabra);
+                        }
+                        
+                        // Combinar todas las condiciones con AND: cada palabra debe estar en al menos uno de los campos
+                        if (condicionesPorPalabra.Count > 0)
+                        {
+                            conditions.Add($"({string.Join(" AND ", condicionesPorPalabra)})");
+                        }
                     }
                 }
 
@@ -4772,6 +4792,9 @@ namespace DistribuidoraPalomarNet
             {
                 if (_frmPrincipal == null) throw new InvalidOperationException("Formulario principal no inicializado");
 
+                // Establecer flag para evitar que los eventos TextChanged disparen consultas
+                _frmPrincipal.PorLimpieza = true;
+
                 campo = string.Empty;
                 valor = string.Empty;
                 prcodi = string.Empty;
@@ -4808,9 +4831,16 @@ namespace DistribuidoraPalomarNet
                 
                 // NUEVO: Limpiar equivalencias y cuadro amarillo de observaciones
                 LimpiarEquivalenciasYObservaciones();
+
+                // Restablecer el flag después de completar la limpieza
+                _frmPrincipal.PorLimpieza = false;
             }
             catch (Exception ex)
             {
+                // Asegurar que el flag se restablece incluso si hay error
+                if (_frmPrincipal != null)
+                    _frmPrincipal.PorLimpieza = false;
+                    
                 GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'Limpiar Campos': {ex.Message}");
             }
         }

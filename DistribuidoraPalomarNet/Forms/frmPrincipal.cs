@@ -247,6 +247,14 @@ namespace DistribuidoraPalomarNet
 
         private static frmPrincipal _instance;
         private bool _porLimpieza = false;
+
+        // Propiedad pública para controlar el flag de limpieza desde Module.cs
+        public bool PorLimpieza
+        {
+            get => _porLimpieza;
+            set => _porLimpieza = value;
+        }
+
         private bool _webView2Inicializado = false;
         private bool _webView22Inicializado = false;
         private string _textoMarquesinaPendiente = string.Empty;
@@ -942,6 +950,56 @@ namespace DistribuidoraPalomarNet
         }
 
 
+        /// <summary>
+        /// Se dispara automáticamente cuando cambia la selección en la grilla principal.
+        /// Carga las equivalencias y datos extras del artículo seleccionado,
+        /// o limpia todo si no hay selección.
+        /// </summary>
+        private void DataGridView1_SelectionChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                // No procesar durante filtros o limpieza
+                if (_aplicandoFiltros || PorLimpieza) return;
+
+                // Verificar si hay una fila seleccionada
+                if (DataGridView1.CurrentRow != null && DataGridView1.CurrentRow.Index >= 0 && DataGridView1.Rows.Count > 0)
+                {
+                    // Hay artículo seleccionado: cargar equivalencias y datos extras
+                    CargarEquivalencias();
+
+                    int numFila = DataGridView1.CurrentRow.Index;
+                    
+                    // Verificar que las celdas existan antes de acceder
+                    if (DataGridView1["CODIGO", numFila]?.Value != null && 
+                        DataGridView1["Marca", numFila]?.Value != null)
+                    {
+                        string codigo = DataGridView1["CODIGO", numFila].Value.ToString();
+                        string marca = DataGridView1["Marca", numFila].Value.ToString();
+                        
+                        string StringSelect = "SELECT TOP 1 IIF(R.RBDESC IS NULL, '', R.RBDESC) AS RBDESC, " +
+                            "IIF(A.ARORIG IS NULL, '', A.ARORIG) AS ARORIG, " +
+                            "IIF(A.AROBSE IS NULL, '', A.AROBSE) AS AROBSE, " +
+                            "IIF(A.ARUBIC1 IS NULL, '', A.ARUBIC1) AS ARUBIC1 " +
+                            "FROM (listas AS A INNER JOIN proveedo AS p ON p.prcodi = A.arprov) " +
+                            "INNER JOIN RUBROS AS R ON A.ARRUB2 = R.RBCODI " +
+                            "WHERE A.ARTERC='" + codigo + "' AND p.prmarc='" + marca + "'";
+                        
+                        Module.CargarDatosExtras(StringSelect);
+                    }
+                }
+                else if (DataGridView1.Rows.Count == 0)
+                {
+                    // Grilla vacía: limpiar equivalencias y cuadro amarillo
+                    Module.LimpiarEquivalenciasYObservaciones();
+                }
+            }
+            catch (Exception ex)
+            {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'SelectionChanged Grilla': {ex.Message}");
+            }
+        }
+
         private async void DataGridView1_Click(object sender, EventArgs e)
         {
             try
@@ -949,17 +1007,7 @@ namespace DistribuidoraPalomarNet
                 if (DataGridView1.CurrentRow != null)
                 {
                     await Module.AccionGrilla(DataGridView1);
-                    CargarEquivalencias();
-
-                    int numFila = DataGridView1.CurrentCell.RowIndex;
-                    string StringSelect = "SELECT TOP 1 IIF(R.RBDESC IS NULL, '', R.RBDESC) AS RBDESC, IIF(A.ARORIG IS NULL, '', A.ARORIG) AS ARORIG" +
-                        ", IIF(A.AROBSE IS NULL, '', A.AROBSE) AS AROBSE " +
-                        ", IIF(A.ARUBIC1 IS NULL, '', A.ARUBIC1) AS ARUBIC1 " +
-                    " FROM (listas AS A INNER JOIN proveedo AS p ON p.prcodi = A.arprov) " +
-                    " INNER JOIN RUBROS AS R ON A.ARRUB2 = R.RBCODI " +
-                    " WHERE A.ARTERC='" + this.DataGridView1["CODIGO", numFila].Value.ToString() +
-                    "' AND p.prmarc='" + this.DataGridView1["Marca", numFila].Value.ToString() + "'";
-                    Module.CargarDatosExtras(StringSelect);
+                    // CargarEquivalencias y CargarDatosExtras ahora se manejan en SelectionChanged
                 }
             }
             catch (Exception ex)
@@ -1170,8 +1218,8 @@ namespace DistribuidoraPalomarNet
                             "INNER JOIN proveedo AS p ON p.prcodi = a.arprov) " +
                             "LEFT JOIN rubros AS r ON a.ARRUB2 = r.RBCODI " +
                           //" left join lineas as l on a.arcuar=l.licodi= " +
-                          "where a.ARTT<>0 AND a.arprim+a.arterc like '%" + txtCodigo.Text +
-                          "%' order by a.arcodi"
+                          "where a.ARTT<>0 AND (a.arprim+a.arterc like '%" + txtCodigo.Text +
+                          "%' OR a.arterc like '%" + txtCodigo.Text + "%') order by a.arcodi"
                         : "SELECT a.arterc as Codigo, a.ardesc as Descripcion, " +
                             "p.PRMARC as Marca," +
                             "IIF(r.rbdesc IS NOT NULL, r.rbdesc, '') as Montadora," +
@@ -1187,8 +1235,8 @@ namespace DistribuidoraPalomarNet
                             "INNER JOIN proveedo AS p ON p.prcodi = a.arprov) " +
                             "LEFT JOIN rubros AS r ON a.ARRUB2 = r.RBCODI " +
                           //" left join lineas as l on a.arcuar=l.licodi= " +
-                          "where a.arprim+a.arterc like '%" + txtCodigo.Text +
-                          "%' order by a.arcodi";
+                          "where (a.arprim+a.arterc like '%" + txtCodigo.Text +
+                          "%' OR a.arterc like '%" + txtCodigo.Text + "%') order by a.arcodi";
 
                     using (var da = new OleDbDataAdapter())
                     using (var ds = new DataSet())

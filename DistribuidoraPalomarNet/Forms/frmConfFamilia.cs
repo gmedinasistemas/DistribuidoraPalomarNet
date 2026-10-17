@@ -130,7 +130,7 @@ namespace DistribuidoraPalomarNet
             btnGrabar.Click += btnGrabar_Click;
             btnSalir.Click += btnSalir_Click;
             CheckBox1.CheckedChanged += CheckBox1_CheckedChanged;
-            btnRestaurar.Click += btnRestaurar_Click;
+            // btnRestaurar.Click ya está registrado en Designer.cs
 
             DataGridView1.EditingControlShowing += DataGridView1_EditingControlShowing;
             DataGridView1.CellParsing += DataGridView1_CellParsing;

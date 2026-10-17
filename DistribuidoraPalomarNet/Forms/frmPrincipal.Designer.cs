@@ -457,7 +457,7 @@
             ptbImagen.Location = new Point(939, 433);
             ptbImagen.Margin = new Padding(4, 3, 4, 3);
             ptbImagen.Name = "ptbImagen";
-            ptbImagen.Size = new Size(248, 212);
+            ptbImagen.Size = new Size(248, 242);
             ptbImagen.SizeMode = PictureBoxSizeMode.Zoom;
             ptbImagen.TabIndex = 0;
             ptbImagen.TabStop = false;
@@ -799,6 +799,7 @@
             DataGridView1.Size = new Size(1175, 262);
             DataGridView1.TabIndex = 3;
             DataGridView1.ColumnHeaderMouseClick += DataGridView1_ColumnHeaderMouseClick;
+            DataGridView1.SelectionChanged += DataGridView1_SelectionChanged;
             DataGridView1.Click += DataGridView1_Click;
             DataGridView1.DoubleClick += DataGridView1_DoubleClick;
             // 
@@ -927,7 +928,7 @@
             // groupBox2
             // 
             groupBox2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            groupBox2.BackColor = Color.FromArgb(204, 204, 204);
+            groupBox2.BackColor = Color.FromArgb(255, 255, 191);
             groupBox2.Controls.Add(lblOrigen);
             groupBox2.Controls.Add(label10);
             groupBox2.Controls.Add(label11);
@@ -935,7 +936,7 @@
             groupBox2.Controls.Add(lblRubro);
             groupBox2.Location = new Point(538, 432);
             groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(394, 92);
+            groupBox2.Size = new Size(394, 113);
             groupBox2.TabIndex = 178;
             groupBox2.TabStop = false;
             groupBox2.Text = "OBSERVACIONES";
@@ -974,12 +975,13 @@
             // 
             // lblObservaciones
             // 
+            lblObservaciones.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             lblObservaciones.BackColor = Color.FromArgb(255, 255, 191);
             lblObservaciones.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblObservaciones.ForeColor = Color.Black;
             lblObservaciones.Location = new Point(13, 47);
             lblObservaciones.Name = "lblObservaciones";
-            lblObservaciones.Size = new Size(375, 39);
+            lblObservaciones.Size = new Size(375, 60);
             lblObservaciones.TabIndex = 14;
             // 
             // lblRubro
@@ -1033,7 +1035,7 @@
             // 
             PictureBox3.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             PictureBox3.BackColor = Color.Transparent;
-            PictureBox3.Location = new Point(738, 535);
+            PictureBox3.Location = new Point(738, 565);
             PictureBox3.Name = "PictureBox3";
             PictureBox3.Size = new Size(194, 110);
             PictureBox3.SizeMode = PictureBoxSizeMode.Zoom;
@@ -1071,7 +1073,7 @@
             // toolStripProgressBar1
             // 
             toolStripProgressBar1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            toolStripProgressBar1.Location = new Point(538, 522);
+            toolStripProgressBar1.Location = new Point(538, 551);
             toolStripProgressBar1.Name = "toolStripProgressBar1";
             toolStripProgressBar1.Size = new Size(394, 11);
             toolStripProgressBar1.TabIndex = 188;
