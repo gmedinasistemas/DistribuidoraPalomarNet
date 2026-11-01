@@ -12,8 +12,6 @@ obj/
 # WebView2 cache
 **/EBWebView/
 
-# Data files
-*.dat
 
 # Logs
 error.log
