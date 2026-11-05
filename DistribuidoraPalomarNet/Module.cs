@@ -35,7 +35,7 @@ namespace DistribuidoraPalomarNet
     /// <b>Cadena de precios en tabla LISTAS:</b>
     /// <list type="bullet">
     /// <item><c>aroo</c> = precio base de lista | <c>artt</c> = precio de oferta.</item>
-    /// <item><c>arpre0</c> = aroo − desc1 &nbsp;|&nbsp; <c>arpre1</c> = arpre0 − desc2 − descFamilia + IVA (precio de costo).</item>
+    /// <item><c>arpre0</c> = aroo − desc1 &nbsp;|&nbsp; <c>arpre1</c> = arpre0 − desc2 − descFamilia (precio de costo sin IVA).</item>
     /// <item><c>arpre2</c> = arpre1 + beneficio familiar = precio sugerido de venta al público.</item>
     /// <item><c>arpre3/arpre4/arpre5</c>: equivalentes para artículos en oferta (<c>artt</c>).</item>
     /// </list>
@@ -199,7 +199,7 @@ namespace DistribuidoraPalomarNet
         // precio_desc2:         precio_desc1 − descuento2 (%).
         // precio_desc1_desc2:   alias de precio_desc2 (no usado actualmente).
         // precio_costo_sin_iva: precio_desc2 − descuento familia = precio de costo sin IVA (base para PREPARAC).
-        // precio_final:         precio_costo_sin_iva + IVA familia = precio final al cliente con IVA.
+        // precio_final:         precio_costo_sin_iva + IVA_FIJO = precio final con IVA (solo para PREPARAC, no se muestra).
         // PRECIO_DESC3:         monto del tercer descuento (­optional) sobre precio_final.
         // precio_final_desc3:   precio_final − desc3 = precio publicado si hay desc3 activo.
         // preciofinalxx:        copia de precio_final antes de aplicar desc3 (intermedio).
@@ -220,6 +220,9 @@ namespace DistribuidoraPalomarNet
         public static decimal precio_desc2;
         public static decimal precio_final;
         public static decimal precio_costo_sin_iva;
+        // IVA_FIJO: alícuota de IVA fija para todas las familias. Solo se aplica a precio_final (PREPARAC);
+        // no se muestra en pantalla, grillas ni Excel.
+        public const decimal IVA_FIJO = 21m;
         // AccionDatosUsu: indica la acción a realizar en frmDatosUsuario (1=alta, 2=edición).
         // NumEqui:        código de equivalencia del artículo seleccionado (AROBSE); vacío si no tiene.
         // vectornomfoto:  array de nombres de archivo de fotos (no usado actualmente).
@@ -578,8 +581,7 @@ namespace DistribuidoraPalomarNet
                     worksheet.Cell(1, 5).Value = "Descripción";
                     worksheet.Cell(1, 6).Value = "Observaciones";
                     worksheet.Cell(1, 7).Value = "Costo sin IVA";
-                    worksheet.Cell(1, 8).Value = "Costo con IVA (temp)";
-                    //worksheet.Cell(1, 9).Value = "Precio de Lista";
+                    //worksheet.Cell(1, 8).Value = "Precio de Lista";
 
                     // Dar formato al encabezado
                     var headerRow = worksheet.Row(1);
@@ -600,9 +602,6 @@ namespace DistribuidoraPalomarNet
                         if (fila["precio_lista"] != DBNull.Value)
                             precioLista = Convert.ToDouble(fila["precio_lista"]);
 
-                        // TEST: Cálculo de IVA temporal fijo de 21% por ahora
-                        double costoConIva = costoSinIva * 1.21;
-
                         // Llenar las celdas
                         worksheet.Cell(row, 1).Value = fila["arprim"]?.ToString() ?? "";
                         worksheet.Cell(row, 2).Value = fila["arterc"]?.ToString() ?? "";
@@ -611,8 +610,7 @@ namespace DistribuidoraPalomarNet
                         worksheet.Cell(row, 5).Value = fila["ardesc"]?.ToString() ?? "";
                         worksheet.Cell(row, 6).Value = fila["arobse"]?.ToString() ?? "";
                         worksheet.Cell(row, 7).Value = costoSinIva;
-                        worksheet.Cell(row, 8).Value = costoConIva;
-                        //worksheet.Cell(row, 9).Value = precioLista;
+                        //worksheet.Cell(row, 8).Value = precioLista;
                         row++;
                     }
 
@@ -623,10 +621,7 @@ namespace DistribuidoraPalomarNet
                     var rangoCostoSinIva = worksheet.Column(7).CellsUsed();
                     rangoCostoSinIva.Style.NumberFormat.Format = "$#,##0.00";
                     
-                    var rangoCostoConIva = worksheet.Column(8).CellsUsed();
-                    rangoCostoConIva.Style.NumberFormat.Format = "$#,##0.00";
-                    
-                    var rangoPrecioLista = worksheet.Column(9).CellsUsed();
+                    var rangoPrecioLista = worksheet.Column(8).CellsUsed();
                     rangoPrecioLista.Style.NumberFormat.Format = "$#,##0.00";
 
                     // Guardar el archivo
@@ -882,6 +877,7 @@ namespace DistribuidoraPalomarNet
                 LeerConfig();
                 Cargar_Usuario();
                 //ActualizarFAMIVA();
+                NormalizarIvaFamilias();
                 await funcion_inicial(0);
                 aplicar_desc_Cliente(); // Cargo Descuentos 1 y 2
                 _frmPrincipal.lblFechaAct.Text = $"Actualizado al {FechaActualizacion()}";
@@ -891,6 +887,31 @@ namespace DistribuidoraPalomarNet
             catch (Exception ex)
             {
                 throw new Exception($"Error dentro de 'Inicializacion': {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Fija <c>FAIVA = IVA_FIJO</c> (21%) en todas las familias de la base de usuario (<c>cnnU</c>).
+        /// El IVA ya no se configura por familia; se mantiene en FAMILIAS solo para lo que viaja a PREPARAC.
+        /// </summary>
+        public static void NormalizarIvaFamilias()
+        {
+            try
+            {
+                ConectarDBUsuario();
+                using var cmd = new OleDbCommand("UPDATE FAMILIAS SET FAIVA = ? WHERE FAIVA IS NULL OR FAIVA <> ?", cnnU);
+                cmd.Parameters.AddWithValue("@p1", (double)IVA_FIJO);
+                cmd.Parameters.AddWithValue("@p2", (double)IVA_FIJO);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'NormalizarIvaFamilias': {ex.Message}");
+            }
+            finally
+            {
+                if (cnnU.State == ConnectionState.Open)
+                    cnnU.Close();
             }
         }
 
@@ -1179,9 +1200,9 @@ namespace DistribuidoraPalomarNet
         /// <item><see cref="ValidarEquivalencias"/>: habilita/deshabilita el botón de equivalencias.</item>
         /// <item><see cref="TraerDatosExtras"/>: carga ubicación, observación, stock y familia del artículo.</item>
         /// <item><see cref="ColorearStock"/>: colorea el campo de stock según semáforo.</item>
-        /// <item><see cref="Calculadora"/>: calcula la cadena de precios (desc1 → desc2 → descFam → IVA → precio_final).</item>
-        /// <item><see cref="aplicar_beneficio"/>: calcula el precio sugerido de venta.</item>
-        /// <item>Muestra el descuento de familia e IVA de familia en la UI.</item>
+        /// <item><see cref="Calculadora"/>: calcula la cadena de precios (desc1 → desc2 → descFam → costo sin IVA; precio_final interno con IVA).</item>
+        /// <item><see cref="aplicar_beneficio"/>: calcula el precio sugerido de venta (sin IVA).</item>
+        /// <item>Muestra el descuento de familia en la UI.</item>
         /// </list>
         /// </remarks>
         /// <param name="dataGrid">DataGridView que disparó el evento de selección.</param>
@@ -1197,7 +1218,6 @@ namespace DistribuidoraPalomarNet
                     _frmPrincipal.txtDescuento2.Text       = string.Empty;
                     _frmPrincipal.txtPreciopublico.Text    = string.Empty;
                     _frmPrincipal.txtDescuentoFamilia.Text = string.Empty;
-                    _frmPrincipal.txtIvaFlia.Text          = string.Empty;
                     _frmPrincipal.MostrarNotificacionDescuento();
                     return;
                 }
@@ -1237,15 +1257,6 @@ namespace DistribuidoraPalomarNet
                 catch
                 {
                     _frmPrincipal.txtDescuentoFamilia.Text = "0";
-                }
-                //txtIvaFlia
-                try
-                {
-                    _frmPrincipal.txtIvaFlia.Text = string.Format("{0:F2}", aplicar_iva_Familia());
-                }
-                catch
-                {
-                    _frmPrincipal.txtIvaFlia.Text = "0";
                 }
             }
             catch (Exception ex)
@@ -1667,7 +1678,7 @@ namespace DistribuidoraPalomarNet
         /// <item>Busca <c>FABEN1</c> directamente en la tabla <c>FAMILIAS</c> de <c>cnnU</c> (base local) por <c>FACODI = _ARTI_ARFLIA</c>.</item>
         /// <item>Si hay beneficio: <c>precioSugerido = baseSugerido + (baseSugerido × FABEN1 / 100)</c>.</item>
         /// </list>
-        /// La base del sugerido es <c>precio_final_desc3</c> si hay desc3 activo; sino <c>precio_final</c>.
+        /// La base del sugerido es <c>precio_final_desc3</c> si hay desc3 activo; sino <c>precio_costo_sin_iva</c>.
         /// <b>Nota:</b> se filtra por <c>FACODI</c> (no por <c>FADESC</c>) porque puede haber familias con
         /// igual descripción pero distinto proveedor (<c>FAPROV</c>).
         /// </remarks>
@@ -1675,10 +1686,10 @@ namespace DistribuidoraPalomarNet
         {
             try
             {
-                // Base para sugerido: si hay desc3 aplicado, usar precio_final_desc3; si no, precio_final
+                // Base para sugerido: si hay desc3 aplicado, usar precio_final_desc3; si no, el costo sin IVA
                 decimal baseSugerido = precio_final_desc3 != 0 && _frmPrincipal.txtDescuento3.Text != "0"
                     ? precio_final_desc3
-                    : precio_final;
+                    : precio_costo_sin_iva;
 
                 // Buscar FABEN1 directamente por FACODI en base de usuario
                 decimal? faben1 = null;
@@ -1773,10 +1784,11 @@ namespace DistribuidoraPalomarNet
         /// precio_desc2         = precio_desc1 − (precio_desc1 × desc2 / 100)
         /// precio_desc2        -= precio_desc2 × descFamilia / 100   [si FADES1 != 0]
         /// precio_costo_sin_iva = precio_desc2
-        /// precio_final         = precio_desc2 + (precio_desc2 × IVA familia / 100)
+        /// precio_final         = precio_desc2 + (precio_desc2 × IVA_FIJO / 100)
         /// </code>
-        /// Cadena cuando <c>Descuento1 = 0</c>: se usa <c>precio_lista</c> como base y aplica solo IVA de familia.
-        /// Los valores de IVA y descuento de familia se consultan en <c>cnnU</c> (tabla FAMILIAS local).
+        /// Cadena cuando <c>Descuento1 = 0</c>: se usa <c>precio_lista</c> como base y aplica solo IVA.
+        /// El IVA (<see cref="IVA_FIJO"/>) solo se usa internamente en <c>precio_final</c> (lo que viaja a PREPARAC);
+        /// en pantalla (COSTO) se muestra <c>precio_costo_sin_iva</c>.
         /// </remarks>
         public static void Calculadora()
         {
@@ -1802,33 +1814,11 @@ namespace DistribuidoraPalomarNet
                             // neto sin IVA
                             precio_costo_sin_iva = precio_desc2;
 
-                            // aplicar IVA por familia si existe (consulta directa por FACODI: evita
-                            // ambigüedad cuando dos familias comparten FADESC con distinto FAPROV)
-                            decimal precioConIva = precio_desc2;
-                            if (_ARTI_ARFLIA != 0)
-                            {
-                                using (var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FACODI = ?", cnnU))
-                                {
-                                    try
-                                    {
-                                        ConectarDBUsuario();
-                                        cmUsu.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
-                                        var objI = cmUsu.ExecuteScalar();
-                                        if (objI != null && objI != DBNull.Value && decimal.TryParse(objI.ToString(), out var ivaTmp) && ivaTmp != 0)
-                                        {
-                                            precioConIva = precio_desc2 + (precio_desc2 * ivaTmp / 100);
-                                        }
-                                    }
-                                    finally
-                                    {
-                                        if (cnnU.State == ConnectionState.Open)
-                                            cnnU.Close();
-                                    }
-                                }
-                            }
-
-                            precio_final = Convert.ToDecimal(precioConIva);
-                            _frmPrincipal.txtPreciopublico.Text = string.Format("{0:F2}", precio_final);
+                            // IVA fijo solo para el precio que viaja a PREPARAC (no se muestra en pantalla)
+                            precio_final = _ARTI_ARFLIA != 0
+                                ? precio_desc2 + (precio_desc2 * IVA_FIJO / 100)
+                                : precio_desc2;
+                            _frmPrincipal.txtPreciopublico.Text = string.Format("{0:F2}", precio_costo_sin_iva);
                         }
                         if (!decimal.TryParse(Descuento1.ToString(), out _) || Descuento1 == 0)
                         {
@@ -1841,33 +1831,11 @@ namespace DistribuidoraPalomarNet
                                 precio_costo_sin_iva = precio_costo_sin_iva - (precio_costo_sin_iva * descFamilia / 100);
                             }
 
-                            // aplicar IVA por familia también cuando no hay descuentos (consulta directa
-                            // por FACODI: evita ambigüedad cuando dos familias comparten FADESC con distinto FAPROV)
-                            decimal precioConIva = precio_costo_sin_iva;
-                            if (_ARTI_ARFLIA != 0)
-                            {
-                                using (var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FACODI = ?", cnnU))
-                                {
-                                    try
-                                    {
-                                        ConectarDBUsuario();
-                                        cmUsu.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
-                                        var objI = cmUsu.ExecuteScalar();
-                                        if (objI != null && objI != DBNull.Value && decimal.TryParse(objI.ToString(), out var ivaTmp) && ivaTmp != 0)
-                                        {
-                                            precioConIva = precio_lista + (precio_lista * ivaTmp / 100);
-                                        }
-                                    }
-                                    finally
-                                    {
-                                        if (cnnU.State == ConnectionState.Open)
-                                            cnnU.Close();
-                                    }
-                                }
-                            }
-
-                            precio_final = precioConIva;
-                            _frmPrincipal.txtPreciopublico.Text = string.Format("{0:F2}", precio_final);
+                            // IVA fijo solo para el precio que viaja a PREPARAC (no se muestra en pantalla)
+                            precio_final = _ARTI_ARFLIA != 0
+                                ? precio_lista + (precio_lista * IVA_FIJO / 100)
+                                : precio_costo_sin_iva;
+                            _frmPrincipal.txtPreciopublico.Text = string.Format("{0:F2}", precio_costo_sin_iva);
                         }
                     }
                     else
@@ -1930,39 +1898,6 @@ namespace DistribuidoraPalomarNet
                 using var cmd = new OleDbCommand("SELECT TOP 1 FADES1 FROM FAMILIAS WHERE FACODI = ?", cnnU);
                 ConectarDBUsuario();
                 cmd.Parameters.AddWithValue("@p1", facodi);
-                var obj = cmd.ExecuteScalar();
-                if (obj != null && obj != DBNull.Value && decimal.TryParse(obj.ToString(), out var d))
-                    return d;
-                return 0;
-            }
-            catch
-            {
-                return 0;
-            }
-            finally
-            {
-                if (cnnU.State == ConnectionState.Open)
-                    cnnU.Close();
-            }
-        }
-        /// <summary>
-        /// Retorna el porcentaje de IVA de familia (<c>FAIVA</c>) del artículo actualmente seleccionado.
-        /// </summary>
-        /// <remarks>
-        /// Consulta la tabla <c>FAMILIAS</c> en <c>cnnU</c> filtrando por <c>_ARTI_ARFLIA</c>.
-        /// Si no hay familia o la consulta falla, retorna 0.
-        /// </remarks>
-        /// <returns>Porcentaje de IVA familiar (ej: 21.0 para el 21%), o 0 si no aplica.</returns>
-        public static decimal aplicar_iva_Familia()
-        {
-            try
-            {
-                if (_ARTI_ARFLIA == 0)
-                    return 0;
-
-                using var cmd = new OleDbCommand("SELECT TOP 1 FAIVA FROM FAMILIAS WHERE FACODI = ?", cnnU);
-                ConectarDBUsuario();
-                cmd.Parameters.AddWithValue("@p1", _ARTI_ARFLIA);
                 var obj = cmd.ExecuteScalar();
                 if (obj != null && obj != DBNull.Value && decimal.TryParse(obj.ToString(), out var d))
                     return d;
@@ -3728,7 +3663,7 @@ namespace DistribuidoraPalomarNet
         }
 
         /// <summary>Recalcula los precios de lista para todos los artículos normales.
-        /// Llama a <see cref="Update_PrecioCosto"/> (cadena desc1→desc2→IVA) y <see cref="Update_PrecioSug"/> (precio sugerido).
+        /// Llama a <see cref="Update_PrecioCosto"/> (cadena desc1→desc2→descFamilia, sin IVA) y <see cref="Update_PrecioSug"/> (precio sugerido).
         /// </summary>
         public static void Update_Precios()
         {
@@ -5216,16 +5151,16 @@ namespace DistribuidoraPalomarNet
 
         /// <summary>
         /// Recalcula masivamente los precios de costo (<c>arpre0</c>, <c>arpre1</c>) en la tabla LISTAS
-        /// aplicando la cadena completa: desc1 → desc2 → descuento de familia (<c>FADES1</c>) → IVA de familia (<c>FAIVA</c>).
+        /// aplicando la cadena: desc1 → desc2 → descuento de familia (<c>FADES1</c>). Sin IVA.
         /// </summary>
         /// <remarks>
         /// Algoritmo por familia (itera todas las FAMILIAS con artículos en LISTAS):
         /// <list type="bullet">
-        /// <item>Si desc2 &gt; 0: <c>arpre1 = arpre1 − FADES1 + FAIVA</c>.</item>
-        /// <item>Si solo desc1 &gt; 0: <c>arpre0 = arpre0 − FADES1 + FAIVA</c>; luego <c>arpre1 = arpre0</c>.</item>
-        /// <item>Sin descuentos: <c>arpre1 = arpre1 − FADES1 + FAIVA</c> directo.</item>
+        /// <item>Si desc2 &gt; 0: <c>arpre1 = arpre1 − FADES1</c>.</item>
+        /// <item>Si solo desc1 &gt; 0: <c>arpre0 = arpre0 − FADES1</c>; luego <c>arpre1 = arpre0</c>.</item>
+        /// <item>Sin descuentos: <c>arpre1 = arpre1 − FADES1</c> directo.</item>
         /// </list>
-        /// Los valores de FADES1 y FAIVA se leen de la tabla <c>FAMILIAS</c> en <c>cnnU</c>.
+        /// FADES1 se lee de la tabla <c>FAMILIAS</c> en <c>cnnU</c>.
         /// </remarks>
         public static void Update_PrecioCosto()
         {
@@ -5269,7 +5204,7 @@ namespace DistribuidoraPalomarNet
                     using (var drFam = cmdFam.ExecuteReader())
                     {
                         ConectarDBUsuario();
-                        using var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA, FADES1 FROM FAMILIAS WHERE FACODI = ?", cnnU);
+                        using var cmUsu = new OleDbCommand("SELECT TOP 1 FADES1 FROM FAMILIAS WHERE FACODI = ?", cnnU);
                         cmUsu.Parameters.Add("@p1", OleDbType.VarWChar);
 
                         while (drFam.Read())
@@ -5278,24 +5213,16 @@ namespace DistribuidoraPalomarNet
                             if (string.IsNullOrEmpty(facodi))
                                 continue;
 
-                            // Releemos descuentos para decidir dónde aplicar IVA
+                            // Releemos descuentos para decidir dónde aplicar el descuento de familia
                             decimal d1 = 0, d2 = 0;
                             decimal.TryParse(_frmPrincipal.txtDescuento1.Text, out d1);
                             decimal.TryParse(_frmPrincipal.txtDescuento2.Text, out d2);
 
-                            decimal? faiva = null;
                             decimal? fades1 = null;
                             cmUsu.Parameters[0].Value = facodi;
-                            using (var rdr = cmUsu.ExecuteReader())
-                            {
-                                if (rdr.Read())
-                                {
-                                    if (rdr[0] != DBNull.Value && decimal.TryParse(rdr[0].ToString(), out var ivaTmp))
-                                        faiva = ivaTmp;
-                                    if (rdr[1] != DBNull.Value && decimal.TryParse(rdr[1].ToString(), out var desTmp))
-                                        fades1 = desTmp;
-                                }
-                            }
+                            var objDes = cmUsu.ExecuteScalar();
+                            if (objDes != null && objDes != DBNull.Value && decimal.TryParse(objDes.ToString(), out var desTmp))
+                                fades1 = desTmp;
 
                             if (fades1.HasValue && fades1.Value != 0)
                             {
@@ -5326,45 +5253,6 @@ namespace DistribuidoraPalomarNet
                                     cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }
-                            }
-
-                            if (faiva.HasValue)
-                            {
-                                string iva = faiva.Value.ToString().Replace(",", ".");
-                                // Si hay desc2, el final está en arpre1 -> IVA sobre arpre1
-                                if (d2 != 0)
-                                {
-                                    cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 + (L.arpre1*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
-                                    cmaccessUpdate.ExecuteNonQuery();
-                                }
-                                else if (d1 != 0)
-                                {
-                                    // Solo desc1: IVA sobre arpre0 y luego reflejar en arpre1
-                                    cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre0 = FORMAT(L.arpre0 + (L.arpre0*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
-                                    cmaccessUpdate.ExecuteNonQuery();
-
-                                    cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = L.arpre0 WHERE F.FACODI = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
-                                    cmaccessUpdate.ExecuteNonQuery();
-                                }
-                                else
-                                {
-                                    // Sin descuentos: IVA directo sobre arpre1
-                                    cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre1 = FORMAT(L.arpre1 + (L.arpre1*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
-                                    cmaccessUpdate.ExecuteNonQuery();
-                                }
-                            }
-                            else
-                            {
-                                //si no encuentra la familia o el iva esta en 0?
-                                //MessageBox.Show(faiva.HasValue.ToString());
                             }
                         }
 
@@ -5429,7 +5317,7 @@ namespace DistribuidoraPalomarNet
                     using (var drFam = cmdFam.ExecuteReader())
                     {
                         ConectarDBUsuario();
-                        using var cmUsu = new OleDbCommand("SELECT TOP 1 FAIVA, FADES1 FROM FAMILIAS WHERE FACODI = ?", cnnU);
+                        using var cmUsu = new OleDbCommand("SELECT TOP 1 FADES1 FROM FAMILIAS WHERE FACODI = ?", cnnU);
                         cmUsu.Parameters.Add("@p1", OleDbType.VarWChar);
 
                         while (drFam.Read())
@@ -5442,19 +5330,11 @@ namespace DistribuidoraPalomarNet
                             decimal.TryParse(_frmPrincipal.txtDescuento1.Text, out d1);
                             decimal.TryParse(_frmPrincipal.txtDescuento2.Text, out d2);
 
-                            decimal? faiva = null;
                             decimal? fades1 = null;
                             cmUsu.Parameters[0].Value = facodi;
-                            using (var rdr = cmUsu.ExecuteReader())
-                            {
-                                if (rdr.Read())
-                                {
-                                    if (rdr[0] != DBNull.Value && decimal.TryParse(rdr[0].ToString(), out var ivaTmp))
-                                        faiva = ivaTmp;
-                                    if (rdr[1] != DBNull.Value && decimal.TryParse(rdr[1].ToString(), out var desTmp))
-                                        fades1 = desTmp;
-                                }
-                            }
+                            var objDes = cmUsu.ExecuteScalar();
+                            if (objDes != null && objDes != DBNull.Value && decimal.TryParse(objDes.ToString(), out var desTmp))
+                                fades1 = desTmp;
 
                             if (fades1.HasValue && fades1.Value != 0)
                             {
@@ -5482,40 +5362,6 @@ namespace DistribuidoraPalomarNet
                                 {
                                     cmaccessUpdate.Parameters.Clear();
                                     cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 - (L.arpre4*" + des + "/100),'Fixed') WHERE F.FACODI = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
-                                    cmaccessUpdate.ExecuteNonQuery();
-                                }
-                            }
-
-                            if (faiva.HasValue)
-                            {
-                                string iva = faiva.Value.ToString().Replace(",", ".");
-                                if (d2 != 0)
-                                {
-                                    // Con desc2: final en arpre4
-                                    cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 + (L.arpre4*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
-                                    cmaccessUpdate.ExecuteNonQuery();
-                                }
-                                else if (d1 != 0)
-                                {
-                                    // Solo desc1: IVA sobre arpre3 y luego reflejar en arpre4
-                                    cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre3 = FORMAT(L.arpre3 + (L.arpre3*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
-                                    cmaccessUpdate.ExecuteNonQuery();
-
-                                    cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = L.arpre3 WHERE F.FACODI = ?";
-                                    cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
-                                    cmaccessUpdate.ExecuteNonQuery();
-                                }
-                                else
-                                {
-                                    // Sin descuentos: IVA directo sobre arpre4
-                                    cmaccessUpdate.Parameters.Clear();
-                                    cmaccessUpdate.CommandText = "UPDATE listas AS L INNER JOIN familias AS F ON L.ARFLIA = F.FACODI SET L.arpre4 = FORMAT(L.arpre4 + (L.arpre4*" + iva + "/100),'Fixed') WHERE F.FACODI = ?";
                                     cmaccessUpdate.Parameters.AddWithValue("@p1", facodi);
                                     cmaccessUpdate.ExecuteNonQuery();
                                 }

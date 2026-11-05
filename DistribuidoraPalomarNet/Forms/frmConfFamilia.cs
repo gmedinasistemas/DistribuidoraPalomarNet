@@ -11,6 +11,7 @@ namespace DistribuidoraPalomarNet
     public partial class frmConfFamilia : Form
     {
         private static bool _familiasInicializadas = false;
+        private bool _cerrando = false;
         private Label _lblCargando;
 
         // Separador de decimales fijo para parseo sin ambigüedad.
@@ -125,12 +126,10 @@ namespace DistribuidoraPalomarNet
         {
             InitializeComponent();
             // Wire events similares al patrón del proyecto
-            Load += frmConfFamilia_Load;
+            // Load, btnGrabar.Click, btnSalir.Click y btnRestaurar.Click ya están registrados en Designer.cs
+            // (registrarlos aquí también hacía que cada click se ejecutara dos veces).
             Shown += frmConfFamilia_Shown;
-            btnGrabar.Click += btnGrabar_Click;
-            btnSalir.Click += btnSalir_Click;
             CheckBox1.CheckedChanged += CheckBox1_CheckedChanged;
-            // btnRestaurar.Click ya está registrado en Designer.cs
 
             DataGridView1.EditingControlShowing += DataGridView1_EditingControlShowing;
             DataGridView1.CellParsing += DataGridView1_CellParsing;
@@ -245,11 +244,9 @@ namespace DistribuidoraPalomarNet
                 DataGridView1.Columns["FADES1"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
                 DataGridView1.Columns["FADES1"].DefaultCellStyle.Format = "N2";
             }
+            // IVA fijo (Module.IVA_FIJO): no se muestra ni se edita
             if (DataGridView1.Columns.Contains("Iva"))
-            {
-                DataGridView1.Columns["Iva"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-                DataGridView1.Columns["Iva"].DefaultCellStyle.Format = "N2";
-            }
+                DataGridView1.Columns["Iva"].Visible = false;
             if (DataGridView1.Columns.Contains("Beneficio"))
             {
                 DataGridView1.Columns["Beneficio"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
@@ -273,7 +270,7 @@ namespace DistribuidoraPalomarNet
         }
 
         // Graba los descuentos según el modo activo:
-        // - CheckBox1 desmarcado: recorre la grilla fila por fila y actualiza FABEN1, FADES1 y FAIVA por familia.
+        // - CheckBox1 desmarcado: recorre la grilla fila por fila y actualiza FABEN1, FADES1 y FAIVA (IVA fijo) por familia.
         // - CheckBox1 marcado: aplica los valores generales (txtbgral/txtiva/txtDescFlia) a TODAS las familias.
         // Al finalizar recarga la grilla para reflejar los valores guardados.
         private void btnGrabar_Click(object sender, EventArgs e)
@@ -283,7 +280,7 @@ namespace DistribuidoraPalomarNet
                 btnGrabar.Enabled = false;
                 if (CheckBox1.Checked == false)
                 {
-                    // Carga por grilla: recorre filas y actualiza FABEN1 y FAIVA por familia
+                    // Carga por grilla: recorre filas y actualiza FABEN1 y FADES1 por familia (FAIVA = IVA fijo)
                     if (DataGridView1.RowCount > 1)
                     {
                         //destilo la carga general.
@@ -296,13 +293,11 @@ namespace DistribuidoraPalomarNet
                             string facodi = Convert.ToString(row.Cells["FACODI"].Value);
                             string ben1 = Convert.ToString(row.Cells["Beneficio"].Value);
                             string fades1 = Convert.ToString(row.Cells["FADES1"].Value);
-                            string iva = Convert.ToString(row.Cells["Iva"].Value);
 
                             TryParseDecimalFlexible((ben1 ?? string.Empty).Trim(), out var ben1Val);
                             TryParseDecimalFlexible((fades1 ?? string.Empty).Trim(), out var fades1Val);
-                            TryParseDecimalFlexible((iva ?? string.Empty).Trim(), out var ivaVal);
 
-                            UpdateFamiliasPorCodigo(facodi, ben1Val, fades1Val, ivaVal);
+                            UpdateFamiliasPorCodigo(facodi, ben1Val, fades1Val, Module.IVA_FIJO);
                             s = s + 1;
                         }
                     }
@@ -339,12 +334,19 @@ namespace DistribuidoraPalomarNet
         // 4. Reaplica el filtro activo en frmPrincipal intentando mantener la fila seleccionada.
         private async void btnSalir_Click(object sender, EventArgs e)
         {
+            // Evita reentradas (doble click o clicks durante el DoEvents del progreso)
+            if (_cerrando) return;
+            _cerrando = true;
+            btnSalir.Enabled = false;
+
             frmProgresoRecalculo frmProgreso = null;
 
             try
             {
                 if (ptbImgSi.Visible)
                 {
+                    // Los cambios se aplican una sola vez aunque el cierre se reintente
+                    ptbImgSi.Visible = false;
                     Cursor previousCursor = Cursor.Current;
                     Cursor.Current = Cursors.WaitCursor;
 
@@ -434,8 +436,9 @@ namespace DistribuidoraPalomarNet
                     Cursor.Current = previousCursor;
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Module.GrabarError($" - {DateTime.Now.ToLongDateString()} => {DateTime.Now.ToString("HH:mm:ss")} 'frmConfFamilia.btnSalir_Click': {ex.Message}");
             }
             finally
             {
@@ -451,7 +454,11 @@ namespace DistribuidoraPalomarNet
                     }
                 }
             }
-            this.Close();
+            // Form abierto con ShowDialog: asignar DialogResult cierra el diálogo de forma confiable
+            if (Modal)
+                DialogResult = DialogResult.OK;
+            else
+                Close();
         }
 
         // Reinicia las familias desde cero: borra todos los registros de FAMILIAS en la base de usuario
@@ -567,7 +574,7 @@ namespace DistribuidoraPalomarNet
         // Consulta la tabla FAMILIAS de la base de usuario y carga los resultados en el DataGridView.
         // Cada fila queda identificada por FACODI (columna oculta), ya que una misma descripción de
         // familia (FADESC) puede repetirse con distinto proveedor (FAPROV).
-        // Columnas visibles: Familia, Marca, Descuento Familia (FADES1), Iva (FAIVA), Beneficio (FABEN1).
+        // Columnas visibles: Familia, Marca, Descuento Familia (FADES1), Beneficio (FABEN1). Iva (FAIVA) queda oculta.
         private void CargarGrilla()
         {
             OleDbDataAdapter da = null;
@@ -822,7 +829,7 @@ namespace DistribuidoraPalomarNet
             }
         }
 
-        // Inserta una nueva familia en la base de usuario con todos sus valores numéricos en 0.
+        // Inserta una nueva familia en la base de usuario con beneficio y descuento en 0 e IVA fijo (Module.IVA_FIJO).
         // Se llama durante la sincronización cuando una familia de artículos no existe en el usuario.
         private void InsertarFamilia(string CodFamilia, string Familia, string faprov = "")
         {
@@ -833,7 +840,7 @@ namespace DistribuidoraPalomarNet
                 cmFamilias.Connection = Module.cnnU;
                 cmFamilias.CommandType = CommandType.Text;
                 string faprovVal = string.IsNullOrWhiteSpace(faprov) ? "NULL" : faprov;
-                cmFamilias.CommandText = "insert into FAMILIAS (FACODI,FADESC,FABEN1,FADES1,FAIVA,FAPROV) values ('" + (CodFamilia ?? string.Empty).Replace("'", "''") + "','" + (Familia ?? string.Empty).Replace("'", "''") + "',0,0,0," + faprovVal + ")";
+                cmFamilias.CommandText = "insert into FAMILIAS (FACODI,FADESC,FABEN1,FADES1,FAIVA,FAPROV) values ('" + (CodFamilia ?? string.Empty).Replace("'", "''") + "','" + (Familia ?? string.Empty).Replace("'", "''") + "',0,0," + Module.IVA_FIJO.ToString(CultureInfo.InvariantCulture) + "," + faprovVal + ")";
                 Application.DoEvents();
                 cmFamilias.ExecuteNonQuery();
                 if (Module.cnnU.State == ConnectionState.Open)

@@ -104,6 +104,7 @@ namespace DistribuidoraPalomarNet
             lbliva.Size = new Size(33, 15);
             lbliva.TabIndex = 3;
             lbliva.Text = "IVA:";
+            lbliva.Visible = false;
             // 
             // txtiva
             // 
@@ -115,6 +116,7 @@ namespace DistribuidoraPalomarNet
             txtiva.Size = new Size(102, 21);
             txtiva.TabIndex = 13;
             txtiva.TextAlign = HorizontalAlignment.Center;
+            txtiva.Visible = false;
             // 
             // lblDescFlia
             // 
@@ -159,7 +161,7 @@ namespace DistribuidoraPalomarNet
             lblbgral.Enabled = false;
             lblbgral.Font = new Font("MS Reference Sans Serif", 8.25F);
             lblbgral.ForeColor = Color.White;
-            lblbgral.Location = new Point(184, 72);
+            lblbgral.Location = new Point(184, 45);
             lblbgral.Margin = new Padding(4, 0, 4, 0);
             lblbgral.Name = "lblbgral";
             lblbgral.Size = new Size(94, 15);
@@ -170,7 +172,7 @@ namespace DistribuidoraPalomarNet
             // 
             txtbgral.Enabled = false;
             txtbgral.Font = new Font("MS Reference Sans Serif", 8.25F);
-            txtbgral.Location = new Point(284, 69);
+            txtbgral.Location = new Point(284, 42);
             txtbgral.Margin = new Padding(4, 3, 4, 3);
             txtbgral.Name = "txtbgral";
             txtbgral.Size = new Size(102, 21);

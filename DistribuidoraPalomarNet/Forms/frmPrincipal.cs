@@ -631,6 +631,12 @@ namespace DistribuidoraPalomarNet
                         Module.cnn.Close();
                     }
                 }
+                else
+                {
+                    // Artículo sin equivalencias: vaciar la grilla para no mostrar las del artículo anterior
+                    DataGridView2.DataSource = null;
+                    DataGridView2.Rows.Clear();
+                }
                 //btnEquivalencia.Enabled = false;
                 TimerVerOfertasEquivalencias.Enabled = true;
             }
@@ -965,15 +971,26 @@ namespace DistribuidoraPalomarNet
                 // Verificar si hay una fila seleccionada
                 if (DataGridView1.CurrentRow != null && DataGridView1.CurrentRow.Index >= 0 && DataGridView1.Rows.Count > 0)
                 {
-                    // Hay artículo seleccionado: cargar equivalencias y datos extras
-                    CargarEquivalencias();
-
                     int numFila = DataGridView1.CurrentRow.Index;
                     
                     // Verificar que las celdas existan antes de acceder
                     if (DataGridView1["CODIGO", numFila]?.Value != null && 
                         DataGridView1["Marca", numFila]?.Value != null)
                     {
+                        // IMPORTANTE: Actualizar Module.NumEqui ANTES de cargar equivalencias
+                        // para evitar que cargue las equivalencias del artículo anterior
+                        if (!string.IsNullOrEmpty(DataGridView1["AROBSE", numFila].Value?.ToString()))
+                        {
+                            Module.NumEqui = DataGridView1["AROBSE", numFila].Value.ToString();
+                        }
+                        else
+                        {
+                            Module.NumEqui = string.Empty;
+                        }
+
+                        // Ahora sí cargar equivalencias con el NumEqui correcto
+                        CargarEquivalencias();
+
                         string codigo = DataGridView1["CODIGO", numFila].Value.ToString();
                         string marca = DataGridView1["Marca", numFila].Value.ToString();
                         
@@ -991,6 +1008,7 @@ namespace DistribuidoraPalomarNet
                 else if (DataGridView1.Rows.Count == 0)
                 {
                     // Grilla vacía: limpiar equivalencias y cuadro amarillo
+                    Module.NumEqui = string.Empty;
                     Module.LimpiarEquivalenciasYObservaciones();
                 }
             }
@@ -1155,7 +1173,6 @@ namespace DistribuidoraPalomarNet
             lblD3Fam.Visible = visible;
             lblPC.Visible = visible;
             lblB.Visible = visible;
-            lblIvaFlia.Visible = visible;
             //lblPP.Visible = visible;
 
             // TextBoxes
@@ -1165,7 +1182,6 @@ namespace DistribuidoraPalomarNet
             txtDescuentoFamilia.Visible = visible;
             txtPreciopublico.Visible = visible;
             txtBeneficio.Visible = visible;
-            txtIvaFlia.Visible = visible;
             //txtSugerido.Visible = visible;
         }
 

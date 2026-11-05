@@ -94,8 +94,6 @@
             btncerrar = new Button();
             btnActualizar = new Button();
             GroupBox1 = new GroupBox();
-            txtIvaFlia = new TextBox();
-            lblIvaFlia = new Label();
             btnConfUsu = new Button();
             Label3 = new Label();
             txtPreciolista = new TextBox();
@@ -224,8 +222,6 @@
             // 
             GroupBox1.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             GroupBox1.BackColor = Color.FromArgb(32, 59, 175);
-            GroupBox1.Controls.Add(txtIvaFlia);
-            GroupBox1.Controls.Add(lblIvaFlia);
             GroupBox1.Controls.Add(btnConfUsu);
             GroupBox1.Controls.Add(Label3);
             GroupBox1.Controls.Add(txtPreciolista);
@@ -250,25 +246,6 @@
             GroupBox1.Size = new Size(581, 67);
             GroupBox1.TabIndex = 4;
             GroupBox1.TabStop = false;
-            // 
-            // txtIvaFlia
-            // 
-            txtIvaFlia.Enabled = false;
-            txtIvaFlia.Location = new Point(286, 38);
-            txtIvaFlia.Name = "txtIvaFlia";
-            txtIvaFlia.Size = new Size(37, 23);
-            txtIvaFlia.TabIndex = 21;
-            txtIvaFlia.TextAlign = HorizontalAlignment.Right;
-            // 
-            // lblIvaFlia
-            // 
-            lblIvaFlia.ForeColor = Color.White;
-            lblIvaFlia.Location = new Point(286, 20);
-            lblIvaFlia.Margin = new Padding(4, 0, 4, 0);
-            lblIvaFlia.Name = "lblIvaFlia";
-            lblIvaFlia.Size = new Size(29, 27);
-            lblIvaFlia.TabIndex = 20;
-            lblIvaFlia.Text = "IVA";
             // 
             // btnConfUsu
             // 
@@ -338,7 +315,7 @@
             // txtPreciopublico
             // 
             txtPreciopublico.Enabled = false;
-            txtPreciopublico.Location = new Point(324, 38);
+            txtPreciopublico.Location = new Point(286, 38);
             txtPreciopublico.Margin = new Padding(4, 3, 4, 3);
             txtPreciopublico.Name = "txtPreciopublico";
             txtPreciopublico.Size = new Size(65, 23);
@@ -348,7 +325,7 @@
             // txtBeneficio
             // 
             txtBeneficio.Enabled = false;
-            txtBeneficio.Location = new Point(389, 38);
+            txtBeneficio.Location = new Point(351, 38);
             txtBeneficio.Name = "txtBeneficio";
             txtBeneficio.Size = new Size(65, 23);
             txtBeneficio.TabIndex = 10;
@@ -357,7 +334,7 @@
             // txtSugerido
             // 
             txtSugerido.Enabled = false;
-            txtSugerido.Location = new Point(455, 38);
+            txtSugerido.Location = new Point(416, 38);
             txtSugerido.Name = "txtSugerido";
             txtSugerido.Size = new Size(65, 23);
             txtSugerido.TabIndex = 12;
@@ -396,7 +373,7 @@
             // lblPC
             // 
             lblPC.ForeColor = Color.White;
-            lblPC.Location = new Point(324, 20);
+            lblPC.Location = new Point(286, 20);
             lblPC.Name = "lblPC";
             lblPC.Size = new Size(66, 27);
             lblPC.TabIndex = 7;
@@ -405,7 +382,7 @@
             // lblB
             // 
             lblB.ForeColor = Color.White;
-            lblB.Location = new Point(389, 20);
+            lblB.Location = new Point(351, 20);
             lblB.Name = "lblB";
             lblB.Size = new Size(66, 27);
             lblB.TabIndex = 9;
@@ -414,7 +391,7 @@
             // lblPP
             // 
             lblPP.ForeColor = Color.White;
-            lblPP.Location = new Point(455, 20);
+            lblPP.Location = new Point(416, 20);
             lblPP.Margin = new Padding(4, 0, 4, 0);
             lblPP.Name = "lblPP";
             lblPP.Size = new Size(66, 27);
@@ -1184,8 +1161,6 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         public Microsoft.Web.WebView2.WinForms.WebView2 webView21;
         public ProgressBar toolStripProgressBar1;
-        public TextBox txtIvaFlia;
-        private Label lblIvaFlia;
         public ComboBox cmbRubros;
         public Label label9;
         public ComboBox cmbMarcas;
